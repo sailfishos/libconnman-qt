@@ -1,7 +1,7 @@
 #-*-Shell-Script-*-
 
 TEMPLATE = lib
-VERSION = 0.0.3
+VERSION = 0.0.1
 CONFIG += qt \
     debug
 QT += dbus
@@ -33,7 +33,7 @@ pkgconfig.files = connman-qt.pc
 
 SOURCES += networkitemmodel.cpp \
 		   networklistmodel.cpp \
-           manager.cpp \
-	   service.cpp \
+		   manager.cpp \
+		   service.cpp \
 
 INSTALLS += target headers pkgconfig

@@ -157,6 +157,26 @@ const QString& NetworkItemModel::mode() const
   return m_mode;
 }
 
+const QString NetworkItemModel::ipv4address() const
+{
+	return ipv4().Address;
+}
+
+const QString NetworkItemModel::ipv4netmask() const
+{
+	return ipv4().Netmask;
+}
+
+const QString NetworkItemModel::ipv4gateway() const
+{
+	return ipv4().Gateway;
+}
+
+const QString NetworkItemModel::ipv4method() const
+{
+	return ipv4().Method;
+}
+
 void NetworkItemModel::setPassphrase(const QString &passphrase)
 {
   Q_ASSERT(m_service);
@@ -335,6 +355,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   _setIpv4(qdbus_cast<QVariantMap>(properties["IPv4"]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
   m_deviceAddress = qdbus_cast<QVariantMap>(properties["Ethernet"])["Address"].toString();
+  emit propertyChanged();
 }
 
 void NetworkItemModel::propertyChanged(const QString &name,
@@ -366,6 +387,8 @@ void NetworkItemModel::propertyChanged(const QString &name,
     } else {
 	  qDebug("We don't do anything with property: %s", STR(name));
     }
+
+	emit propertyChanged();
 }
 
 

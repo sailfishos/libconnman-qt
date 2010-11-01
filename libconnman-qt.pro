@@ -1,7 +1,7 @@
 #-*-Shell-Script-*-
 
 TEMPLATE = lib
-VERSION = 0.0.1
+VERSION = 0.1.0
 CONFIG += qt \
     debug
 QT += dbus
@@ -28,6 +28,7 @@ headers.path = $$INSTALL_ROOT/usr/include/connman-qt
 CONFIG += create_pc create_prl
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library
 QMAKE_PKGCONFIG_INCDIR = $$headers.path
+
 pkgconfig.path = $$INSTALL_ROOT/usr/lib/pkgconfig
 pkgconfig.files = connman-qt.pc
 

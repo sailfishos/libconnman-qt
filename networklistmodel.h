@@ -31,8 +31,6 @@ public:
   int columnCount(const QModelIndex &parent = QModelIndex()) const;
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
   QVariant data(const QModelIndex &index, int role) const;
-  void enableTechnology(const QString &technology);
-  void disableTechnology(const QString &technology);
   const QStringList availableTechnologies() const;
   const QStringList enabledTechnologies() const;
   const QStringList connectedTechnologies() const;
@@ -43,6 +41,8 @@ public slots:
   void requestScan();
   bool offlineMode() const;
   void setOfflineMode(const bool &offlineMode);
+  void enableTechnology(const QString &technology);
+  void disableTechnology(const QString &technology);
   QString defaultTechnology() const;
   QString state() const;
 
@@ -83,7 +83,7 @@ private slots:
   void propertyChanged(const QString &name,
 		       const QDBusVariant &value);
   void networkItemModified(const QList<const char *> &members);
-
+  void itemPropertyChanged();
 private:
   Q_DISABLE_COPY(NetworkListModel);
 };

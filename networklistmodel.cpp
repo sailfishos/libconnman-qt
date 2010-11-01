@@ -97,6 +97,7 @@ void NetworkListModel::enableTechnology(const QString &technology)
 
 void NetworkListModel::disableTechnology(const QString &technology)
 {
+  qDebug("disenabling technology \"%s\"", STR(technology));
   m_manager->DisableTechnology(technology);
 }
 
@@ -189,8 +190,9 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
       qdbus_cast<QList<QDBusObjectPath> >(m_propertiesCache["Services"]);
     beginInsertRows(QModelIndex(), 0, services.count());
     foreach (QDBusObjectPath p, services) {
-   //   DCP_CRITICAL( QString("service path:\t%1").arg(p.path()).toAscii());
+	  qDebug()<< QString("service path:\t%1").arg(p.path());
       NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
+	  connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
       m_networks.append(pNIM);
     }
     endInsertRows();
@@ -292,10 +294,21 @@ void NetworkListModel::propertyChanged(const QString &name,
    //the Manager in getProperties
    if (members.contains(NetworkItemModel::Type))
      {
-       int row = m_networks.indexOf(static_cast<NetworkItemModel*>(sender()));
+	   int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
        Q_ASSERT(row != -1);
        emit dataChanged(createIndex(row, 0), createIndex(row, 1));
      }
+ }
+
+ void NetworkListModel::itemPropertyChanged()
+ {
+	 int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
+	 if(row == -1)
+	 {
+		 qDebug()<<"caught property changed signal for network item not in our list";
+		 return;
+	 }
+	 emit dataChanged(createIndex(row, 0), createIndex(row, 1));
  }
 
 int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const

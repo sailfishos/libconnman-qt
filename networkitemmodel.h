@@ -18,6 +18,7 @@
 //#define PRETEND 1
 
 
+
 class NetworkItemModel : public QObject
 {
   Q_OBJECT;
@@ -36,11 +37,12 @@ class NetworkItemModel : public QObject
     STATE_LAST
   };
 
-  struct IPv4Type {
-    QString Method;
-    QString Address;
-    QString Netmask;
-    QString Gateway;
+  struct IPv4Type
+  {
+	  QString Method;
+	  QString Address;
+	  QString Netmask;
+	  QString Gateway;
   };
 
  public:
@@ -64,7 +66,7 @@ class NetworkItemModel : public QObject
   /* property definitions */
   Q_PROPERTY(QString name READ name);
   Q_PROPERTY(QString security READ security);
-  Q_PROPERTY(StateType state READ state);
+  Q_PROPERTY(int state READ state);
   Q_PROPERTY(int strength READ strength);
   Q_PROPERTY(QString type READ type);
   Q_PROPERTY(QString mode READ mode);
@@ -73,6 +75,11 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(IPv4Type ipv4 READ ipv4 WRITE setIpv4);
   Q_PROPERTY(QStringList nameservers READ nameservers WRITE setNameservers);
   Q_PROPERTY(QString deviceAddress READ deviceAddress);
+  Q_PROPERTY(QString ipaddress READ ipv4address);
+  Q_PROPERTY(QString netmask READ ipv4netmask);
+  Q_PROPERTY(QString method READ ipv4method);
+  Q_PROPERTY(QString gateway READ ipv4gateway);
+  Q_ENUMS(StateType)
 
   /* property getters */
   const QString& name() const;
@@ -87,6 +94,10 @@ class NetworkItemModel : public QObject
   const QStringList &nameservers() const;
   const QString &deviceAddress() const;
   const QString &mode() const;
+  const QString ipv4address() const;
+  const QString ipv4netmask() const;
+  const QString ipv4gateway() const;
+  const QString ipv4method() const;
 
   /* property setters */
   //These actually set the property on the underlying service object.
@@ -107,6 +118,9 @@ class NetworkItemModel : public QObject
   void connectService();
   void disconnectService();
   void removeService();
+
+signals:
+  void propertyChanged();
 
  protected:
   void timerEvent(QTimerEvent *event); //hack
@@ -149,3 +163,4 @@ private slots:
 Q_DECLARE_METATYPE(NetworkItemModel::IPv4Type);
 
 #endif //NETWORKITEMMODEL_H
+

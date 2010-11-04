@@ -23,6 +23,7 @@ class NetworkListModel : public QAbstractListModel
   Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged);
   Q_PROPERTY(QString defaultTechnology READ defaultTechnology NOTIFY defaultTechnologyChanged);
   Q_PROPERTY(QString state READ state NOTIFY stateChanged);
+  Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:  
   NetworkListModel(QObject* parent=0);
@@ -55,7 +56,7 @@ signals:
   void offlineModeChanged(bool offlineMode);
   void defaultTechnologyChanged(const QString &defaultTechnology);
   void stateChanged(const QString &state);
-
+  void countChanged(int newCount);
 protected:
   void timerEvent(QTimerEvent *event); //hack
 

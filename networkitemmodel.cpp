@@ -34,7 +34,7 @@ NetworkItemModel::NetworkItemModel(const QString &path, QObject *parent) :
   m_setPropertyWatcher(NULL),
   m_disconnectWatcher(NULL),
   m_connectWatcher(NULL),
-  m_state(STATE_NONE),
+  m_state(StateNone),
   m_strength(0),
   m_passphraseRequired(false)
 {
@@ -280,23 +280,19 @@ NetworkItemModel::StateType NetworkItemModel::state(const QString &state)
 {
   NetworkItemModel::StateType _state;
   if (state == "idle") {
-    _state = STATE_IDLE;
+	_state = StateIdle;
   } else if (state == "failure") {
-    _state = STATE_FAILURE;
+	_state = StateFailure;
   } else if (state == "association") {
-    _state = STATE_ASSOCIATION;
+	_state = StateAssociation;
   } else if (state == "configuration") {
-    _state = STATE_CONFIGURATION;
+	_state = StateConfiguration;
   } else if (state == "ready") {
-    _state = STATE_READY;
-  } else if (state == "login") {
-    _state = STATE_LOGIN;
+	_state = StateReady;
   } else if (state == "online") {
-    _state = STATE_ONLINE;
-  } else if (state == "disconnect") {
-    _state = STATE_DISCONNECT;
+	_state = StateOnline;
   } else {
-    _state = STATE_NONE;
+	_state = StateNone;
 	qDebug("setting to to STATE_NONE because of unknown state returned: \"%s\"", STR(state));
   }
 

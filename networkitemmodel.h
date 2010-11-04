@@ -26,16 +26,13 @@ class NetworkItemModel : public QObject
 
  public:
   enum StateType {
-    STATE_NONE = 0,
-    STATE_IDLE,
-    STATE_FAILURE,
-    STATE_ASSOCIATION,
-    STATE_CONFIGURATION,
-    STATE_READY,
-    STATE_LOGIN,
-    STATE_ONLINE,
-    STATE_DISCONNECT,
-    STATE_LAST
+	StateNone = 0,
+	StateIdle,
+	StateFailure,
+	StateAssociation,
+	StateConfiguration,
+	StateReady,
+	StateOnline,
   };
 
   struct IPv4Type
@@ -67,7 +64,7 @@ class NetworkItemModel : public QObject
   /* property definitions */
   Q_PROPERTY(QString name READ name);
   Q_PROPERTY(QString security READ security);
-  Q_PROPERTY(int state READ state);
+  Q_PROPERTY(StateType state READ state);
   Q_PROPERTY(int strength READ strength);
   Q_PROPERTY(QString type READ type);
   Q_PROPERTY(QString mode READ mode);
@@ -80,7 +77,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString netmask READ ipv4netmask WRITE setIpv4Netmask);
   Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
   Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
-  Q_ENUMS(NetworkItemModel::StateType)
+  Q_ENUMS(StateType)
 
   /* property getters */
   const QString& name() const;

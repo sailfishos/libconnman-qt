@@ -31,11 +31,13 @@ NetworkListModel::NetworkListModel(QObject* parent)
   QHash<int, QByteArray> roles;
 
   QMetaObject properties = NetworkItemModel::staticMetaObject;
-
-  for(int i=0; i<properties.propertyCount();i++)
+  int i=0;
+  for(; i<properties.propertyCount();i++)
   {
 	  roles[i]=properties.property(i).name();
   }
+
+  roles[++i] = "networkitemmodel";
 
   setRoleNames(roles);
 
@@ -78,6 +80,11 @@ QVariant NetworkListModel::data(const QModelIndex &index, int role) const
 	QString roleName = roleNames()[role];
 	QMetaObject object = NetworkItemModel::staticMetaObject;
 
+	if(roleName == "networkitemmodel")
+	{
+		return QVariant::fromValue<QObject*>((QObject*)m_networks[index.row()]);
+	}
+
 	for(int i=0; i<object.propertyCount(); i++)
 	{
 		if(object.property(i).name() == roleName)
@@ -87,6 +94,24 @@ QVariant NetworkListModel::data(const QModelIndex &index, int role) const
 	}
 
   return QVariant();
+}
+
+void NetworkListModel::setProperty(const int &index, QString property, const QVariant &value)
+{
+	QString roleName = property;
+	QMetaObject object = NetworkItemModel::staticMetaObject;
+
+	for(int i=0; i<object.propertyCount(); i++)
+	{
+		if(object.property(i).name() == roleName)
+		{
+			//emit dataChanged(index.row(),index.row());
+			qDebug()<<"changing value of: "<<roleName<< " to "<<value;
+			object.property(i).write(m_networks[index],value);
+			break;
+		}
+	}
+
 }
 
 void NetworkListModel::enableTechnology(const QString &technology)

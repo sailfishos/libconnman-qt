@@ -31,6 +31,7 @@ public:
   int columnCount(const QModelIndex &parent = QModelIndex()) const;
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
   QVariant data(const QModelIndex &index, int role) const;
+
   const QStringList availableTechnologies() const;
   const QStringList enabledTechnologies() const;
   const QStringList connectedTechnologies() const;
@@ -38,6 +39,7 @@ public:
 public slots:
   void connectService(const QString &name, const QString &security,
 			  const QString &passphrase);
+  void setProperty(const int &index, QString property, const QVariant &value);
   void requestScan();
   bool offlineMode() const;
   void setOfflineMode(const bool &offlineMode);

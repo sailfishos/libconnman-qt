@@ -11,6 +11,7 @@
 #define NETWORKITEMMODEL_H
 
 #include "service.h"
+#include "commondbustypes.h"
 
 #include <QString>
 #include <QObject>
@@ -21,7 +22,7 @@
 
 class NetworkItemModel : public QObject
 {
-  Q_OBJECT;
+  Q_OBJECT
 
  public:
   enum StateType {
@@ -75,11 +76,11 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(IPv4Type ipv4 READ ipv4 WRITE setIpv4);
   Q_PROPERTY(QStringList nameservers READ nameservers WRITE setNameservers);
   Q_PROPERTY(QString deviceAddress READ deviceAddress);
-  Q_PROPERTY(QString ipaddress READ ipv4address);
-  Q_PROPERTY(QString netmask READ ipv4netmask);
-  Q_PROPERTY(QString method READ ipv4method);
-  Q_PROPERTY(QString gateway READ ipv4gateway);
-  Q_ENUMS(StateType)
+  Q_PROPERTY(QString ipaddress READ ipv4address WRITE setIpv4Address);
+  Q_PROPERTY(QString netmask READ ipv4netmask WRITE setIpv4Netmask);
+  Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
+  Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
+  Q_ENUMS(NetworkItemModel::StateType)
 
   /* property getters */
   const QString& name() const;
@@ -105,6 +106,11 @@ class NetworkItemModel : public QObject
   void setIpv4(const IPv4Type &ipv4);
   void setNameservers(const QStringList &nameservers);
 
+  void setIpv4Address(QString);
+  void setIpv4Netmask(QString);
+  void setIpv4Gateway(QString);
+  void setIpv4Method(QString);
+
   /* debug */
   int id;
   static int instances;
@@ -118,6 +124,8 @@ class NetworkItemModel : public QObject
   void connectService();
   void disconnectService();
   void removeService();
+
+  QString stateTypeToString();
 
 signals:
   void propertyChanged();

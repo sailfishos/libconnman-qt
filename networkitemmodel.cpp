@@ -38,6 +38,8 @@ NetworkItemModel::NetworkItemModel(const QString &path, QObject *parent) :
   m_strength(0),
   m_passphraseRequired(false)
 {
+  registerCommonDataTypes();
+
   setParent(parent);
   instances++;
   idCounter++;
@@ -248,6 +250,30 @@ void NetworkItemModel::setNameservers(const QStringList &nameservers)
 	throw -1; //FIXME: don't throw
       }
   }
+}
+
+void NetworkItemModel::setIpv4Address(QString v)
+{
+	m_ipv4.Address = v;
+	setIpv4(m_ipv4);
+}
+
+void NetworkItemModel::setIpv4Netmask(QString v )
+{
+	m_ipv4.Netmask = v;
+	setIpv4(m_ipv4);
+}
+
+void NetworkItemModel::setIpv4Gateway(QString v)
+{
+	m_ipv4.Gateway = v;
+	setIpv4(m_ipv4);
+}
+
+void NetworkItemModel::setIpv4Method(QString v)
+{
+	m_ipv4.Method = v;
+	setIpv4(m_ipv4);
 }
 
 NetworkItemModel::StateType NetworkItemModel::state(const QString &state)

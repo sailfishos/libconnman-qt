@@ -49,6 +49,8 @@ public slots:
   QString defaultTechnology() const;
   QString state() const;
 
+  QList<NetworkItemModel*> networks() { return m_networks.toList(); }
+
 signals:
   void technologiesChanged(const QStringList &availableTechnologies,
 			   const QStringList &enabledTechnologies,

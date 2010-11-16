@@ -122,8 +122,6 @@ class NetworkItemModel : public QObject
   void disconnectService();
   void removeService();
 
-  QString stateTypeToString();
-
 signals:
   void propertyChanged();
 

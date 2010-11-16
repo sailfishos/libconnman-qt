@@ -383,7 +383,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 void NetworkItemModel::propertyChanged(const QString &name,
 				       const QDBusVariant &value)
 {
-  qDebug("property %s changed", STR(name));
+  qDebug()<<"property "<<STR(name)<<" changed: "<<value.variant();
     if (name == State) {
 	  m_state = state(value.variant().toString());
     } else if (name == Name) {
@@ -435,7 +435,8 @@ void NetworkItemModel::setPropertyFinished(QDBusPendingCallWatcher *call)
 {
   QDBusPendingReply<void> reply = *call;
   if (reply.isError()) {
-	qDebug("not continuing because of error in setProperty!");
+	qDebug()<<"not continuing because of error in setProperty!"<<reply.error().message();
+
   } else {
     QDBusPendingReply<void> nextReply = m_service->Disconnect();
     if (m_setPropertyWatcher) {

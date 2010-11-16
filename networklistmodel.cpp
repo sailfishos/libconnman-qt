@@ -300,7 +300,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 	//DCP_CRITICAL(QString("removing network %1").arg(m_networks[i]->servicePath()).toAscii());
 //	m_networks[i]->decreaseReferenceCount();
       }
-      m_networks.remove(num_new, num_old - num_new);
+	  m_networks.remove(num_new, num_old - num_new);
 
       endRemoveRows();
     }

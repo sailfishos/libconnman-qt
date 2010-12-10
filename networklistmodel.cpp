@@ -359,6 +359,9 @@ int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const
 			    enabledTechnologies,
 			    connectedTechnologies);
 
+   availableTechnologiesChanged(availableTechnologies);
+   enabledTechnologiesChanged(enabledTechnologies);
+   connectedTechnologiesChanged(connectedTechnologies);
    countChanged(m_networks.count());
  }
 

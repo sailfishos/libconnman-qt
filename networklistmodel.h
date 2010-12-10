@@ -23,7 +23,10 @@ class NetworkListModel : public QAbstractListModel
   Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged);
   Q_PROPERTY(QString defaultTechnology READ defaultTechnology NOTIFY defaultTechnologyChanged);
   Q_PROPERTY(QString state READ state NOTIFY stateChanged);
-  Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+  Q_PROPERTY(int count READ rowCount NOTIFY countChanged);
+  Q_PROPERTY(QStringList availableTechnologies READ availableTechnologies NOTIFY availableTechnologiesChanged);
+  Q_PROPERTY(QStringList enabledTechnologies READ enabledTechnologies NOTIFY enabledTechnologiesChanged);
+  Q_PROPERTY(QStringList connectedTechnologies READ connectedTechnologies NOTIFY connectedTechnologiesChanged);
 
 public:  
   NetworkListModel(QObject* parent=0);
@@ -55,6 +58,10 @@ signals:
   void technologiesChanged(const QStringList &availableTechnologies,
 			   const QStringList &enabledTechnologies,
 			   const QStringList &connectedTechnologies);
+  void availableTechnologiesChanged(const QStringList);
+  void enabledTechnologiesChanged(const QStringList);
+  void connectedTechnologiesChanged(const QStringList);
+
   void offlineModeChanged(bool offlineMode);
   void defaultTechnologyChanged(const QString &defaultTechnology);
   void stateChanged(const QString &state);

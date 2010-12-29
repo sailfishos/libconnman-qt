@@ -172,7 +172,7 @@ const QStringList NetworkListModel::connectedTechnologies() const
 void NetworkListModel::connectToConnman()
 {
   disconnectFromConnman();
-  m_manager = new Manager("org.moblin.connman", "/",
+  m_manager = new Manager("net.connman", "/",
 			  QDBusConnection::systemBus(),
 			  this);
   if (!m_manager->isValid()) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <node name="/Manager" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
-  <interface name="org.moblin.connman.Manager">
+  <interface name="net.connman.Manager">
 
     <method name="GetProperties" tp:name-for-bindings="Get_Properties">
       <arg name="properties" type="a{sv}" direction="out"/>

@@ -45,7 +45,7 @@ NetworkItemModel::NetworkItemModel(const QString &path, QObject *parent) :
   idCounter++;
   m_servicePath = path;
   if (!path.isEmpty()) {
-    m_service = new Service("org.moblin.connman", path,
+    m_service = new Service("net.connman", path,
 			    QDBusConnection::systemBus(),
 			    this);
     if (!m_service->isValid()) {

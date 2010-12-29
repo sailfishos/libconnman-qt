@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <node name="/Service" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
-  <interface name="org.moblin.connman.Service">
+  <interface name="net.connman.Service">
 
     <method name="GetProperties" tp:name-for-bindings="Get_Properties">
       <arg name="properties" type="a{sv}" direction="out"/>

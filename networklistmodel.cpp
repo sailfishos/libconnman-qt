@@ -117,7 +117,12 @@ void NetworkListModel::setProperty(const int &index, QString property, const QVa
 void NetworkListModel::enableTechnology(const QString &technology)
 {
   qDebug("enabling technology \"%s\"", STR(technology));
-  m_manager->EnableTechnology(technology);
+  QDBusReply<void> reply = m_manager->EnableTechnology(technology);
+  if(reply.error().isValid())
+  {
+	  qDebug()<<reply.error().message();
+	  enabledTechnologiesChanged(enabledTechnologies());
+  }
 }
 
 void NetworkListModel::disableTechnology(const QString &technology)

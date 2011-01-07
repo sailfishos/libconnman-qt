@@ -307,25 +307,25 @@ void NetworkItemModel::_setIpv4(const QVariantMap &ipv4)
   QString string;
 
   string = ipv4["Method"].toString();
-  qDebug("Method: %s", STR(string));
+ // qDebug("Method: %s", STR(string));
   if (m_ipv4.Method != string) {
     m_ipv4.Method = string;
     modified = true;
   }
   string = ipv4["Address"].toString();
-  qDebug("Address: %s", STR(string));
+  //qDebug("Address: %s", STR(string));
   if (m_ipv4.Address != string) {
     m_ipv4.Address = string;
     modified = true;
   }
   string =  ipv4["Netmask"].toString();
-  qDebug("Netmask: %s", STR(string));
+  //qDebug("Netmask: %s", STR(string));
   if (m_ipv4.Netmask != string) {
     m_ipv4.Netmask = string;
     modified = true;
   }
   string = ipv4["Gateway"].toString();
-  qDebug("Gateway: %s", STR(string));
+ // qDebug("Gateway: %s", STR(string));
   if (m_ipv4.Gateway != string) {
     m_ipv4.Gateway = string;
     modified = true;
@@ -354,12 +354,13 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 	qDebug("getPropertiesReply is error!");
     QDBusError error = reply.error();
 	qDebug("service: %s", STR(servicePath()));
-	/*qDebug(QString("type: %1 name: %2 message: %3").
+	qDebug(QString("type: %1 name: %2 message: %3").
 		 arg(QDBusError::errorString(error.type()))
 		 .arg(error.name())
-		 .arg(error.message()).toAscii());*/
-    throw -1; //FIXME
+		 .arg(error.message()).toAscii());
+	return;
   }
+  qDebug()<<"getPropertiesReply";
   QVariantMap properties = reply.value();
   //although it seems dangerous as some of these properties are not
   //present, grabbing them is not, because QMap will insert the
@@ -383,17 +384,20 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 void NetworkItemModel::propertyChanged(const QString &name,
 				       const QDBusVariant &value)
 {
-  qDebug()<<"property "<<STR(name)<<" changed: "<<value.variant();
+  qDebug()<<"NetworkItemModel: property "<<STR(name)<<" changed: "<<value.variant();
     if (name == State) {
 	  m_state = state(value.variant().toString());
+	  stateChanged(m_state);
     } else if (name == Name) {
-	  m_name = (value.variant().toString());
+		m_name = (value.variant().toString());
+		nameChanged(m_name);
     } else if (name == Type) {
 	  m_type = (value.variant().toString());
     } else if (name == Mode) {
 	  m_mode = (value.variant().toString());
     } else if (name == Security) {
-	  m_security = (value.variant().toString());
+		m_security = (value.variant().toString());
+		securityChanged(m_security);
     } else if (name == PassphraseRequired) {
 	  m_passphraseRequired = (value.variant().toBool());
     } else if (name == Passphrase) {

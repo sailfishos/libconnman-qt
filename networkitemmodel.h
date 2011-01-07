@@ -62,9 +62,9 @@ class NetworkItemModel : public QObject
   static const char* const Mode;
 
   /* property definitions */
-  Q_PROPERTY(QString name READ name);
-  Q_PROPERTY(QString security READ security);
-  Q_PROPERTY(StateType state READ state);
+  Q_PROPERTY(QString name READ name NOTIFY nameChanged);
+  Q_PROPERTY(QString security READ security NOTIFY securityChanged);
+  Q_PROPERTY(StateType state READ state NOTIFY stateChanged);
   Q_PROPERTY(int strength READ strength);
   Q_PROPERTY(QString type READ type);
   Q_PROPERTY(QString mode READ mode);
@@ -124,6 +124,9 @@ class NetworkItemModel : public QObject
 
 signals:
   void propertyChanged();
+  void nameChanged(QString newname);
+  void securityChanged(QString security);
+  void stateChanged(StateType newstate);
 
  protected:
   void timerEvent(QTimerEvent *event); //hack

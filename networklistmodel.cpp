@@ -226,7 +226,7 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 
 		m_propertiesCache = reply.value();
 		QList<QDBusObjectPath> services = qdbus_cast<QList<QDBusObjectPath> >(m_propertiesCache["Services"]);
-		beginInsertRows(QModelIndex(), 0, services.count());
+		beginInsertRows(QModelIndex(), 0, services.count()-1);
 		foreach (QDBusObjectPath p, services)
 		{
 			qDebug()<< QString("service path:\t%1").arg(p.path());
@@ -264,7 +264,7 @@ void NetworkListModel::connectServiceReply(QDBusPendingCallWatcher *call)
 void NetworkListModel::propertyChanged(const QString &name,
 				       const QDBusVariant &value)
 {
-	qDebug("Property \"%s\" changed", STR(name));
+	qDebug("NetworkListModel: Property \"%s\" changed", STR(name));
 	m_propertiesCache[name] = value.variant();
 
 	if (name == NetworkListModel::availTechs ||
@@ -284,6 +284,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 		QList<QDBusObjectPath> new_services =
 				qdbus_cast<QList<QDBusObjectPath> >(value.variant());
 		int num_new = new_services.count();
+		qDebug()<<"number of services: "<<num_new;
 		for (int i = 0; i < num_new; i++)
 		{
 			QDBusObjectPath path(new_services[i]);
@@ -293,7 +294,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 				//beginInsertRows(QModelIndex(), i, i+1);
 				beginInsertRows(QModelIndex(), i, i);
 				NetworkItemModel *pNIM = new NetworkItemModel(path.path());
-				//	pNIM->increaseReferenceCount();
+				connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
 				m_networks.insert(i, pNIM);
 				endInsertRows();
 			}
@@ -309,7 +310,8 @@ void NetworkListModel::propertyChanged(const QString &name,
 					endMoveRows();
 				}
 			}
-	  }
+			countChanged(m_networks.count());
+		}
 		int num_old = m_networks.count();
 		if (num_old > num_new)
 		{
@@ -321,6 +323,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 			{
 				//DCP_CRITICAL(QString("removing network %1").arg(m_networks[i]->servicePath()).toAscii());
 				//	m_networks[i]->decreaseReferenceCount();
+				delete m_networks[i];
 			}
 			m_networks.remove(num_new, num_old - num_new);
 
@@ -358,9 +361,11 @@ void NetworkListModel::propertyChanged(const QString &name,
 	 int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
 	 if(row == -1)
 	 {
+		 Q_ASSERT(0);
 		 qDebug()<<"caught property changed signal for network item not in our list";
 		 return;
 	 }
+	 qDebug()<<"Properties changed for "<< m_networks[row]->name();
 	 emit dataChanged(createIndex(row, 0), createIndex(row, 0));
  }
 

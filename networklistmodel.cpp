@@ -209,31 +209,40 @@ void NetworkListModel::disconnectFromConnman()
 
 void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 {
-  Q_ASSERT(call);
-  QDBusPendingReply<QVariantMap> reply = *call;
-  if (reply.isError()) {
-    disconnectFromConnman();
-    //TODO set up timer to reconnect in a bit
-  } else {
-    m_propertiesCache = reply.value();
-    QList<QDBusObjectPath> services =
-      qdbus_cast<QList<QDBusObjectPath> >(m_propertiesCache["Services"]);
-    beginInsertRows(QModelIndex(), 0, services.count());
-    foreach (QDBusObjectPath p, services) {
-	  qDebug()<< QString("service path:\t%1").arg(p.path());
-      NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
-	  connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
-      m_networks.append(pNIM);
-    }
-    endInsertRows();
-    connect(m_manager,
-	    SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
-	    this,
-	    SLOT(propertyChanged(const QString&, const QDBusVariant&)));
-    emitTechnologiesChanged();
-    emit defaultTechnologyChanged(m_propertiesCache[DefaultTechnology].toString());
-    emit stateChanged(m_propertiesCache[State].toString());
-  }
+	Q_ASSERT(call);
+	QDBusPendingReply<QVariantMap> reply = *call;
+	if (reply.isError())
+	{
+		disconnectFromConnman();
+		//TODO set up timer to reconnect in a bit
+		QTimer::singleShot(10000,this,SLOT(connectToConnman));
+	}
+	else
+	{
+		///reset everything just in case:
+		beginResetModel();
+		m_networks.clear();
+		endResetModel();
+
+		m_propertiesCache = reply.value();
+		QList<QDBusObjectPath> services = qdbus_cast<QList<QDBusObjectPath> >(m_propertiesCache["Services"]);
+		beginInsertRows(QModelIndex(), 0, services.count());
+		foreach (QDBusObjectPath p, services)
+		{
+			qDebug()<< QString("service path:\t%1").arg(p.path());
+			NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
+			connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
+			m_networks.append(pNIM);
+		}
+		endInsertRows();
+		connect(m_manager,
+				SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
+				this,
+				SLOT(propertyChanged(const QString&, const QDBusVariant&)));
+		emitTechnologiesChanged();
+		emit defaultTechnologyChanged(m_propertiesCache[DefaultTechnology].toString());
+		emit stateChanged(m_propertiesCache[State].toString());
+	}
 }
 
 void NetworkListModel::connectServiceReply(QDBusPendingCallWatcher *call)
@@ -255,64 +264,74 @@ void NetworkListModel::connectServiceReply(QDBusPendingCallWatcher *call)
 void NetworkListModel::propertyChanged(const QString &name,
 				       const QDBusVariant &value)
 {
-  qDebug("Property \"%s\" changed", STR(name));
-  m_propertiesCache[name] = value.variant();
-  if (name == NetworkListModel::availTechs ||
-      name == NetworkListModel::enablTechs ||
-      name == NetworkListModel::connTechs) {
-    emitTechnologiesChanged();
-  } else if (name == DefaultTechnology) {
-    emit defaultTechnologyChanged(m_propertiesCache[DefaultTechnology].toString());
-  } else if (name == State) {
-    emit stateChanged(m_propertiesCache[State].toString());
-  }else if (name == "Services") {
-    QList<QDBusObjectPath> new_services =
-      qdbus_cast<QList<QDBusObjectPath> >(value.variant());
-    int num_new = new_services.count();
-    for (int i = 0; i < num_new; i++) {
-      QDBusObjectPath path(new_services[i]);
-      int j = findNetworkItemModel(path);
-      //DCP_CRITICAL(QString("i=%1 j=%2").arg(i).arg(j).toAscii());
-      if (-1 == j) {
-	//DCP_CRITICAL(QString("couldn't find service %1 in existing networks").arg(path.path()).toAscii());
-	beginInsertRows(QModelIndex(), i, i+1);
+	qDebug("Property \"%s\" changed", STR(name));
+	m_propertiesCache[name] = value.variant();
 
-	NetworkItemModel *pNIM = new NetworkItemModel(path.path());
-//	pNIM->increaseReferenceCount();
-	m_networks.insert(i, pNIM);
-
-	endInsertRows();
-      } else {
-	if (i != j) { //only move if from and to aren't the same
-	  beginMoveRows(QModelIndex(), j, j, QModelIndex(), i);
-
-	  //DCP_CRITICAL(QString("%1 (position %2) appears in the list of old networks at position %3").arg(path.path()).arg(i).arg(j).toAscii());
-	  NetworkItemModel *pNIM = m_networks[j];
-	  Q_ASSERT(pNIM);
-	  m_networks.remove(j);
-	  m_networks.insert(i, pNIM);
-	  endMoveRows();
+	if (name == NetworkListModel::availTechs ||
+		name == NetworkListModel::enablTechs ||
+		name == NetworkListModel::connTechs)
+	{
+		emitTechnologiesChanged();
 	}
-      }
-    }
-    int num_old = m_networks.count();
-    if (num_old > num_new) {
-      //DCP_CRITICAL(QString("num old: %1  num new: %2").arg(num_old).arg(num_new).toAscii());
-      //DCP_CRITICAL(QString("we have %1 networks to remove").arg(num_old - num_new).toAscii());
-      beginRemoveRows(QModelIndex(), num_new, num_old - 1);
+	else if (name == DefaultTechnology) {
+		emit defaultTechnologyChanged(m_propertiesCache[DefaultTechnology].toString());
+	}
+	else if (name == State) {
+		emit stateChanged(m_propertiesCache[State].toString());
+	}
+	else if (name == "Services")
+	{
+		QList<QDBusObjectPath> new_services =
+				qdbus_cast<QList<QDBusObjectPath> >(value.variant());
+		int num_new = new_services.count();
+		for (int i = 0; i < num_new; i++)
+		{
+			QDBusObjectPath path(new_services[i]);
+			int j = findNetworkItemModel(path);
+			if (-1 == j)
+			{
+				//beginInsertRows(QModelIndex(), i, i+1);
+				beginInsertRows(QModelIndex(), i, i);
+				NetworkItemModel *pNIM = new NetworkItemModel(path.path());
+				//	pNIM->increaseReferenceCount();
+				m_networks.insert(i, pNIM);
+				endInsertRows();
+			}
+			else
+			{
+				if (i != j)
+				{ //only move if from and to aren't the same
+					beginMoveRows(QModelIndex(), j, j, QModelIndex(), i);
+					NetworkItemModel *pNIM = m_networks[j];
+					Q_ASSERT(pNIM);
+					m_networks.remove(j);
+					m_networks.insert(i, pNIM);
+					endMoveRows();
+				}
+			}
+	  }
+		int num_old = m_networks.count();
+		if (num_old > num_new)
+		{
+			//DCP_CRITICAL(QString("num old: %1  num new: %2").arg(num_old).arg(num_new).toAscii());
+			//DCP_CRITICAL(QString("we have %1 networks to remove").arg(num_old - num_new).toAscii());
+			beginRemoveRows(QModelIndex(), num_new, num_old - 1);
 
-      for (int i = num_new; i < num_old; i++) {
-	//DCP_CRITICAL(QString("removing network %1").arg(m_networks[i]->servicePath()).toAscii());
-//	m_networks[i]->decreaseReferenceCount();
-      }
-	  m_networks.remove(num_new, num_old - num_new);
+			for (int i = num_new; i < num_old; i++)
+			{
+				//DCP_CRITICAL(QString("removing network %1").arg(m_networks[i]->servicePath()).toAscii());
+				//	m_networks[i]->decreaseReferenceCount();
+			}
+			m_networks.remove(num_new, num_old - num_new);
 
-      endRemoveRows();
-    }
-  } else if (name == OfflineMode) {
-    m_propertiesCache[OfflineMode] = value.variant();
-    emit offlineModeChanged(m_propertiesCache[OfflineMode].toBool());
-  }
+			endRemoveRows();
+		}
+	}
+	else if (name == OfflineMode)
+	{
+		m_propertiesCache[OfflineMode] = value.variant();
+		emit offlineModeChanged(m_propertiesCache[OfflineMode].toBool());
+	}
 }
 
  void NetworkListModel::networkItemModified(const QList<const char *> &members)
@@ -323,11 +342,15 @@ void NetworkListModel::propertyChanged(const QString &name,
    //on the service object after we get the service object paths from
    //the Manager in getProperties
    if (members.contains(NetworkItemModel::Type))
-     {
+   {
 	   int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
-       Q_ASSERT(row != -1);
-       emit dataChanged(createIndex(row, 0), createIndex(row, 1));
-     }
+	   if(row == -1)
+	   {
+		   qDebug()<<"caught property changed signal for network item not in our list";
+		   return;
+	   }
+	   emit dataChanged(createIndex(row, 0), createIndex(row, 0));
+   }
  }
 
  void NetworkListModel::itemPropertyChanged()
@@ -338,15 +361,16 @@ void NetworkListModel::propertyChanged(const QString &name,
 		 qDebug()<<"caught property changed signal for network item not in our list";
 		 return;
 	 }
-	 emit dataChanged(createIndex(row, 0), createIndex(row, 1));
+	 emit dataChanged(createIndex(row, 0), createIndex(row, 0));
  }
 
 int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const
 {
-  for (int i= 0; i < m_networks.count(); i++) {
-    if (m_networks[i]->servicePath() == path.path()) return i;
-  }
-  return -1;
+	for (int i= 0; i < m_networks.count(); i++)
+	{
+		if (m_networks[i]->servicePath() == path.path()) return i;
+	}
+	return -1;
 }
 
  void NetworkListModel::emitTechnologiesChanged()

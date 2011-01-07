@@ -71,8 +71,6 @@ protected:
 
 
 private:
-  void connectToConnman();
-  void disconnectFromConnman();
   int findNetworkItemModel(const QDBusObjectPath &path) const;
   void emitTechnologiesChanged();
 
@@ -90,6 +88,8 @@ private:
   static const QString State;
 
 private slots:
+  void connectToConnman();
+  void disconnectFromConnman();
   void getPropertiesReply(QDBusPendingCallWatcher *call);
   void connectServiceReply(QDBusPendingCallWatcher *call);
   void propertyChanged(const QString &name,

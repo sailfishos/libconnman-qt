@@ -134,7 +134,11 @@ void NetworkListModel::disableTechnology(const QString &technology)
 void NetworkListModel::connectService(const QString &name, const QString &security,
 				      const QString &passphrase)
 {
-  Q_ASSERT(m_manager);
+  if(!m_manager)
+  {
+	connectToConnman();
+	return;
+  }
 
   qDebug("name: %s", STR(name));
   qDebug("security: %s", STR(security));
@@ -182,7 +186,9 @@ void NetworkListModel::connectToConnman()
 			  this);
   if (!m_manager->isValid()) {
     //This shouldn't happen
-  //  DCP_CRITICAL("manager is invalid");
+	qDebug("manager is invalid. connman may not be running or is invalid");
+	Q_ASSERT(0);
+	QTimer::singleShot(10000,this,SLOT(connectToConnman()));
     delete m_manager;
   } else {
     QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
@@ -213,9 +219,10 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 	QDBusPendingReply<QVariantMap> reply = *call;
 	if (reply.isError())
 	{
+		qDebug()<<"Error getPropertiesReply: "<<reply.error().message();
 		disconnectFromConnman();
 		//TODO set up timer to reconnect in a bit
-		QTimer::singleShot(10000,this,SLOT(connectToConnman));
+		QTimer::singleShot(10000,this,SLOT(connectToConnman()));
 	}
 	else
 	{
@@ -418,7 +425,7 @@ void NetworkListModel::requestScan()
 
 void NetworkListModel::setOfflineMode(const bool &offlineMode)
 {
-  Q_ASSERT(m_manager);
+ if(!m_manager) return;
 
     QDBusPendingReply<void> reply =
       m_manager->SetProperty(OfflineMode, QDBusVariant(QVariant(offlineMode)));

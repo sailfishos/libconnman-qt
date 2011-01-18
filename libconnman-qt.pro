@@ -7,13 +7,8 @@ CONFIG += qt \
 QT += dbus
 TARGET = $$qtLibraryTarget(connman-qt)
 target.path = $$INSTALL_ROOT/usr/lib
-!exists(manager.h) {
-  system(qdbusxml2cpp -c Manager -p manager -N connman-manager.xml)
-}
-
-!exists(service.h) {
-  system(qdbusxml2cpp -c Service -p service -N connman-service.xml)
-}
+system(qdbusxml2cpp -c Manager -p manager -N connman-manager.xml)
+system(qdbusxml2cpp -c Service -p service -N connman-service.xml)
 
 HEADERS += manager.h \
     service.h \

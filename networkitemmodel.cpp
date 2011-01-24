@@ -20,6 +20,7 @@ const char* const NetworkItemModel::Type = "Type";
 const char* const NetworkItemModel::PassphraseRequired = "PassphraseRequired";
 const char* const NetworkItemModel::Passphrase = "Passphrase";
 const char* const NetworkItemModel::IPv4 = "IPv4.Configuration";
+const char* const NetworkItemModel::IPv4Normal = "IPv4";
 const char* const NetworkItemModel::Nameservers = "Nameservers";
 const char* const NetworkItemModel::DeviceAddress = "DeviceAddress";
 const char* const NetworkItemModel::Mode = "Mode";
@@ -375,7 +376,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   m_passphrase = qdbus_cast<QString>(properties[Passphrase]);
   m_strength = qdbus_cast<int>(properties[Strength]);
   m_state = state(qdbus_cast<QString>(properties[State]));
-  _setIpv4(qdbus_cast<QVariantMap>(properties["IPv4"]));
+  _setIpv4(qdbus_cast<QVariantMap>(properties[IPv4Normal]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
   m_deviceAddress = qdbus_cast<QVariantMap>(properties["Ethernet"])["Address"].toString();
   emit propertyChanged();
@@ -404,7 +405,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  m_passphrase = (value.variant().toString());
     } else if (name == Strength) {
 	  m_strength = (value.variant().toInt());
-    } else if (name == IPv4) {
+	} else if (name == IPv4 || name == IPv4Normal) {
 	  _setIpv4(qdbus_cast<QVariantMap>(value.variant()));
     } else if (name == Nameservers) {
 	  m_nameservers = (value.variant().toStringList());

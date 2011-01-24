@@ -57,6 +57,7 @@ class NetworkItemModel : public QObject
   static const char* const PassphraseRequired;
   static const char* const Passphrase;
   static const char* const IPv4;
+  static const char* const IPv4Normal;
   static const char* const Nameservers;
   static const char* const DeviceAddress;
   static const char* const Mode;

@@ -10,7 +10,7 @@
 #ifndef NETWORKLISTMODEL_H
 #define NETWORKLISTMODEL_H
 
-#include "networkitemmodel.h"
+#include "networkitem.h"
 #include "manager.h"
 
 #include <QAbstractTableModel>

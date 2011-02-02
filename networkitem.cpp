@@ -7,7 +7,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  */
-#include "networkitemmodel.h"
+#include "networkitem.h"
 #include "debug.h"
 #include "commondbustypes.h"
 

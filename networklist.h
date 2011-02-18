@@ -16,6 +16,8 @@
 #include <QAbstractTableModel>
 #include <QtDBus>
 
+class QDBusServiceWatcher;
+
 class NetworkListModel : public QAbstractListModel
 {
   Q_OBJECT;
@@ -66,6 +68,7 @@ signals:
   void defaultTechnologyChanged(const QString &defaultTechnology);
   void stateChanged(const QString &state);
   void countChanged(int newCount);
+
 protected:
   void timerEvent(QTimerEvent *event); //hack
 
@@ -87,9 +90,11 @@ private:
   static const QString DefaultTechnology;
   static const QString State;
 
+  QDBusServiceWatcher *watcher;
+
 private slots:
-  void connectToConnman();
-  void disconnectFromConnman();
+  void connectToConnman(QString = "");
+  void disconnectFromConnman(QString = "");
   void getPropertiesReply(QDBusPendingCallWatcher *call);
   void connectServiceReply(QDBusPendingCallWatcher *call);
   void propertyChanged(const QString &name,

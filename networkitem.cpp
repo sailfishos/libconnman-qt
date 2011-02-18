@@ -11,6 +11,8 @@
 #include "debug.h"
 #include "commondbustypes.h"
 
+#include <QVariant>
+
 //FIXME: could reuse these static strings for getProperties and popertyChanged
 const char* const NetworkItemModel::Name = "Name";
 const char* const NetworkItemModel::Security = "Security";
@@ -371,7 +373,19 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   m_name = qdbus_cast<QString>(properties[Name]);
   m_type = qdbus_cast<QString>(properties[Type]);
   m_mode= qdbus_cast<QString>(properties[Mode]);
-  m_security = qdbus_cast<QString>(properties[Security]);
+
+  QStringList sec = qdbus_cast<QStringList>(properties[Security]);
+  qDebug()<<"security value type: "<<properties[Security].typeName();
+  foreach(QString s, sec)
+  {
+      qDebug()<<"Security property: "<<s;
+  }
+  if(sec.count() > 0)
+  {
+      m_security = sec.at(0);
+      qDebug()<<"Setting security to "<<m_security;
+  }
+
   m_passphraseRequired = qdbus_cast<bool>(properties[PassphraseRequired]);
   m_passphrase = qdbus_cast<QString>(properties[Passphrase]);
   m_strength = qdbus_cast<int>(properties[Strength]);
@@ -396,9 +410,18 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  m_type = (value.variant().toString());
     } else if (name == Mode) {
 	  m_mode = (value.variant().toString());
-    } else if (name == Security) {
-		m_security = (value.variant().toString());
-		securityChanged(m_security);
+	} else if (name == Security) {
+		QStringList sec = qdbus_cast<QStringList>(value.variant());
+		qDebug()<<"security value type: "<<value.variant().typeName();
+		foreach(QString s, sec)
+		{
+			qDebug()<<"Security property: "<<s;
+		}
+		if(sec.count() > 0)
+		{
+			m_security = sec.at(0);
+			qDebug()<<"Setting security to "<<m_security;
+		}
     } else if (name == PassphraseRequired) {
 	  m_passphraseRequired = (value.variant().toBool());
     } else if (name == Passphrase) {

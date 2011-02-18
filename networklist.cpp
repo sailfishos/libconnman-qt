@@ -21,7 +21,8 @@ NetworkListModel::NetworkListModel(QObject* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
     m_getPropertiesWatcher(NULL),
-    m_connectServiceWatcher(NULL)
+    m_connectServiceWatcher(NULL),
+    watcher(NULL)
 {
   m_headerData.append("NetworkItemModel");
   m_headerData.append("Type");
@@ -178,18 +179,27 @@ const QStringList NetworkListModel::connectedTechnologies() const
       (m_propertiesCache[NetworkListModel::connTechs]);
 }
 
-void NetworkListModel::connectToConnman()
+void NetworkListModel::connectToConnman(QString)
 {
+  if(!watcher) {
+    watcher = new QDBusServiceWatcher("net.connman",QDBusConnection::systemBus(),
+				      QDBusServiceWatcher::WatchForRegistration |
+				      QDBusServiceWatcher::WatchForUnregistration,this);
+
+    connect(watcher,SIGNAL(serviceRegistered(QString)),this,SLOT(connectToConnman(QString)));
+    connect(watcher,SIGNAL(serviceUnregistered(QString)),this,SLOT(disconnectFromConnman(QString)));
+  }
+
   disconnectFromConnman();
   m_manager = new Manager("net.connman", "/",
 			  QDBusConnection::systemBus(),
 			  this);
   if (!m_manager->isValid()) {
     //This shouldn't happen
-	qDebug("manager is invalid. connman may not be running or is invalid");
-	Q_ASSERT(0);
-	QTimer::singleShot(10000,this,SLOT(connectToConnman()));
+    qDebug("manager is invalid. connman may not be running or is invalid");
+    //QTimer::singleShot(10000,this,SLOT(connectToConnman()));
     delete m_manager;
+    m_manager = NULL;
   } else {
     QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
     m_getPropertiesWatcher = new QDBusPendingCallWatcher(reply, m_manager);
@@ -201,7 +211,7 @@ void NetworkListModel::connectToConnman()
   }
 }
 
-void NetworkListModel::disconnectFromConnman()
+void NetworkListModel::disconnectFromConnman(QString)
 {
   if (m_manager) {
     delete m_manager; //we think that m_getPropertiesWatcher will be

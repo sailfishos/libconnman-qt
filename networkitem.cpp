@@ -26,6 +26,10 @@ const char* const NetworkItemModel::IPv4Normal = "IPv4";
 const char* const NetworkItemModel::Nameservers = "Nameservers";
 const char* const NetworkItemModel::DeviceAddress = "DeviceAddress";
 const char* const NetworkItemModel::Mode = "Mode";
+const char* const NetworkItemModel::APN = "APN";
+const char* const NetworkItemModel::SetupRequired = "SetupRequired";
+///todo: not hooked up:
+const char* const NetworkItemModel::LoginRequired = "LoginRequired";
 
 int NetworkItemModel::instances = 0;
 int NetworkItemModel::idCounter = 0;
@@ -182,6 +186,11 @@ const QString NetworkItemModel::ipv4method() const
 	return ipv4().Method;
 }
 
+const bool NetworkItemModel::setupRequired() const
+{
+	return m_setupRequired;
+}
+
 void NetworkItemModel::setPassphrase(const QString &passphrase)
 {
   Q_ASSERT(m_service);
@@ -277,6 +286,11 @@ void NetworkItemModel::setIpv4Method(QString v)
 {
 	m_ipv4.Method = v;
 	setIpv4(m_ipv4);
+}
+
+void NetworkItemModel::setApn(QString v)
+{
+   m_service->SetProperty(APN, QDBusVariant(v));
 }
 
 NetworkItemModel::StateType NetworkItemModel::state(const QString &state)
@@ -393,6 +407,8 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   _setIpv4(qdbus_cast<QVariantMap>(properties[IPv4Normal]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
   m_deviceAddress = qdbus_cast<QVariantMap>(properties["Ethernet"])["Address"].toString();
+  m_apn = qdbus_cast<QString>(properties[APN]);
+  m_setupRequired = qdbus_cast<bool>(properties[SetupRequired]);
   emit propertyChanged();
 }
 
@@ -434,7 +450,11 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  m_nameservers = (value.variant().toStringList());
     } else if (name == "Ethernet") {
 	  m_deviceAddress = (qdbus_cast<QVariantMap>(value.variant())["Address"].toString());
-    } else {
+	} else if (name == SetupRequired) {
+	   m_setupRequired = value.variant().toBool();
+	} else if (name == APN) {
+		m_apn = value.variant().toString();
+	} else {
 	  qDebug("We don't do anything with property: %s", STR(name));
     }
 

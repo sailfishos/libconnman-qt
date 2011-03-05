@@ -191,6 +191,11 @@ const bool NetworkItemModel::setupRequired() const
 	return m_setupRequired;
 }
 
+const QString NetworkItemModel::apn() const
+{
+	return m_apn;
+}
+
 void NetworkItemModel::setPassphrase(const QString &passphrase)
 {
   Q_ASSERT(m_service);

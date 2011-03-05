@@ -457,6 +457,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  m_deviceAddress = (qdbus_cast<QVariantMap>(value.variant())["Address"].toString());
 	} else if (name == SetupRequired) {
 	   m_setupRequired = value.variant().toBool();
+	   setupRequiredChanged(m_setupRequired);
 	} else if (name == APN) {
 		m_apn = value.variant().toString();
 	} else {

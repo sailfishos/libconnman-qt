@@ -81,7 +81,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString netmask READ ipv4netmask WRITE setIpv4Netmask);
   Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
   Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
-  Q_PROPERTY(bool setupRequired READ setupRequired)
+  Q_PROPERTY(bool setupRequired READ setupRequired NOTIFY setupRequiredChanged)
   Q_PROPERTY(QString apn READ apn WRITE setApn)
   Q_ENUMS(StateType)
 
@@ -135,6 +135,7 @@ signals:
   void propertyChanged();
   void nameChanged(QString newname);
   void securityChanged(QString security);
+  void setupRequiredChanged(bool setupRequired);
   void stateChanged(StateType newstate);
 
  protected:

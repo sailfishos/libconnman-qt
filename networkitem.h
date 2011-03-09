@@ -62,7 +62,6 @@ class NetworkItemModel : public QObject
   static const char* const DeviceAddress;
   static const char* const Mode;
   static const char* const SetupRequired;
-  static const char* const APN;
   static const char* const LoginRequired;
 
   /* property definitions */
@@ -73,7 +72,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString type READ type);
   Q_PROPERTY(QString mode READ mode);
   Q_PROPERTY(bool passphraseRequired READ passphraseRequired);
-  Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase);
+  Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged);
   Q_PROPERTY(IPv4Type ipv4 READ ipv4 WRITE setIpv4);
   Q_PROPERTY(QStringList nameservers READ nameservers WRITE setNameservers);
   Q_PROPERTY(QString deviceAddress READ deviceAddress);
@@ -82,7 +81,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
   Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
   Q_PROPERTY(bool setupRequired READ setupRequired NOTIFY setupRequiredChanged)
-  Q_PROPERTY(QString apn READ apn WRITE setApn)
+  Q_PROPERTY(QString error READ error)
   Q_ENUMS(StateType)
 
   /* property getters */
@@ -102,8 +101,8 @@ class NetworkItemModel : public QObject
   const QString ipv4netmask() const;
   const QString ipv4gateway() const;
   const QString ipv4method() const;
-  const bool setupRequired() const;
-  const QString apn() const;
+  const bool& setupRequired() const;
+  const QString error() const;
 
   /* property setters */
   //These actually set the property on the underlying service object.
@@ -115,7 +114,6 @@ class NetworkItemModel : public QObject
   void setIpv4Netmask(QString);
   void setIpv4Gateway(QString);
   void setIpv4Method(QString);
-  void setApn(QString);
 
   /* debug */
   int id;
@@ -137,6 +135,7 @@ signals:
   void securityChanged(QString security);
   void setupRequiredChanged(bool setupRequired);
   void stateChanged(StateType newstate);
+  void passphraseChanged(QString newPassphrase);
 
  protected:
   void timerEvent(QTimerEvent *event); //hack
@@ -165,7 +164,7 @@ signals:
   QString m_deviceAddress;
   QString m_mode;
   bool m_setupRequired;
-  QString m_apn;
+  QString m_error;
 
 private slots:
   void getPropertiesReply(QDBusPendingCallWatcher *call);

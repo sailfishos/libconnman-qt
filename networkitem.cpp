@@ -26,7 +26,6 @@ const char* const NetworkItemModel::IPv4Normal = "IPv4";
 const char* const NetworkItemModel::Nameservers = "Nameservers";
 const char* const NetworkItemModel::DeviceAddress = "DeviceAddress";
 const char* const NetworkItemModel::Mode = "Mode";
-const char* const NetworkItemModel::APN = "APN";
 const char* const NetworkItemModel::SetupRequired = "SetupRequired";
 ///todo: not hooked up:
 const char* const NetworkItemModel::LoginRequired = "LoginRequired";
@@ -186,14 +185,14 @@ const QString NetworkItemModel::ipv4method() const
 	return ipv4().Method;
 }
 
-const bool NetworkItemModel::setupRequired() const
+const bool& NetworkItemModel::setupRequired() const
 {
 	return m_setupRequired;
 }
 
-const QString NetworkItemModel::apn() const
+const QString NetworkItemModel::error() const
 {
-	return m_apn;
+	return m_error;
 }
 
 void NetworkItemModel::setPassphrase(const QString &passphrase)
@@ -293,11 +292,6 @@ void NetworkItemModel::setIpv4Method(QString v)
 	setIpv4(m_ipv4);
 }
 
-void NetworkItemModel::setApn(QString v)
-{
-   m_service->SetProperty(APN, QDBusVariant(v));
-}
-
 NetworkItemModel::StateType NetworkItemModel::state(const QString &state)
 {
   NetworkItemModel::StateType _state;
@@ -376,10 +370,10 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 	qDebug("getPropertiesReply is error!");
     QDBusError error = reply.error();
 	qDebug("service: %s", STR(servicePath()));
-	qDebug(QString("type: %1 name: %2 message: %3").
+	qDebug()<<QString("type: %1 name: %2 message: %3").
 		 arg(QDBusError::errorString(error.type()))
 		 .arg(error.name())
-		 .arg(error.message()).toAscii());
+		 .arg(error.message());
 	return;
   }
   qDebug()<<"getPropertiesReply";
@@ -407,12 +401,12 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 
   m_passphraseRequired = qdbus_cast<bool>(properties[PassphraseRequired]);
   m_passphrase = qdbus_cast<QString>(properties[Passphrase]);
+  passphraseChanged(m_passphrase);
   m_strength = qdbus_cast<int>(properties[Strength]);
   m_state = state(qdbus_cast<QString>(properties[State]));
   _setIpv4(qdbus_cast<QVariantMap>(properties[IPv4Normal]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
   m_deviceAddress = qdbus_cast<QVariantMap>(properties["Ethernet"])["Address"].toString();
-  m_apn = qdbus_cast<QString>(properties[APN]);
   m_setupRequired = qdbus_cast<bool>(properties[SetupRequired]);
   emit propertyChanged();
 }
@@ -447,6 +441,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  m_passphraseRequired = (value.variant().toBool());
     } else if (name == Passphrase) {
 	  m_passphrase = (value.variant().toString());
+	  passphraseChanged(m_passphrase);
     } else if (name == Strength) {
 	  m_strength = (value.variant().toInt());
 	} else if (name == IPv4 || name == IPv4Normal) {
@@ -458,8 +453,8 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	} else if (name == SetupRequired) {
 	   m_setupRequired = value.variant().toBool();
 	   setupRequiredChanged(m_setupRequired);
-	} else if (name == APN) {
-		m_apn = value.variant().toString();
+	} else if (name == "Error") {
+		m_error = value.variant().toString();
 	} else {
 	  qDebug("We don't do anything with property: %s", STR(name));
     }

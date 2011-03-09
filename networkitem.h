@@ -62,6 +62,7 @@ class NetworkItemModel : public QObject
   static const char* const DeviceAddress;
   static const char* const Mode;
   static const char* const SetupRequired;
+  static const char* const APN;
   static const char* const LoginRequired;
 
   /* property definitions */
@@ -81,6 +82,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
   Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
   Q_PROPERTY(bool setupRequired READ setupRequired NOTIFY setupRequiredChanged)
+  Q_PROPERTY(QString apn READ apn WRITE setApn)
   Q_PROPERTY(QString error READ error)
   Q_ENUMS(StateType)
 
@@ -103,6 +105,7 @@ class NetworkItemModel : public QObject
   const QString ipv4method() const;
   const bool& setupRequired() const;
   const QString error() const;
+  const QString apn() const;
 
   /* property setters */
   //These actually set the property on the underlying service object.
@@ -114,6 +117,7 @@ class NetworkItemModel : public QObject
   void setIpv4Netmask(QString);
   void setIpv4Gateway(QString);
   void setIpv4Method(QString);
+  void setApn(QString);
 
   /* debug */
   int id;
@@ -164,6 +168,7 @@ signals:
   QString m_deviceAddress;
   QString m_mode;
   bool m_setupRequired;
+  QString m_apn;
   QString m_error;
 
 private slots:

@@ -26,6 +26,7 @@ const char* const NetworkItemModel::IPv4Normal = "IPv4";
 const char* const NetworkItemModel::Nameservers = "Nameservers";
 const char* const NetworkItemModel::DeviceAddress = "DeviceAddress";
 const char* const NetworkItemModel::Mode = "Mode";
+const char* const NetworkItemModel::APN = "APN";
 const char* const NetworkItemModel::SetupRequired = "SetupRequired";
 ///todo: not hooked up:
 const char* const NetworkItemModel::LoginRequired = "LoginRequired";
@@ -190,6 +191,11 @@ const bool& NetworkItemModel::setupRequired() const
 	return m_setupRequired;
 }
 
+const QString NetworkItemModel::apn() const
+{
+	return m_apn;
+}
+
 const QString NetworkItemModel::error() const
 {
 	return m_error;
@@ -202,7 +208,7 @@ void NetworkItemModel::setPassphrase(const QString &passphrase)
     m_service->SetProperty("Passphrase", QDBusVariant(QVariant(passphrase)));
   reply.waitForFinished(); //FIXME: BAD
   if (reply.isError()) {
-	qDebug("got error from setProperty");
+    qDebug("got error from setProperty");
     throw -1; //FIXME: don't throw
   }
 
@@ -235,6 +241,12 @@ void NetworkItemModel::setIpv4(const IPv4Type &ipv4)
 	  SLOT(setPropertyFinished(QDBusPendingCallWatcher*)));
 }
 
+void NetworkItemModel::setApn(QString value)
+{
+	Q_ASSERT(m_service);
+
+	m_service->SetProperty(APN, QDBusVariant(QVariant(value)));
+}
 
 const QString& NetworkItemModel::servicePath() const
 {
@@ -407,6 +419,8 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   _setIpv4(qdbus_cast<QVariantMap>(properties[IPv4Normal]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
   m_deviceAddress = qdbus_cast<QVariantMap>(properties["Ethernet"])["Address"].toString();
+  m_apn = qdbus_cast<QString>(properties[APN]);
+  m_error = qdbus_cast<QString>(properties["Error"]);
   m_setupRequired = qdbus_cast<bool>(properties[SetupRequired]);
   emit propertyChanged();
 }
@@ -453,6 +467,8 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	} else if (name == SetupRequired) {
 	   m_setupRequired = value.variant().toBool();
 	   setupRequiredChanged(m_setupRequired);
+	} else if (name == APN) {
+		m_apn = value.variant().toString();
 	} else if (name == "Error") {
 		m_error = value.variant().toString();
 	} else {

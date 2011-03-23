@@ -121,6 +121,16 @@ void NetworkItemModel::removeService()
 #endif
 }
 
+void NetworkItemModel::moveBefore(NetworkItemModel *other)
+{
+    m_service->MoveBefore(QDBusObjectPath(other->servicePath()));
+}
+
+void NetworkItemModel::moveAfter(NetworkItemModel *other)
+{
+    m_service->MoveAfter(QDBusObjectPath(other->servicePath()));
+}
+
 const QString& NetworkItemModel::name() const
 {
   return m_name;

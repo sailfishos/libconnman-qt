@@ -132,6 +132,8 @@ class NetworkItemModel : public QObject
   void connectService();
   void disconnectService();
   void removeService();
+  void moveBefore(NetworkItemModel* other);
+  void moveAfter(NetworkItemModel* other);
 
 signals:
   void propertyChanged();

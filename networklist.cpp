@@ -22,7 +22,8 @@ NetworkListModel::NetworkListModel(QObject* parent)
     m_manager(NULL),
     m_getPropertiesWatcher(NULL),
     m_connectServiceWatcher(NULL),
-    watcher(NULL)
+    watcher(NULL),
+    m_defaultRoute(NULL)
 {
   m_headerData.append("NetworkItemModel");
   m_headerData.append("Type");
@@ -42,6 +43,7 @@ NetworkListModel::NetworkListModel(QObject* parent)
 
   setRoleNames(roles);
 
+  connect(this,SIGNAL(countChanged(int)),this,SLOT(countChangedSlot(int)));
 }
 
 NetworkListModel::~NetworkListModel()
@@ -179,6 +181,16 @@ const QStringList NetworkListModel::connectedTechnologies() const
       (m_propertiesCache[NetworkListModel::connTechs]);
 }
 
+void NetworkListModel::setDefaultRoute(NetworkItemModel *item)
+{
+    if(m_networks.count() > 0 && (item->state() == NetworkItemModel::StateReady || item->state() == NetworkItemModel::StateOnline))
+    {
+        NetworkItemModel * topservice = m_networks.at(0);
+
+        item->moveBefore(topservice);
+    }
+}
+
 void NetworkListModel::connectToConnman(QString)
 {
   if(!watcher) {
@@ -314,6 +326,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 				connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
 				m_networks.insert(i, pNIM);
 				endInsertRows();
+				countChanged(m_networks.count());
 			}
 			else
 			{
@@ -325,9 +338,12 @@ void NetworkListModel::propertyChanged(const QString &name,
 					m_networks.remove(j);
 					m_networks.insert(i, pNIM);
 					endMoveRows();
+
+					///We may not need this here:
+					countChanged(m_networks.count());
 				}
 			}
-			countChanged(m_networks.count());
+
 		}
 		int num_old = m_networks.count();
 		if (num_old > num_new)
@@ -345,6 +361,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 			m_networks.remove(num_new, num_old - num_new);
 
 			endRemoveRows();
+			countChanged(m_networks.count());
 		}
 	}
 	else if (name == OfflineMode)
@@ -384,6 +401,18 @@ void NetworkListModel::propertyChanged(const QString &name,
 	 }
 	 qDebug()<<"Properties changed for "<< m_networks[row]->name();
 	 emit dataChanged(createIndex(row, 0), createIndex(row, 0));
+ }
+
+ void NetworkListModel::countChangedSlot(int newCount)
+ {
+     if(newCount > 0)
+     {
+         if(m_networks.at(0) != m_defaultRoute)
+         {
+             m_defaultRoute = m_networks.at(0);
+             defaultRouteChanged(m_defaultRoute);
+         }
+     }
  }
 
 int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const

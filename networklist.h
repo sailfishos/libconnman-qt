@@ -29,6 +29,7 @@ class NetworkListModel : public QAbstractListModel
   Q_PROPERTY(QStringList availableTechnologies READ availableTechnologies NOTIFY availableTechnologiesChanged);
   Q_PROPERTY(QStringList enabledTechnologies READ enabledTechnologies NOTIFY enabledTechnologiesChanged);
   Q_PROPERTY(QStringList connectedTechnologies READ connectedTechnologies NOTIFY connectedTechnologiesChanged);
+  Q_PROPERTY(NetworkItemModel* defaultRoute READ defaultRoute WRITE setDefaultRoute NOTIFY defaultRouteChanged);
 
 public:  
   NetworkListModel(QObject* parent=0);
@@ -41,6 +42,9 @@ public:
   const QStringList availableTechnologies() const;
   const QStringList enabledTechnologies() const;
   const QStringList connectedTechnologies() const;
+
+  NetworkItemModel* defaultRoute() { return m_defaultRoute; }
+  void setDefaultRoute(NetworkItemModel* item);
 
 public slots:
   void connectService(const QString &name, const QString &security,
@@ -68,6 +72,7 @@ signals:
   void defaultTechnologyChanged(const QString &defaultTechnology);
   void stateChanged(const QString &state);
   void countChanged(int newCount);
+  void defaultRouteChanged(NetworkItemModel* item);
 
 protected:
   void timerEvent(QTimerEvent *event); //hack
@@ -89,7 +94,7 @@ private:
   static const QString OfflineMode;
   static const QString DefaultTechnology;
   static const QString State;
-
+  NetworkItemModel* m_defaultRoute;
   QDBusServiceWatcher *watcher;
 
 private slots:
@@ -101,6 +106,7 @@ private slots:
 		       const QDBusVariant &value);
   void networkItemModified(const QList<const char *> &members);
   void itemPropertyChanged();
+  void countChangedSlot(int newCount);
 private:
   Q_DISABLE_COPY(NetworkListModel);
 };

@@ -397,6 +397,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 
   m_name = qdbus_cast<QString>(properties[Name]);
   m_type = qdbus_cast<QString>(properties[Type]);
+  typeChanged(m_type);
   m_mode= qdbus_cast<QString>(properties[Mode]);
 
   QStringList sec = qdbus_cast<QStringList>(properties[Security]);
@@ -437,15 +438,12 @@ void NetworkItemModel::propertyChanged(const QString &name,
 		nameChanged(m_name);
     } else if (name == Type) {
 	  m_type = (value.variant().toString());
+	  typeChanged(m_type);
     } else if (name == Mode) {
 	  m_mode = (value.variant().toString());
 	} else if (name == Security) {
 		QStringList sec = qdbus_cast<QStringList>(value.variant());
 		qDebug()<<"security value type: "<<value.variant().typeName();
-		foreach(QString s, sec)
-		{
-			qDebug()<<"Security property: "<<s;
-		}
 		if(sec.count() > 0)
 		{
 			m_security = sec.at(0);

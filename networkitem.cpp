@@ -406,6 +406,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   //strings and 0 for ints/bools
 
   m_name = qdbus_cast<QString>(properties[Name]);
+  nameChanged(m_name);
   m_type = qdbus_cast<QString>(properties[Type]);
   typeChanged(m_type);
   m_mode= qdbus_cast<QString>(properties[Mode]);

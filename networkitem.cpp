@@ -427,6 +427,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   m_passphrase = qdbus_cast<QString>(properties[Passphrase]);
   passphraseChanged(m_passphrase);
   m_strength = qdbus_cast<int>(properties[Strength]);
+  strengthChanged(m_strength);
   m_state = state(qdbus_cast<QString>(properties[State]));
   _setIpv4(qdbus_cast<QVariantMap>(properties[IPv4Normal]));
   m_nameservers = qdbus_cast<QStringList>(properties[Nameservers]);
@@ -467,6 +468,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  passphraseChanged(m_passphrase);
     } else if (name == Strength) {
 	  m_strength = (value.variant().toInt());
+	  strengthChanged(m_strength);
 	} else if (name == IPv4 || name == IPv4Normal) {
 	  _setIpv4(qdbus_cast<QVariantMap>(value.variant()));
     } else if (name == Nameservers) {

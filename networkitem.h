@@ -69,7 +69,7 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString name READ name NOTIFY nameChanged);
   Q_PROPERTY(QString security READ security NOTIFY securityChanged);
   Q_PROPERTY(StateType state READ state NOTIFY stateChanged);
-  Q_PROPERTY(int strength READ strength);
+  Q_PROPERTY(int strength READ strength NOTIFY strengthChanged);
   Q_PROPERTY(QString type READ type NOTIFY typeChanged);
   Q_PROPERTY(QString mode READ mode);
   Q_PROPERTY(bool passphraseRequired READ passphraseRequired);
@@ -143,6 +143,7 @@ signals:
   void stateChanged(StateType newstate);
   void passphraseChanged(QString newPassphrase);
   void typeChanged(QString newType);
+  void strengthChanged(int newStrength);
 
  protected:
   void timerEvent(QTimerEvent *event); //hack

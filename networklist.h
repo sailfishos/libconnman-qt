@@ -44,11 +44,17 @@ public:
   const QStringList connectedTechnologies() const;
 
   NetworkItemModel* defaultRoute() { return m_defaultRoute; }
+
   void setDefaultRoute(NetworkItemModel* item);
 
+
+
 public slots:
+  NetworkItemModel* service(QString name);
+
   void connectService(const QString &name, const QString &security,
 			  const QString &passphrase);
+  void connectService(const QString &name);
   void setProperty(const int &index, QString property, const QVariant &value);
   void requestScan();
   bool offlineMode() const;

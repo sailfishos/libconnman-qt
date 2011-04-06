@@ -134,6 +134,19 @@ void NetworkListModel::disableTechnology(const QString &technology)
   m_manager->DisableTechnology(technology);
 }
 
+NetworkItemModel* NetworkListModel::service(QString name)
+{
+	foreach(NetworkItemModel* item, m_networks)
+	{
+		if(item->name() == name)
+		{
+			return item;
+		}
+	}
+
+	return NULL;
+}
+
 void NetworkListModel::connectService(const QString &name, const QString &security,
 				      const QString &passphrase)
 {
@@ -161,6 +174,19 @@ void NetworkListModel::connectService(const QString &name, const QString &securi
   connect(m_connectServiceWatcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
 	  this,
 	  SLOT(connectServiceReply(QDBusPendingCallWatcher*)));
+}
+
+void NetworkListModel::connectService(const QString &name)
+{
+	foreach(NetworkItemModel* item, m_networks)
+	{
+		if(item->name() == name)
+		{
+			item->connectService();
+			return;
+		}
+	}
+	qDebug()<<"NetworkListModel::connectService(): service with name: "<<name<<" not found";
 }
 
 const QStringList NetworkListModel::availableTechnologies() const

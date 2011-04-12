@@ -420,7 +420,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   if(sec.count() > 0)
   {
       m_security = sec.at(0);
-      qDebug()<<"Setting security to "<<m_security;
+      securityChanged(m_security);
   }
 
   m_passphraseRequired = qdbus_cast<bool>(properties[PassphraseRequired]);
@@ -459,7 +459,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 		if(sec.count() > 0)
 		{
 			m_security = sec.at(0);
-			qDebug()<<"Setting security to "<<m_security;
+			securityChanged(m_security);
 		}
     } else if (name == PassphraseRequired) {
 	  m_passphraseRequired = (value.variant().toBool());

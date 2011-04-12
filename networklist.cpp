@@ -382,7 +382,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 			{
 				//DCP_CRITICAL(QString("removing network %1").arg(m_networks[i]->servicePath()).toAscii());
 				//	m_networks[i]->decreaseReferenceCount();
-				delete m_networks[i];
+				m_networks[i]->deleteLater();
 			}
 			m_networks.remove(num_new, num_old - num_new);
 
@@ -443,8 +443,8 @@ void NetworkListModel::propertyChanged(const QString &name,
      }
      else
      {
-         m_defaultRoute = NULL;
-         defaultRouteChanged(m_defaultRoute);
+         //m_defaultRoute = NULL;
+         //defaultRouteChanged(m_defaultRoute);
      }
  }
 

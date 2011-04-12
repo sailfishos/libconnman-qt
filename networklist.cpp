@@ -287,6 +287,8 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 			qDebug()<< QString("service path:\t%1").arg(p.path());
 			NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
 			connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
+			connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
+					this,SLOT(itemStateChanged(NetworkItemModel::StateType)));
 			m_networks.append(pNIM);
 		}
 		endInsertRows();
@@ -350,6 +352,8 @@ void NetworkListModel::propertyChanged(const QString &name,
 				beginInsertRows(QModelIndex(), i, i);
 				NetworkItemModel *pNIM = new NetworkItemModel(path.path());
 				connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
+				connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
+						this,SLOT(itemStateChanged(NetworkItemModel::StateType)));
 				m_networks.insert(i, pNIM);
 				endInsertRows();
 				countChanged(m_networks.count());
@@ -446,6 +450,11 @@ void NetworkListModel::propertyChanged(const QString &name,
          //m_defaultRoute = NULL;
          //defaultRouteChanged(m_defaultRoute);
      }
+ }
+
+ void NetworkListModel::itemStateChanged(NetworkItemModel::StateType)
+ {
+     connectedNetworkItemsChanged();
  }
 
 int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const

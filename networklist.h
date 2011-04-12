@@ -79,6 +79,7 @@ signals:
   void stateChanged(const QString &state);
   void countChanged(int newCount);
   void defaultRouteChanged(NetworkItemModel* item);
+  void connectedNetworkItemsChanged();
 
 protected:
   void timerEvent(QTimerEvent *event); //hack
@@ -113,6 +114,7 @@ private slots:
   void networkItemModified(const QList<const char *> &members);
   void itemPropertyChanged();
   void countChangedSlot(int newCount);
+  void itemStateChanged(NetworkItemModel::StateType);
 private:
   Q_DISABLE_COPY(NetworkListModel);
 };

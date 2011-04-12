@@ -140,7 +140,7 @@ signals:
   void nameChanged(QString newname);
   void securityChanged(QString security);
   void setupRequiredChanged(bool setupRequired);
-  void stateChanged(StateType newstate);
+  void stateChanged(NetworkItemModel::StateType newstate);
   void passphraseChanged(QString newPassphrase);
   void typeChanged(QString newType);
   void strengthChanged(int newStrength);

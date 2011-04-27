@@ -43,7 +43,7 @@ public:
   const QStringList enabledTechnologies() const;
   const QStringList connectedTechnologies() const;
 
-  NetworkItemModel* defaultRoute() { return m_defaultRoute; }
+  NetworkItemModel* defaultRoute() const { return m_defaultRoute; }
 
   void setDefaultRoute(NetworkItemModel* item);
 

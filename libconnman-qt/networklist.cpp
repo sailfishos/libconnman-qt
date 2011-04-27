@@ -40,6 +40,7 @@ NetworkListModel::NetworkListModel(QObject* parent)
   }
 
   roles[++i] = "networkitemmodel";
+  roles[++i] = "defaultRoute";
 
   setRoleNames(roles);
 
@@ -86,6 +87,10 @@ QVariant NetworkListModel::data(const QModelIndex &index, int role) const
 	if(roleName == "networkitemmodel")
 	{
 		return QVariant::fromValue<QObject*>((QObject*)m_networks[index.row()]);
+	}
+	else if(roleName == "defaultRoute")
+	{
+		return defaultRoute() == m_networks[index.row()];
 	}
 
 	for(int i=0; i<object.propertyCount(); i++)
@@ -289,6 +294,7 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 			connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
 			connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
 					this,SLOT(itemStateChanged(NetworkItemModel::StateType)));
+			itemStateChanged(pNIM->state());
 			m_networks.append(pNIM);
 		}
 		endInsertRows();
@@ -431,6 +437,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 	 }
 	 qDebug()<<"Properties changed for "<< m_networks[row]->name();
 	 emit dataChanged(createIndex(row, 0), createIndex(row, 0));
+	 emit itemPropertyChanged();
  }
 
  void NetworkListModel::countChangedSlot(int newCount)

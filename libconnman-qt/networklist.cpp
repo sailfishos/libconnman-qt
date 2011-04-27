@@ -453,8 +453,8 @@ void NetworkListModel::propertyChanged(const QString &name,
      }
      else
      {
-         //m_defaultRoute = NULL;
-         //defaultRouteChanged(m_defaultRoute);
+         m_defaultRoute = NULL;
+         defaultRouteChanged(m_defaultRoute);
      }
  }
 

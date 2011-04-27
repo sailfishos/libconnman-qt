@@ -437,7 +437,6 @@ void NetworkListModel::propertyChanged(const QString &name,
 	 }
 	 qDebug()<<"Properties changed for "<< m_networks[row]->name();
 	 emit dataChanged(createIndex(row, 0), createIndex(row, 0));
-	 emit itemPropertyChanged();
  }
 
  void NetworkListModel::countChangedSlot(int newCount)

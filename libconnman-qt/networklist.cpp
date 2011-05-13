@@ -445,7 +445,8 @@ void NetworkListModel::propertyChanged(const QString &name,
      {
          NetworkItemModel* tempItem = m_networks.at(0);
          if(tempItem != m_defaultRoute &&
-                 (tempItem->state() == NetworkItemModel::StateReady || NetworkItemModel::StateOnline))
+                 (tempItem->state() == NetworkItemModel::StateReady ||
+                  tempItem->state() == NetworkItemModel::StateOnline))
          {
              m_defaultRoute = m_networks.at(0);
              defaultRouteChanged(m_defaultRoute);

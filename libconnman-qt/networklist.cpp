@@ -506,6 +506,7 @@ void NetworkListModel::timerEvent(QTimerEvent *event)
 
 void NetworkListModel::requestScan()
 {
+  if (!m_manager) return;
   const QString wifi("wifi");
   m_manager->RequestScan(wifi);
   //FIXME: error returns, etc

@@ -431,7 +431,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 	 int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
 	 if(row == -1)
 	 {
-		 Q_ASSERT(0);
+		 //Q_ASSERT(0);
 		 qDebug()<<"caught property changed signal for network item not in our list";
 		 return;
 	 }

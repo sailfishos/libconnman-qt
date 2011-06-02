@@ -9,9 +9,54 @@ Item {
 	NetworkListModel {
 		id: networkListModel
 	}
+    TimezoneModel {
+        id: timezoneModel
+    }
 
 	Column {
 
+        Text { text: "Timezone: " + timezoneModel.timezone }
+        Row {
+            TextInput {
+                id: timezoneEntry
+                width: 200
+                height: 40
+                text: timezoneModel.timezone
+            }
+            Rectangle {
+                id: setButton
+                width: 40
+                height: 40
+                color: "grey"
+                Text { anchors.centerIn: parent; text: "Set" }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        timezoneModel.timezone = timezoneEntry.text
+                    }
+                }
+            }
+        }
+        Rectangle {
+            id: updatesButton
+            property string mode: timezoneModel.timezoneUpdates
+            width: 180
+            height: 50
+            color: mode == "auto" ? "blue" : "red"
+            Text {
+                anchors.centerIn: parent
+                text: "TimezoneUpdates: " + updatesButton.mode
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    if (updatesButton.mode == "auto")
+                        timezoneModel.timezoneUpdates = "manual";
+                    else
+                        timezoneModel.timezoneUpdates = "auto";
+                }
+            }
+        }
 		Rectangle {
 			id: button
 			property bool airplane: networkListModel.offlineMode

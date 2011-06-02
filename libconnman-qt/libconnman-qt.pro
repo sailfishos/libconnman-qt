@@ -23,7 +23,7 @@ HEADERS += manager.h \
     timezonemodel.h \
 
 headers.files = manager.h service.h networkitem.h \
-		 networklist.h commondbustypes.h timezonemodel.h
+		 networklist.h commondbustypes.h clockproxy.h timezonemodel.h
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 CONFIG += create_pc create_prl

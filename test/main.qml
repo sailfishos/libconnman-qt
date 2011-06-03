@@ -9,19 +9,19 @@ Item {
 	NetworkListModel {
 		id: networkListModel
 	}
-    TimezoneModel {
-        id: timezoneModel
+    ClockModel {
+        id: clockModel
     }
 
 	Column {
 
-        Text { text: "Timezone: " + timezoneModel.timezone }
+        Text { text: "Timezone: " + clockModel.timezone }
         Row {
             TextInput {
                 id: timezoneEntry
                 width: 200
                 height: 40
-                text: timezoneModel.timezone
+                text: clockModel.timezone
             }
             Rectangle {
                 id: setButton
@@ -32,14 +32,14 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        timezoneModel.timezone = timezoneEntry.text
+                        clockModel.timezone = timezoneEntry.text
                     }
                 }
             }
         }
         Rectangle {
             id: updatesButton
-            property string mode: timezoneModel.timezoneUpdates
+            property string mode: clockModel.timezoneUpdates
             width: 180
             height: 50
             color: mode == "auto" ? "blue" : "red"
@@ -51,9 +51,9 @@ Item {
                 anchors.fill: parent
                 onClicked: {
                     if (updatesButton.mode == "auto")
-                        timezoneModel.timezoneUpdates = "manual";
+                        clockModel.timezoneUpdates = "manual";
                     else
-                        timezoneModel.timezoneUpdates = "auto";
+                        clockModel.timezoneUpdates = "auto";
                 }
             }
         }

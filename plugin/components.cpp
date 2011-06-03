@@ -10,14 +10,14 @@
 
 #include <networklist.h>
 #include <networkitem.h>
-#include <timezonemodel.h>
+#include <clockmodel.h>
 
 
 void Components::registerTypes(const char *uri)
 {
 	qmlRegisterType<NetworkListModel>(uri,0,1,"NetworkListModel");
 	qmlRegisterType<NetworkItemModel>(uri,0,1,"NetworkItemModel");
-	qmlRegisterType<TimezoneModel>(uri,0,1,"TimezoneModel");
+	qmlRegisterType<ClockModel>(uri,0,1,"ClockModel");
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)

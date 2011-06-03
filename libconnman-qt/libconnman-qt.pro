@@ -20,10 +20,10 @@ HEADERS += manager.h \
     networklist.h \
 	commondbustypes.h \
     clockproxy.h \
-    timezonemodel.h \
+    clockmodel.h \
 
 headers.files = manager.h service.h networkitem.h \
-		 networklist.h commondbustypes.h clockproxy.h timezonemodel.h
+		 networklist.h commondbustypes.h clockproxy.h clockmodel.h
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 CONFIG += create_pc create_prl
@@ -37,6 +37,6 @@ SOURCES += networkitem.cpp \
 		   manager.cpp \
 		   service.cpp \
            clockproxy.cpp \
-           timezonemodel.cpp \
+           clockmodel.cpp \
 
 INSTALLS += target headers pkgconfig

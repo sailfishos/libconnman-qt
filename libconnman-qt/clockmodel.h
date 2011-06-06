@@ -33,9 +33,21 @@ public slots:
     QStringList timeservers() const;
     void setTimeservers(const QStringList &val);
 
-    // for getting time and date please use QDateTime, etc
     void setDate(QDate date);
     void setTime(QTime time);
+
+    // localized time/date strings
+    QString currentDate()
+    {
+        QLocale locale;
+        return QDateTime::currentDateTime().date().currentDate().toString(locale.dateFormat(QLocale::LongFormat));
+    }
+
+    QString currentTime()
+    {
+        QLocale locale;
+        return QDateTime::currentDateTime().time().currentTime().toString(locale.timeFormat(QLocale::ShortFormat));
+    }
 
     // helper function for Timepicker
     QTime time(QString h, QString m) { return QTime(h.toInt(), m.toInt()); }

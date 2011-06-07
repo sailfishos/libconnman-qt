@@ -136,7 +136,7 @@ class NetworkItemModel : public QObject
   void moveAfter(NetworkItemModel* other);
 
 signals:
-  void propertyChanged();
+  void propertyChanged(QString name, QVariant value);
   void nameChanged(QString newname);
   void securityChanged(QString security);
   void setupRequiredChanged(bool setupRequired);

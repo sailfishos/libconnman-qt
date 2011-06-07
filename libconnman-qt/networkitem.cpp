@@ -431,7 +431,7 @@ void NetworkItemModel::getPropertiesReply(QDBusPendingCallWatcher *call)
   m_apn = qdbus_cast<QString>(properties[APN]);
   m_error = qdbus_cast<QString>(properties["Error"]);
   m_setupRequired = qdbus_cast<bool>(properties[SetupRequired]);
-  emit propertyChanged();
+  emit propertyChanged("","");
 }
 
 void NetworkItemModel::propertyChanged(const QString &name,
@@ -482,7 +482,7 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	  qDebug("We don't do anything with property: %s", STR(name));
     }
 
-	emit propertyChanged();
+	emit propertyChanged(name,value.variant());
 }
 
 

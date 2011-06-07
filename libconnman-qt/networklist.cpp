@@ -291,7 +291,7 @@ void NetworkListModel::getPropertiesReply(QDBusPendingCallWatcher *call)
 		{
 			qDebug()<< QString("service path:\t%1").arg(p.path());
 			NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
-			connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
+			connect(pNIM,SIGNAL(propertyChanged(QString, QVariant)),this,SLOT(itemPropertyChanged(QString, QVariant)));
 			connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
 					this,SLOT(itemStateChanged(NetworkItemModel::StateType)));
 			itemStateChanged(pNIM->state());
@@ -357,7 +357,7 @@ void NetworkListModel::propertyChanged(const QString &name,
 				//beginInsertRows(QModelIndex(), i, i+1);
 				beginInsertRows(QModelIndex(), i, i);
 				NetworkItemModel *pNIM = new NetworkItemModel(path.path());
-				connect(pNIM,SIGNAL(propertyChanged()),this,SLOT(itemPropertyChanged()));
+				connect(pNIM,SIGNAL(propertyChanged(QString, QVariant)),this,SLOT(itemPropertyChanged(QString, QVariant)));
 				connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
 						this,SLOT(itemStateChanged(NetworkItemModel::StateType)));
 				m_networks.insert(i, pNIM);
@@ -426,7 +426,7 @@ void NetworkListModel::propertyChanged(const QString &name,
    }
  }
 
- void NetworkListModel::itemPropertyChanged()
+ void NetworkListModel::itemPropertyChanged(QString name, QVariant value)
  {
 	 int row = m_networks.indexOf(qobject_cast<NetworkItemModel*>(sender()));
 	 if(row == -1)
@@ -459,9 +459,24 @@ void NetworkListModel::propertyChanged(const QString &name,
      }
  }
 
- void NetworkListModel::itemStateChanged(NetworkItemModel::StateType)
+ void NetworkListModel::itemStateChanged(NetworkItemModel::StateType itemState)
  {
      connectedNetworkItemsChanged();
+
+     NetworkItemModel* item = qobject_cast<NetworkItemModel*>(sender());
+     if(item == m_networks.at(0) )
+     {
+	 if(itemState == NetworkItemModel::StateReady ||
+		 itemState == NetworkItemModel::StateOnline)
+	 {
+	     m_defaultRoute = m_networks.at(0);
+	 }
+	 else
+	 {
+	     m_defaultRoute = NULL;
+	 }
+	 defaultRouteChanged(m_defaultRoute);
+     }
  }
 
 int NetworkListModel::findNetworkItemModel(const QDBusObjectPath &path) const

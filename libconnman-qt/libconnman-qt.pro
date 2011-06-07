@@ -18,12 +18,13 @@ HEADERS += manager.h \
     service.h \
     networkitem.h \
     networklist.h \
+    networkmanager.h \
 	commondbustypes.h \
     clockproxy.h \
     clockmodel.h
 
 headers.files = manager.h service.h networkitem.h \
-		 networklist.h commondbustypes.h clockproxy.h clockmodel.h
+         networklist.h commondbustypes.h clockproxy.h clockmodel.h networkmanager.h
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 CONFIG += create_pc create_prl
@@ -34,6 +35,7 @@ pkgconfig.files = connman-qt4.pc
 
 SOURCES += networkitem.cpp \
 		   networklist.cpp \
+		   networkmanager.cpp \
 		   manager.cpp \
 		   service.cpp \
            clockproxy.cpp \

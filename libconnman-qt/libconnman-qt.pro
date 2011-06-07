@@ -21,6 +21,7 @@ HEADERS += manager.h \
 	commondbustypes.h \
     clockproxy.h \
     clockmodel.h \
+    networkmanager.h
 
 headers.files = manager.h service.h networkitem.h \
 		 networklist.h commondbustypes.h clockproxy.h clockmodel.h
@@ -38,5 +39,6 @@ SOURCES += networkitem.cpp \
 		   service.cpp \
            clockproxy.cpp \
            clockmodel.cpp \
+    networkmanager.cpp
 
 INSTALLS += target headers pkgconfig

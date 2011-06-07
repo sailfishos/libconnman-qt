@@ -68,8 +68,8 @@ public slots:
 
 signals:
   void technologiesChanged(const QStringList &availableTechnologies,
-			   const QStringList &enabledTechnologies,
-			   const QStringList &connectedTechnologies);
+						   const QStringList &enabledTechnologies,
+						   const QStringList &connectedTechnologies);
   void availableTechnologiesChanged(const QStringList);
   void enabledTechnologiesChanged(const QStringList);
   void connectedTechnologiesChanged(const QStringList);

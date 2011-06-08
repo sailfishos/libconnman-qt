@@ -79,15 +79,39 @@ Item {
 
 		Row {
 			height: 50
+			spacing: 10
+			Text { text: "available technologies" }
 			Repeater {
-				model: networkListModel.availableConnections
+				model: networkListModel.availableTechnologies
 				delegate: Text {
 					text: modelData
 					height: 50
+				}
+			}
+		}
 
-					Component.onCompleted: {
-						console.log("available connection: " + modelData)
-					}
+		Row {
+			height: 50
+			spacing: 10
+			Text { text: "enabled technologies" }
+			Repeater {
+				model: networkListModel.enabledTechnologies
+				delegate: Text {
+					text: modelData
+					height: 50
+				}
+			}
+		}
+
+		Row {
+			height: 50
+			spacing: 10
+			Text { text: "connected technologies" }
+			Repeater {
+				model: networkListModel.connectedTechnologies
+				delegate: Text {
+					text: modelData
+					height: 50
 				}
 			}
 		}

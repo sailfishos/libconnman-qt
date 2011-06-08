@@ -77,6 +77,21 @@ Item {
 			}
 		}
 
+		Row {
+			height: 50
+			Repeater {
+				model: networkListModel.availableConnections
+				delegate: Text {
+					text: modelData
+					height: 50
+
+					Component.onCompleted: {
+						console.log("available connection: " + modelData)
+					}
+				}
+			}
+		}
+
 		ListView {
 			height: 600
 			width: parent.width

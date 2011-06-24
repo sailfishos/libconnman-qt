@@ -159,13 +159,13 @@ void ClockModel::setTimeservers(const QStringList &val)
 void ClockModel::setDate(QDate date)
 {
     QDateTime toDate(date, QTime::currentTime());
-    qint64 secsSinceEpoch = toDate.toMSecsSinceEpoch() / 1000;
+    quint64 secsSinceEpoch = (quint64)toDate.toTime_t();
     SET_CONNMAN_PROPERTY("Time", secsSinceEpoch);
 }
 
 void ClockModel::setTime(QTime time)
 {
     QDateTime toDate(QDate::currentDate(), time);
-    qint64 secsSinceEpoch = toDate.toMSecsSinceEpoch() / 1000;
+    quint64 secsSinceEpoch = (quint64)toDate.toTime_t();
     SET_CONNMAN_PROPERTY("Time", secsSinceEpoch);
 }

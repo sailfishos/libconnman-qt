@@ -79,8 +79,8 @@ class NetworkItemModel : public QObject
   Q_PROPERTY(QString deviceAddress READ deviceAddress);
   Q_PROPERTY(QString ipaddress READ ipv4address WRITE setIpv4Address);
   Q_PROPERTY(QString netmask READ ipv4netmask WRITE setIpv4Netmask);
-  Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Gateway);
-  Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Method);
+  Q_PROPERTY(QString method READ ipv4method WRITE setIpv4Method);
+  Q_PROPERTY(QString gateway READ ipv4gateway WRITE setIpv4Gateway);
   Q_PROPERTY(bool setupRequired READ setupRequired NOTIFY setupRequiredChanged)
   Q_PROPERTY(QString apn READ apn WRITE setApn)
   Q_PROPERTY(QString error READ error)

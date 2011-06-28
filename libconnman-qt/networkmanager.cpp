@@ -228,7 +228,9 @@ void NetworkManager::getPropertiesReply(QDBusPendingCallWatcher *call)
 		///reset everything just in case:
 		int count = m_networks.count();
 		m_networks.clear();
-		networksRemoved(0, count);
+
+		if(count > 0)
+			networksRemoved(0, count);
 
 		m_propertiesCache = reply.value();
 		QList<QDBusObjectPath> services = qdbus_cast<QList<QDBusObjectPath> >(m_propertiesCache["Services"]);

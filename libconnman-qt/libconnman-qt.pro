@@ -1,7 +1,7 @@
 #-*-Shell-Script-*-
 
 TEMPLATE = lib
-VERSION=0.1.2
+VERSION=0.1.3
 CONFIG += qt \
     debug
 QT += dbus

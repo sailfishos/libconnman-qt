@@ -90,10 +90,6 @@ signals:
     void networksRemoved(int from, int to);
     void networkChanged(int index);
 
-protected:
-    void timerEvent(QTimerEvent *event); //hack
-
-
 private:
     int findNetworkItemModel(const QDBusObjectPath &path) const;
     void emitTechnologiesChanged();

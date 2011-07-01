@@ -40,7 +40,6 @@ NetworkManager::NetworkManager(QObject* parent)
   m_headerData.append("NetworkItemModel");
   m_headerData.append("Type");
   connectToConnman();
-  startTimer(60000);
 
   connect(this,SIGNAL(countChanged(int)),this,SLOT(countChangedSlot(int)));
 }
@@ -69,7 +68,7 @@ void NetworkManager::setProperty(const int &index, QString property, const QVari
 
 void NetworkManager::enableTechnology(const QString &technology)
 {
-  qDebug("enabling technology \"%s\"", STR(technology));
+  // qDebug("enabling technology \"%s\"", STR(technology));
   QDBusReply<void> reply = m_manager->EnableTechnology(technology);
   if(reply.error().isValid())
   {
@@ -80,7 +79,7 @@ void NetworkManager::enableTechnology(const QString &technology)
 
 void NetworkManager::disableTechnology(const QString &technology)
 {
-  qDebug("disenabling technology \"%s\"", STR(technology));
+  // qDebug("disenabling technology \"%s\"", STR(technology));
   m_manager->DisableTechnology(technology);
 }
 
@@ -238,7 +237,7 @@ void NetworkManager::getPropertiesReply(QDBusPendingCallWatcher *call)
 
 		foreach (QDBusObjectPath p, services)
 		{
-			qDebug()<< QString("service path:\t%1").arg(p.path());
+			// qDebug()<< QString("service path:\t%1").arg(p.path());
 			NetworkItemModel *pNIM = new NetworkItemModel(p.path(), this);
 			connect(pNIM,SIGNAL(propertyChanged(QString, QVariant)),this,SLOT(itemPropertyChanged(QString, QVariant)));
 			connect(pNIM,SIGNAL(stateChanged(NetworkItemModel::StateType)),
@@ -270,7 +269,7 @@ void NetworkManager::connectServiceReply(QDBusPendingCallWatcher *call)
 	qDebug("error type: %s", STR(QDBusError::errorString(error.type())));
   } else {
     QDBusObjectPath p = reply.value();
-	qDebug("object path: %s", STR(p.path()));
+	// qDebug("object path: %s", STR(p.path()));
   }
 }
 
@@ -387,7 +386,7 @@ void NetworkManager::propertyChanged(const QString &name,
 		 qDebug()<<"caught property changed signal for network item not in our list";
 		 return;
 	 }
-	 qDebug()<<"Properties changed for "<< m_networks[row]->name();
+	 // qDebug()<<"Properties changed for "<< m_networks[row]->name();
 	 networkChanged(row);
  }
 
@@ -448,9 +447,9 @@ int NetworkManager::findNetworkItemModel(const QDBusObjectPath &path) const
      (m_propertiesCache[NetworkManager::enablTechs]);
    const QStringList connectedTechnologies = qdbus_cast<QStringList>
      (m_propertiesCache[NetworkManager::connTechs]);
-   qDebug() << availTechs << ": " << m_propertiesCache[NetworkManager::availTechs];
-   qDebug() << enablTechs << ": " << m_propertiesCache[NetworkManager::enablTechs];
-   qDebug() << connTechs << ": " << m_propertiesCache[NetworkManager::connTechs];
+   // qDebug() << availTechs << ": " << m_propertiesCache[NetworkManager::availTechs];
+   // qDebug() << enablTechs << ": " << m_propertiesCache[NetworkManager::enablTechs];
+   // qDebug() << connTechs << ": " << m_propertiesCache[NetworkManager::connTechs];
    emit technologiesChanged(availableTechnologies,
 			    enabledTechnologies,
 			    connectedTechnologies);
@@ -461,15 +460,6 @@ int NetworkManager::findNetworkItemModel(const QDBusObjectPath &path) const
    countChanged(m_networks.count());
  }
 
-
-void NetworkManager::timerEvent(QTimerEvent *event)
-{
-  Q_UNUSED(event);
-//  DCP_CRITICAL("Dumping list of networks");
-  foreach(NetworkItemModel* pNIM, m_networks) {
-    pNIM->dump();
-  }
-}
 
 void NetworkManager::requestScan()
 {

@@ -485,24 +485,6 @@ void NetworkItemModel::propertyChanged(const QString &name,
 	emit propertyChanged(name,value.variant());
 }
 
-
-void NetworkItemModel::timerEvent(QTimerEvent *event)
-{
-  Q_UNUSED(event);
-  //qDebug("hello!");
-  //setStrength(rand()*100.0/RAND_MAX);
-}
-
-void NetworkItemModel::dump() const
-{
-  qDebug("%s", STR(dumpToString()));
-}
-
-QString NetworkItemModel::dumpToString() const
-{
-  return QString("id: %1 name: %2 state: %3 type: %4: path: %5").arg(id).arg(m_name).arg(m_state).arg(type()).arg(m_servicePath);
-}
-
 void NetworkItemModel::setPropertyFinished(QDBusPendingCallWatcher *call)
 {
   QDBusPendingReply<void> reply = *call;

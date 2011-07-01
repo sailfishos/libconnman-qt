@@ -123,8 +123,6 @@ class NetworkItemModel : public QObject
   int id;
   static int instances;
   static int idCounter;
-  void dump() const;
-  QString dumpToString() const;
 
   const QString& servicePath() const;
 
@@ -144,9 +142,6 @@ signals:
   void passphraseChanged(QString newPassphrase);
   void typeChanged(QString newType);
   void strengthChanged(int newStrength);
-
- protected:
-  void timerEvent(QTimerEvent *event); //hack
 
  private:
   bool isListEqual(const QStringList &a, const QStringList &b) const;

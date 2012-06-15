@@ -1,0 +1,3 @@
+*.swp
+*.o
+moc_*.cpp

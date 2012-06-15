@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS += libconnman-qt test plugin cp-plugin
+SUBDIRS += libconnman-qt test plugin
 CONFIG += ordered
 

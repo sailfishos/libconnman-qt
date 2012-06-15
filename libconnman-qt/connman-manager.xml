@@ -12,23 +12,39 @@
       <arg name="value" type="v"/>
     </method>
 
-    <method name="RequestScan" tp:name-for-bindings="Request_Scan">
-      <arg name="type" type="s"/>
+    <method name="GetTechnologies" tp:name-for-bindings="Get_Technologies">
+        <arg name="technologies" type="a(oa{sv})" direction="out"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="ConnmanObjectList"/>
     </method>
 
-    <method name="EnableTechnology" tp:name-for-bindings="Enable_Technology">
-      <arg name="type" type="s"/>
+    <method name="GetServices" tp:name-for-bindings="Get_Services">
+        <arg name="services" type="a(oa{sv})" direction="out"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="ConnmanObjectList"/>
     </method>
 
-    <method name="DisableTechnology" tp:name-for-bindings="Disable_Technology">
-      <arg name="type" type="s"/>
+    <method name="RegisterAgent" tp:name-for-bindings="Register_Agent">
+        <arg name="path" type="o"/>
     </method>
 
-    <method name="ConnectService" tp:name-for-bindings="Connect_Service">
-      <arg name="network" type="a{sv}"/>
-      <arg name="service" type="o" direction="out" />
-      <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+    <method name="UnregisterAgent" tp:name-for-bindings="Unregister_Agent">
+        <arg name="path" type="o"/>
     </method>
+
+    <signal name="TechnologyAdded" tp:name-for-bindings="Technology_Added">
+        <arg name="technology" type="o"/>
+        <arg name="properties" type="a{sv}"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+    </signal>
+
+    <signal name="TechnologyRemoved" tp:name-for-bindings="Technology_Removed">
+        <arg name="technology" type="o"/>
+    </signal>
+
+    <signal name="ServicesChanged" tp:name-for-bindings="Services_Changed">
+        <arg name="changed" type="a(oa{sv})"/>
+        <arg name="removed" type="ao"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="ConnmanObjectList"/>
+    </signal>
 
     <signal name="PropertyChanged" tp:name-for-bindings="Property_Changed">
       <arg name="name" type="s"/>

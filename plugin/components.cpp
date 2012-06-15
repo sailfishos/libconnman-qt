@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 Intel Corporation.
+ * Copyright © 2012, Jolla.
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at 
@@ -8,16 +9,16 @@
 
 #include "components.h"
 
-#include <networklist.h>
-#include <networkitem.h>
+#include <networkmanager.h>
+#include "networkingmodel.h"
 #include <clockmodel.h>
 
 
 void Components::registerTypes(const char *uri)
 {
-	qmlRegisterType<NetworkListModel>(uri,0,1,"NetworkListModel");
-	qmlRegisterType<NetworkItemModel>(uri,0,1,"NetworkItemModel");
-	qmlRegisterType<ClockModel>(uri,0,1,"ClockModel");
+	qmlRegisterType<NetworkManager>(uri,0,2,"NetworkManager");
+	qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
+	qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)

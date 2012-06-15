@@ -11,20 +11,23 @@ isEmpty(PREFIX) {
 }
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
-system(qdbusxml2cpp -c Manager -p manager -N connman-manager.xml)
+#system(qdbusxml2cpp -c Manager -p manager -N connman-manager.xml)
 system(qdbusxml2cpp -c Service -p service -N connman-service.xml)
+system(qdbusxml2cpp -c Technology -p technology -N connman-technology.xml)
 
 HEADERS += manager.h \
     service.h \
-    networkitem.h \
-    networklist.h \
+    technology.h \
     networkmanager.h \
+    networktechnology.h \
+    networkservice.h \
 	commondbustypes.h \
     clockproxy.h \
     clockmodel.h
 
-headers.files = manager.h service.h networkitem.h \
-         networklist.h commondbustypes.h clockproxy.h clockmodel.h networkmanager.h
+headers.files = manager.h service.h technology.h \
+         commondbustypes.h clockproxy.h clockmodel.h networkmanager.h \
+         networktechnology.h networkservice.h
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 CONFIG += create_pc create_prl
@@ -33,12 +36,15 @@ QMAKE_PKGCONFIG_INCDIR = $$headers.path
 pkgconfig.path = $$INSTALL_ROOT$$PREFIX/lib/pkgconfig
 pkgconfig.files = connman-qt4.pc
 
-SOURCES += networkitem.cpp \
-		   networklist.cpp \
+SOURCES += \
 		   networkmanager.cpp \
+		   networktechnology.cpp \
+		   networkservice.cpp \
 		   manager.cpp \
 		   service.cpp \
+           technology.cpp \
            clockproxy.cpp \
-           clockmodel.cpp
+           clockmodel.cpp \
+           commondbustypes.cpp
 
 INSTALLS += target headers pkgconfig

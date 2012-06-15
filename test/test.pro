@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core declarative gui
+QT += core declarative gui opengl
 
 TARGET = testconnman-qt
 CONFIG   += console

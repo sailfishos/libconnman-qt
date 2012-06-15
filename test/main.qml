@@ -1,6 +1,6 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import Connman.Qt 0.2
+import MeeGo.Connman 0.2
 import "/usr/lib/qt4/imports/Connman/js/mustache.js" as M
 
 PageStack {

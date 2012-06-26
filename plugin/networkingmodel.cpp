@@ -8,6 +8,7 @@
  *
  */
 
+#include "QDebug"
 #include "networkingmodel.h"
 
 #define AGENT_PATH "/WifiSettings"
@@ -20,6 +21,13 @@ NetworkingModel::NetworkingModel(QObject* parent)
     m_manager = NetworkManagerFactory::createInstance();
     new UserInputAgent(this);
 
+    m_wifi = m_manager->getTechnology("wifi"); // TODO: use constant literal
+    if (m_wifi) {
+        connect(m_wifi,
+                SIGNAL(poweredChanged(bool)),
+                this,
+                SIGNAL(wifiPoweredChanged(bool)));
+    }
     connect(m_manager,
             SIGNAL(technologiesChanged(QMap<QString, NetworkTechnology*>, QStringList)),
             this,
@@ -55,6 +63,7 @@ bool NetworkingModel::isWifiPowered() const
     if (m_wifi) {
         return m_wifi->powered();
     } else {
+        qWarning() << "Can't get: wifi technology is NULL";
         return false;
     }
 }
@@ -63,6 +72,8 @@ void NetworkingModel::setWifiPowered(const bool &wifiPowered)
 {
     if (m_wifi) {
         m_wifi->setPowered(wifiPowered);
+    } else {
+        qWarning() << "Can't set: wifi technology is NULL";
     }
 }
 

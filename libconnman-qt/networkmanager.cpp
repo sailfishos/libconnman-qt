@@ -255,7 +255,7 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
         return m_technologiesCache.value(type);
     else {
         qDebug() << "Technology " << type << " doesn't exist";
-        throw -1;// FIXME
+        return NULL;
     }
 }
 

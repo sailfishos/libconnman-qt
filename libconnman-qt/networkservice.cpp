@@ -83,6 +83,11 @@ void NetworkService::requestConnect()
             SLOT(dbg_connectReply(QDBusPendingCallWatcher*)));
 }
 
+void NetworkService::requestDisconnect()
+{
+    m_service->Disconnect();
+}
+
 /* this slot is used for debugging */
 void NetworkService::dbg_connectReply(QDBusPendingCallWatcher *call){
     qDebug() << "Got something from service.connect()";

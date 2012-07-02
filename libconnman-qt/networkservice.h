@@ -48,6 +48,7 @@ signals:
 
 public slots:
     void requestConnect();
+    void requestDisconnect();
 
 private:
     Service *m_service;

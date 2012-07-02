@@ -27,6 +27,7 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged);
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged);
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged);
+    Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed);
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -39,6 +40,7 @@ public:
     const QStringList security() const;
     const uint strength() const;
     const bool favorite() const;
+    const QVariantMap ipv4() const;
 
 signals:
     void nameChanged(const QString &name);
@@ -46,6 +48,7 @@ signals:
     void securityChanged(const QStringList &security);
     void strengthChanged(const uint strength);
     void favoriteChanged(const bool &favorite);
+    void ipv4Changed(const QVariantMap &ipv4);
 
 public slots:
     void requestConnect();
@@ -64,6 +67,7 @@ private:
     static const QString Strength;
     static const QString Error;
     static const QString Favorite;
+    static const QString IPv4;
 
 private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);

@@ -17,6 +17,7 @@ const QString NetworkService::Security("Security");
 const QString NetworkService::Strength("Strength");
 const QString NetworkService::Error("Error");
 const QString NetworkService::Favorite("Favorite");
+const QString NetworkService::IPv4("IPv4");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -62,6 +63,10 @@ const uint NetworkService::strength() const {
 
 const bool NetworkService::favorite() const {
     return m_propertiesCache.value(Favorite).toBool();
+}
+
+const QVariantMap NetworkService::ipv4() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
 }
 
 void NetworkService::requestConnect()
@@ -116,5 +121,7 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit strengthChanged(m_propertiesCache[name].toUInt());
     } else if (name == Favorite) {
         emit favoriteChanged(m_propertiesCache[name].toBool());
+    } else if (name == IPv4) {
+        emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     }
 }

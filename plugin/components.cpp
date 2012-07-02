@@ -9,14 +9,14 @@
 
 #include "components.h"
 
-#include <networkmanager.h>
+#include <networkservice.h>
 #include "networkingmodel.h"
 #include <clockmodel.h>
 
 
 void Components::registerTypes(const char *uri)
 {
-	qmlRegisterType<NetworkManager>(uri,0,2,"NetworkManager");
+	qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
 	qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
 	qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
 }

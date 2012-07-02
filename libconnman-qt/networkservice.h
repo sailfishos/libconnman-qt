@@ -30,6 +30,7 @@ class NetworkService : public QObject
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
+    NetworkService(QObject* parent = 0) { Q_ASSERT(false); };
     virtual ~NetworkService();
 
     const QString name() const;

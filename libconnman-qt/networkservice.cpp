@@ -134,8 +134,8 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
     } else if (name == IPv4) {
         emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == Nameservers) {
-        emit securityChanged(m_propertiesCache[name].toStringList());
+        emit nameserversChanged(m_propertiesCache[name].toStringList());
     } else if (name == Domains) {
-        emit securityChanged(m_propertiesCache[name].toStringList());
+        emit domainsChanged(m_propertiesCache[name].toStringList());
     }
 }

@@ -20,6 +20,7 @@ const QString NetworkService::Favorite("Favorite");
 const QString NetworkService::IPv4("IPv4");
 const QString NetworkService::Nameservers("Nameservers");
 const QString NetworkService::Domains("Domains");
+const QString NetworkService::Proxy("Proxy");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -77,6 +78,10 @@ const QStringList NetworkService::nameservers() const {
 
 const QStringList NetworkService::domains() const {
     return m_propertiesCache.value(Domains).toStringList();
+}
+
+const QVariantMap NetworkService::proxy() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
 }
 
 void NetworkService::requestConnect()
@@ -137,5 +142,7 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit nameserversChanged(m_propertiesCache[name].toStringList());
     } else if (name == Domains) {
         emit domainsChanged(m_propertiesCache[name].toStringList());
+    } else if (name == Proxy) {
+        emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     }
 }

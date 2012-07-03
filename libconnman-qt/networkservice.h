@@ -30,6 +30,7 @@ class NetworkService : public QObject
     Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed);
     Q_PROPERTY(QStringList nameservers READ nameservers NOTIFY nameserversChanged);
     Q_PROPERTY(QStringList domains READ domains NOTIFY domainsChanged);
+    Q_PROPERTY(QVariantMap proxy READ proxy NOTIFY proxyChanged);
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -45,6 +46,7 @@ public:
     const QVariantMap ipv4() const;
     const QStringList nameservers() const;
     const QStringList domains() const;
+    const QVariantMap proxy() const;
 
 signals:
     void nameChanged(const QString &name);
@@ -55,6 +57,7 @@ signals:
     void ipv4Changed(const QVariantMap &ipv4);
     void nameserversChanged(const QStringList &nameservers);
     void domainsChanged(const QStringList &domains);
+    void proxyChanged(const QVariantMap &proxy);
 
 public slots:
     void requestConnect();
@@ -76,6 +79,7 @@ private:
     static const QString IPv4;
     static const QString Nameservers;
     static const QString Domains;
+    static const QString Proxy;
 
 private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);

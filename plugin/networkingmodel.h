@@ -37,6 +37,7 @@ public:
     QList<QObject*> networks() const;
     bool isWifiPowered() const;
     void requestUserInput(ServiceReqData* data);
+    void reportError(const QString &error);
 
 public slots:
     void setWifiPowered(const bool &wifiPowered);
@@ -48,6 +49,7 @@ signals:
     void networksChanged();
     void technologiesChanged();
     void userInputRequested(QVariantMap fields);
+    void errorReported(const QString &error);
 
 private:
     NetworkManager* m_manager;

@@ -108,6 +108,10 @@ void NetworkingModel::requestUserInput(ServiceReqData* data)
     emit userInputRequested(data->fields);
 }
 
+void NetworkingModel::reportError(const QString &error) {
+    emit errorReported(error);
+}
+
 void NetworkingModel::sendUserReply(const QVariantMap &input) {
     if (!input.isEmpty()) {
         QDBusMessage &reply = m_req_data->reply;
@@ -141,6 +145,7 @@ void UserInputAgent::Release()
 void UserInputAgent::ReportError(const QDBusObjectPath &service_path, const QString &error)
 {
     qDebug() << "From " << service_path.path() << " got this error:\n" << error;
+    m_networkingmodel->reportError(error);
 }
 
 void UserInputAgent::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)

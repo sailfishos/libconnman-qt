@@ -18,9 +18,13 @@ const QString NetworkService::Strength("Strength");
 const QString NetworkService::Error("Error");
 const QString NetworkService::Favorite("Favorite");
 const QString NetworkService::IPv4("IPv4");
+const QString NetworkService::IPv4Config("IPv4.Configuration");
 const QString NetworkService::Nameservers("Nameservers");
+const QString NetworkService::NameserversConfig("Nameservers.Configuration");
 const QString NetworkService::Domains("Domains");
+const QString NetworkService::DomainsConfig("Domains.Configuration");
 const QString NetworkService::Proxy("Proxy");
+const QString NetworkService::ProxyConfig("Proxy.Configuration");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -72,16 +76,32 @@ const QVariantMap NetworkService::ipv4() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
 }
 
+const QVariantMap NetworkService::ipv4Config() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
+}
+
 const QStringList NetworkService::nameservers() const {
     return m_propertiesCache.value(Nameservers).toStringList();
+}
+
+const QStringList NetworkService::nameserversConfig() const {
+    return m_propertiesCache.value(NameserversConfig).toStringList();
 }
 
 const QStringList NetworkService::domains() const {
     return m_propertiesCache.value(Domains).toStringList();
 }
 
+const QStringList NetworkService::domainsConfig() const {
+    return m_propertiesCache.value(DomainsConfig).toStringList();
+}
+
 const QVariantMap NetworkService::proxy() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
+}
+
+const QVariantMap NetworkService::proxyConfig() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
 }
 
 void NetworkService::requestConnect()
@@ -106,6 +126,30 @@ void NetworkService::requestConnect()
 void NetworkService::requestDisconnect()
 {
     m_service->Disconnect();
+}
+
+void NetworkService::setIpv4Config(const QVariantMap &ipv4)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(IPv4Config, QDBusVariant(QVariant(ipv4)));
+}
+
+void NetworkService::setNameserversConfig(const QStringList &nameservers)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(NameserversConfig, QDBusVariant(QVariant(nameservers)));
+}
+
+void NetworkService::setDomainsConfig(const QStringList &domains)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(DomainsConfig, QDBusVariant(QVariant(domains)));
+}
+
+void NetworkService::setProxyConfig(const QVariantMap &proxy)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(proxy)));
 }
 
 /* this slot is used for debugging */
@@ -138,11 +182,19 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit favoriteChanged(m_propertiesCache[name].toBool());
     } else if (name == IPv4) {
         emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
+    } else if (name == IPv4Config) {
+        emit ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
     } else if (name == Nameservers) {
         emit nameserversChanged(m_propertiesCache[name].toStringList());
+    } else if (name == NameserversConfig) {
+        emit nameserversConfigChanged(m_propertiesCache[name].toStringList());
     } else if (name == Domains) {
         emit domainsChanged(m_propertiesCache[name].toStringList());
+    } else if (name == DomainsConfig) {
+        emit domainsConfigChanged(m_propertiesCache[name].toStringList());
     } else if (name == Proxy) {
         emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
+    } else if (name == ProxyConfig) {
+        emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
     }
 }

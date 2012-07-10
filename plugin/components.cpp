@@ -16,7 +16,8 @@
 
 void Components::registerTypes(const char *uri)
 {
-	qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
+	qmlRegisterUncreatableType<NetworkService>(uri,0,2,"NetworkService",
+            "Please don't create \"NetworkService\" objects manually.");
 	qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
 	qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
 }

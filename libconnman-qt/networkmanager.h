@@ -31,6 +31,7 @@ class NetworkManager : public QObject
 {
     Q_OBJECT;
 
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
     Q_PROPERTY(QString state READ state NOTIFY stateChanged);
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged);
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged);
@@ -38,6 +39,8 @@ class NetworkManager : public QObject
 public:
     NetworkManager(QObject* parent=0);
     virtual ~NetworkManager();
+
+    bool isAvailable() const;
 
     NetworkTechnology* getTechnology(const QString &type) const;
     const QVector<NetworkService*> getServices() const;
@@ -52,6 +55,8 @@ public slots:
     void unregisterAgent(const QString &path);
 
 signals:
+    void availabilityChanged(bool available);
+
     void stateChanged(const QString &state);
     void offlineModeChanged(bool offlineMode);
     void technologiesChanged(const QMap<QString, NetworkTechnology*> &added,
@@ -76,9 +81,12 @@ private:
     static const QString State;
     static const QString OfflineMode;
 
+    bool m_available;
+
 private slots:
     void connectToConnman(QString = "");
     void disconnectFromConnman(QString = "");
+    void connmanUnregistered(QString = "");
     void getPropertiesReply(QDBusPendingCallWatcher *call);
     void getTechnologiesReply(QDBusPendingCallWatcher *call);
     void getServicesReply(QDBusPendingCallWatcher *call);

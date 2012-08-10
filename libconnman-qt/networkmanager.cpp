@@ -33,26 +33,31 @@ NetworkManager::NetworkManager(QObject* parent)
     m_getTechnologiesWatcher(NULL),
     m_getServicesWatcher(NULL),
     m_defaultRoute(NULL),
-    watcher(NULL)
+    watcher(NULL),
+    m_available(false)
 {
     registerCommonDataTypes();
-    connectToConnman();
+
+
+    watcher = new QDBusServiceWatcher("net.connman",QDBusConnection::systemBus(),
+            QDBusServiceWatcher::WatchForRegistration |
+            QDBusServiceWatcher::WatchForUnregistration, this);
+    connect(watcher, SIGNAL(serviceRegistered(QString)),
+            this, SLOT(connectToConnman(QString)));
+    connect(watcher, SIGNAL(serviceUnregistered(QString)),
+            this, SLOT(connmanUnregistered(QString)));
+
+
+    m_available = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
+
+    if(m_available)
+        connectToConnman();
 }
 
 NetworkManager::~NetworkManager() {}
 
 void NetworkManager::connectToConnman(QString)
 {
-    if(!watcher) {
-        watcher = new QDBusServiceWatcher("net.connman",QDBusConnection::systemBus(),
-                QDBusServiceWatcher::WatchForRegistration |
-                QDBusServiceWatcher::WatchForUnregistration, this);
-        connect(watcher, SIGNAL(serviceRegistered(QString)),
-                this, SLOT(connectToConnman(QString)));
-        connect(watcher, SIGNAL(serviceUnregistered(QString)),
-                this, SLOT(disconnectFromConnman(QString)));
-    }
-
     disconnectFromConnman();
     m_manager = new Manager("net.connman", "/",
             QDBusConnection::systemBus(), this);
@@ -61,6 +66,10 @@ void NetworkManager::connectToConnman(QString)
         qDebug("manager is invalid. connman may not be running or is invalid");
         delete m_manager;
         m_manager = NULL;
+
+        // shouldn't happen but in this case service isn't available
+        if(m_available)
+            emit availabilityChanged(m_available = false);
     } else {
         QDBusPendingReply<QVariantMap> props_reply = m_manager->GetProperties();
         m_getPropertiesWatcher = new QDBusPendingCallWatcher(props_reply, m_manager);
@@ -83,8 +92,11 @@ void NetworkManager::connectToConnman(QString)
                 this,
                 SLOT(getServicesReply(QDBusPendingCallWatcher*)));
 
+        if(!m_available)
+            emit availabilityChanged(m_available = true);
+
+        qDebug("connected");
     }
-    qDebug("connected");
 }
 
 void NetworkManager::disconnectFromConnman(QString)
@@ -95,6 +107,16 @@ void NetworkManager::disconnectFromConnman(QString)
     }
     // FIXME: should we delete technologies and services?
 }
+
+
+void NetworkManager::connmanUnregistered(QString)
+{
+    disconnectFromConnman();
+
+    if(m_available)
+        emit availabilityChanged(m_available = false);
+}
+
 
 // These functions is a part of setup procedure
 
@@ -234,6 +256,13 @@ void NetworkManager::propertyChanged(const QString &name,
 
 // Getters
 
+
+bool NetworkManager::isAvailable() const
+{
+    return m_available;
+}
+
+
 const QString NetworkManager::state() const
 {
     return m_propertiesCache[State].toString();
@@ -279,14 +308,15 @@ void NetworkManager::setOfflineMode(const bool &offlineMode)
                                QDBusVariant(QVariant(offlineMode)));
 }
 
+  // these shouldn't crash even if connman isn't available
 void NetworkManager::registerAgent(const QString &path)
 {
-    Q_ASSERT(m_manager);
-    m_manager->RegisterAgent(QDBusObjectPath(path));
+    if(m_manager)
+        m_manager->RegisterAgent(QDBusObjectPath(path));
 }
 
 void NetworkManager::unregisterAgent(const QString &path)
 {
-    Q_ASSERT(m_manager);
-    m_manager->UnregisterAgent(QDBusObjectPath(path));
+    if(m_manager)
+        m_manager->UnregisterAgent(QDBusObjectPath(path));
 }

@@ -28,6 +28,8 @@ NetworkingModel::NetworkingModel(QObject* parent)
                 this,
                 SIGNAL(wifiPoweredChanged(bool)));
     }
+    connect(m_manager, SIGNAL(availabilityChanged(bool)),
+            this, SLOT(managerAvailabilityChanged(bool)));
     connect(m_manager,
             SIGNAL(technologiesChanged(QMap<QString, NetworkTechnology*>, QStringList)),
             this,
@@ -43,6 +45,11 @@ NetworkingModel::NetworkingModel(QObject* parent)
 NetworkingModel::~NetworkingModel()
 {
     m_manager->unregisterAgent(QString(AGENT_PATH));
+}
+
+bool NetworkingModel::isAvailable() const
+{
+    return m_manager->isAvailable();
 }
 
 QList<QObject*> NetworkingModel::networks() const
@@ -100,6 +107,14 @@ void NetworkingModel::updateTechnologies(const QMap<QString, NetworkTechnology*>
         m_wifi = NULL; // FIXME: is it needed?
     }
     emit technologiesChanged();
+}
+
+void NetworkingModel::managerAvailabilityChanged(bool available)
+{
+    if(available)
+        m_manager->registerAgent(QString(AGENT_PATH));
+
+    emit availabilityChanged(available);
 }
 
 void NetworkingModel::requestUserInput(ServiceReqData* data)

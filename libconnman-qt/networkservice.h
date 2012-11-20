@@ -11,11 +11,12 @@
 #ifndef NETWORKSERVICE_H
 #define NETWORKSERVICE_H
 
-#include "service.h"
 #include <QtDBus>
 
 #define CONNECT_TIMEOUT 180000 // user is supposed to provide input for unconfigured networks
 #define CONNECT_TIMEOUT_FAVORITE 60000
+
+class Service;
 
 class NetworkService : public QObject
 {

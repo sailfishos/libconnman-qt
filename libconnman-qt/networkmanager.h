@@ -12,11 +12,12 @@
 #define NETWORKMANAGER_H
 
 #include "commondbustypes.h"
-#include "manager.h"
+
 #include "networktechnology.h"
 #include "networkservice.h"
 #include <QtDBus>
 
+class Manager;
 class NetworkManager;
 
 class NetworkManagerFactory

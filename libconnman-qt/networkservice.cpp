@@ -8,6 +8,7 @@
  *
  */
 
+#include "service.h"
 #include "networkservice.h"
 #include "debug.h"
 

@@ -36,6 +36,7 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList domainsConfig READ domainsConfig WRITE setDomainsConfig NOTIFY domainsConfigChanged);
     Q_PROPERTY(QVariantMap proxy READ proxy NOTIFY proxyChanged);
     Q_PROPERTY(QVariantMap proxyConfig READ proxyConfig WRITE setProxyConfig NOTIFY proxyConfigChanged);
+    Q_PROPERTY(QVariantMap ethernet READ ethernet NOTIFY ethernetChanged);
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -56,6 +57,7 @@ public:
     const QStringList domainsConfig() const;
     const QVariantMap proxy() const;
     const QVariantMap proxyConfig() const;
+    const QVariantMap ethernet() const;
 
 signals:
     void nameChanged(const QString &name);
@@ -71,6 +73,7 @@ signals:
     void domainsConfigChanged(const QStringList &domains);
     void proxyChanged(const QVariantMap &proxy);
     void proxyConfigChanged(const QVariantMap &proxy);
+    void ethernetChanged(const QVariantMap &ethernet);
 
 public slots:
     void requestConnect();
@@ -102,6 +105,7 @@ private:
     static const QString DomainsConfig;
     static const QString Proxy;
     static const QString ProxyConfig;
+    static const QString Ethernet;
 
 private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);

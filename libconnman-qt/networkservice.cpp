@@ -27,6 +27,7 @@ const QString NetworkService::Domains("Domains");
 const QString NetworkService::DomainsConfig("Domains.Configuration");
 const QString NetworkService::Proxy("Proxy");
 const QString NetworkService::ProxyConfig("Proxy.Configuration");
+const QString NetworkService::Ethernet("Ethernet");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -104,6 +105,10 @@ const QVariantMap NetworkService::proxy() const {
 
 const QVariantMap NetworkService::proxyConfig() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
+}
+
+const QVariantMap NetworkService::ethernet() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
 }
 
 void NetworkService::requestConnect()
@@ -204,5 +209,7 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     } else if (name == ProxyConfig) {
         emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
+    } else if (name == Ethernet) {
+        emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
     }
 }

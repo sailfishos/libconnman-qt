@@ -288,11 +288,12 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
     }
 }
 
-const QVector<NetworkService*> NetworkManager::getServices() const
+const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
 {
     QVector<NetworkService*> networks(m_servicesCache.size(), NULL);
     foreach (const QString &path, m_servicesCache.keys()) {
-        networks[m_servicesOrder.value(path)] = m_servicesCache.value(path);
+	    if (tech.isEmpty() || m_servicesCache.value(path)->type() == tech)
+		    networks[m_servicesOrder.value(path)] = m_servicesCache.value(path);
     }
     return networks; // TODO: optimizations
 }

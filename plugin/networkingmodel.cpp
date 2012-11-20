@@ -54,13 +54,11 @@ bool NetworkingModel::isAvailable() const
 
 QList<QObject*> NetworkingModel::networks() const
 {
-    const QString wifi("wifi");
     QList<QObject*> networks;
-    // TODO: get rid of double looping, do filtering in NM::getServices()
-    foreach (NetworkService* network, m_manager->getServices()) {
-        if (network->type() == wifi) {
-            networks.append(network);
-        }
+    // FIXME: how to get rid of this douple looping since we
+    // must return a QList<QObject*>?
+    foreach (NetworkService* network, m_manager->getServices("wifi")) {
+	    networks.append(network);
     }
     return networks;
 }

@@ -220,6 +220,10 @@ void NetworkManager::getServicesReply(QDBusPendingCallWatcher *call)
         ConnmanObjectList lst = reply.value();
         ConnmanObject obj;
         int order = -1;
+
+        // make sure we don't leak memory
+        m_servicesOrder.clear();
+
         foreach (obj, lst) { // TODO: consider optimizations
             order++;
 
@@ -264,6 +268,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
 
     ConnmanObject connmanobj;
     int order = -1;
+
+    // make sure we don't leak memory
+    m_servicesOrder.clear();
+
     foreach (connmanobj, changed) {
         order++;
         m_servicesOrder.insert(connmanobj.objpath.path(), order);

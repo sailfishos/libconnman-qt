@@ -297,8 +297,10 @@ void NetworkManager::propertyChanged(const QString &name,
         const QDBusVariant &value)
 {
 	QVariant tmp = value.variant();
+
     pr_dbg() << "Manager's property" << name << "changed from"
-             << m_propertiesCache[name] << "to" << tmp.toString();
+             << m_propertiesCache[name].toString() << "to" << tmp.toString();
+
     m_propertiesCache[name] = tmp;
     if (name == State) {
         emit stateChanged(tmp.toString());

@@ -91,7 +91,7 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 
 	// TODO: add service objpath
     pr_dbg() << "Technology property" << name << "changed from"
-             << m_propertiesCache[name] << "to" << tmp.toString();
+             << m_propertiesCache[name].toString() << "to" << tmp.toString();
 
     m_propertiesCache[name] = tmp;
 

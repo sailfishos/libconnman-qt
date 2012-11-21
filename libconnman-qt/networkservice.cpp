@@ -170,8 +170,9 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
 {
 	QVariant tmp = value.variant();
 
-	// TODO: add service objpath
-    pr_dbg() << "Service property" << name << "changed from"
+	Q_ASSERT(m_service);
+
+	pr_dbg() << m_service->path() << "property" << name << "changed from"
              << m_propertiesCache[name].toString() << "to" << tmp.toString();
 
     m_propertiesCache[name] = tmp;

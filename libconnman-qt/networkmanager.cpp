@@ -192,7 +192,7 @@ void NetworkManager::getTechnologiesReply(QDBusPendingCallWatcher *call)
                 SLOT(technologyAdded(const QDBusObjectPath &, const QVariantMap &)));
 
         connect(m_manager,
-                SIGNAL(TechnologyRemoved(const QDBusObjectPath &, const QVariantMap &)),
+                SIGNAL(TechnologyRemoved(const QDBusObjectPath &)),
                 this,
                 SLOT(technologyRemoved(const QDBusObjectPath &)));
 

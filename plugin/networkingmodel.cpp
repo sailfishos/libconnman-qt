@@ -8,10 +8,10 @@
  *
  */
 
-#include "QDebug"
+#include <QDebug>
 #include "networkingmodel.h"
 
-#define AGENT_PATH "/WifiSettings"
+static const char AGENT_PATH[] = "/WifiSettings";
 
 NetworkingModel::NetworkingModel(QObject* parent)
   : QObject(parent),
@@ -19,7 +19,8 @@ NetworkingModel::NetworkingModel(QObject* parent)
     m_wifi(NULL)
 {
     m_manager = NetworkManagerFactory::createInstance();
-    new UserInputAgent(this);
+
+    new UserInputAgent(this); // this object will be freed when NetworkingModel is freed
 
     m_wifi = m_manager->getTechnology("wifi"); // TODO: use constant literal
     if (m_wifi) {
@@ -28,16 +29,20 @@ NetworkingModel::NetworkingModel(QObject* parent)
                 this,
                 SIGNAL(wifiPoweredChanged(bool)));
     }
+
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
+
     connect(m_manager,
             SIGNAL(technologiesChanged()),
             this,
             SLOT(updateTechnologies()));
+
     connect(m_manager,
             SIGNAL(servicesChanged()),
             this,
             SIGNAL(networksChanged()));
+
     QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
     m_manager->registerAgent(QString(AGENT_PATH));
 }
@@ -178,17 +183,21 @@ void UserInputAgent::RequestInput(const QDBusObjectPath &service_path,
                                        const QVariantMap &fields,
                                        const QDBusMessage &message)
 {
-    QVariantMap json;
     qDebug() << "Service " << service_path.path() << " wants user input";
+
+    QVariantMap json;
     foreach (const QString &key, fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
         json.insert(key, payload);
     }
+
+    message.setDelayedReply(true);
+
     ServiceReqData *reqdata = new ServiceReqData;
     reqdata->fields = json;
-    message.setDelayedReply(true);
     reqdata->reply = message.createReply();
     reqdata->msg = message;
+
     m_networkingmodel->requestUserInput(reqdata);
 }
 

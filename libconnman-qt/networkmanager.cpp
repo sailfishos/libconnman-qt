@@ -186,11 +186,17 @@ void NetworkManager::getTechnologiesReply(QDBusPendingCallWatcher *call)
             pr_dbg() << "\tPowered:" << tech->powered();
         }
 
-        if (!m_technologiesCache.isEmpty()) {
-	        pr_dbg() << "No Technologies replied from connman";
-            emit technologiesChanged(m_technologiesCache, QStringList());
-        }
+        connect(m_manager,
+                SIGNAL(TechnologyAdded(const QDBusObjectPath &, const QVariantMap &)),
+                this,
+                SLOT(technologyAdded(const QDBusObjectPath &, const QVariantMap &)));
 
+        connect(m_manager,
+                SIGNAL(TechnologyRemoved(const QDBusObjectPath &, const QVariantMap &)),
+                this,
+                SLOT(technologyRemoved(const QDBusObjectPath &)));
+
+        emit technologiesChanged();
     }
 }
 
@@ -301,6 +307,41 @@ void NetworkManager::propertyChanged(const QString &name,
     }
 }
 
+void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
+                                     const QVariantMap &properties)
+{
+	NetworkTechnology *tech = new NetworkTechnology(technology.path(),
+	                                                properties, this);
+
+	m_technologiesCache.insert(tech->type(), tech);
+
+	pr_dbg() << "Technology: " << tech->type();
+	pr_dbg() << "\tConnected:" << tech->connected();
+	pr_dbg() << "\tPowered:" << tech->powered();
+
+	emit technologiesChanged();
+}
+
+void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
+{
+	NetworkTechnology *net;
+	// if we wasn't storing by type() this loop would be unecessary
+	// but since this function will be triggered rarely that's fine
+	foreach (net, m_technologiesCache) {
+		if (net->objPath() == technology.path()) {
+
+			pr_dbg() << "Removing " << net->objPath();
+			m_technologiesCache.remove(net->type());
+			net->deleteLater();
+
+			break;
+		}
+	}
+
+	emit technologiesChanged();
+}
+
+
 // Public API /////////////
 
 // Getters
@@ -335,6 +376,17 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
         pr_dbg() << "Technology " << type << " doesn't exist";
         return NULL;
     }
+}
+
+const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
+{
+    QVector<NetworkTechnology *> techs(m_technologiesCache.size(), NULL);
+
+    foreach (NetworkTechnology *tech, m_technologiesCache) {
+	    techs.push_back(tech);
+    }
+
+    return techs;
 }
 
 const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const

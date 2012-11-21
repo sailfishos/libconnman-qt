@@ -62,6 +62,13 @@ const bool NetworkTechnology::connected() const
     return m_propertiesCache[NetworkTechnology::Connected].toBool();
 }
 
+const QString NetworkTechnology::objPath() const
+{
+	Q_ASSERT(m_technology);
+
+	return m_technology->path();
+}
+
 // Setters
 
 void NetworkTechnology::setPowered(const bool &powered)

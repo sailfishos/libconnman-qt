@@ -31,9 +31,9 @@ NetworkingModel::NetworkingModel(QObject* parent)
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
     connect(m_manager,
-            SIGNAL(technologiesChanged(QMap<QString, NetworkTechnology*>, QStringList)),
+            SIGNAL(technologiesChanged()),
             this,
-            SLOT(updateTechnologies(QMap<QString, NetworkTechnology*>, QStringList)));
+            SLOT(updateTechnologies()));
     connect(m_manager,
             SIGNAL(servicesChanged()),
             this,
@@ -90,20 +90,28 @@ void NetworkingModel::requestScan() const
     }
 }
 
-void NetworkingModel::updateTechnologies(const QMap<QString, NetworkTechnology*> &added,
-                                         const QStringList &removed)
+void NetworkingModel::updateTechnologies()
 {
-    QString wifi_str = QString("wifi");
-    if (added.contains(wifi_str)) {
-        m_wifi = added.value(wifi_str);
-        connect(m_wifi,
-                SIGNAL(poweredChanged(bool)),
-                this,
-                SIGNAL(wifiPoweredChanged(bool)));
-    }
-    if (removed.contains(wifi_str)) {
-        m_wifi = NULL; // FIXME: is it needed?
-    }
+	NetworkTechnology *test = NULL;
+	if (m_wifi) {
+		if ((test = m_manager->getTechnology("wifi")) == NULL) {
+			// if wifi is set and manager doesn't return a wifi, it means
+			// that wifi was removed
+			m_wifi = NULL;
+		}
+	} else {
+		if (test = m_manager->getTechnology("wifi")) {
+			// if wifi is not set and manager returns a wifi, it means
+			// that wifi was added
+			m_wifi = test;
+
+			connect(m_wifi,
+			        SIGNAL(poweredChanged(bool)),
+			        this,
+			        SIGNAL(wifiPoweredChanged(bool)));
+		}
+	}
+
     emit technologiesChanged();
 }
 

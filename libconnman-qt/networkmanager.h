@@ -43,6 +43,7 @@ public:
     bool isAvailable() const;
 
     NetworkTechnology* getTechnology(const QString &type) const;
+	const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = "") const;
 
     const QString state() const;
@@ -59,8 +60,7 @@ signals:
 
     void stateChanged(const QString &state);
     void offlineModeChanged(bool offlineMode);
-    void technologiesChanged(const QMap<QString, NetworkTechnology*> &added,
-                             const QStringList &removed);
+    void technologiesChanged();
     void servicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
 
@@ -93,6 +93,9 @@ private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
     void updateDefaultRoute(NetworkService* defaultRoute);
+    void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
+    void technologyRemoved(const QDBusObjectPath &technology);
+
 
 private:
     Q_DISABLE_COPY(NetworkManager);

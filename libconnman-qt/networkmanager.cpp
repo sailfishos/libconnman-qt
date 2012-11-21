@@ -401,12 +401,16 @@ const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
 
 const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
 {
-    QVector<NetworkService*> networks(m_servicesCache.size(), NULL);
-    foreach (const QString &path, m_servicesCache.keys()) {
+    QVector<NetworkService *> services;
+
+    // this foreach is based on the m_servicesOrder to keep connman's sort
+    // of services.
+    foreach (const QString &path, m_servicesOrder.keys()) {
 	    if (tech.isEmpty() || m_servicesCache.value(path)->type() == tech)
-		    networks[m_servicesOrder.value(path)] = m_servicesCache.value(path);
+		    services.push_back(m_servicesCache.value(path));
     }
-    return networks; // TODO: optimizations
+
+    return services;
 }
 
 // Setters

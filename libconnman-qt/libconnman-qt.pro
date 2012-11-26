@@ -23,26 +23,26 @@ HEADERS += manager.h \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \
-	commondbustypes.h \
+    commondbustypes.h \
     clockproxy.h \
     clockmodel.h \
     debug.h
 
 SOURCES += \
-		   networkmanager.cpp \
-		   networktechnology.cpp \
-		   networkservice.cpp \
-		   manager.cpp \
-		   service.cpp \
-           technology.cpp \
-           clockproxy.cpp \
-           clockmodel.cpp \
-           commondbustypes.cpp \
-           debug.cpp
+    networkmanager.cpp \
+    networktechnology.cpp \
+    networkservice.cpp \
+    manager.cpp \
+    service.cpp \
+    technology.cpp \
+    clockproxy.cpp \
+    clockmodel.cpp \
+    commondbustypes.cpp \
+    debug.cpp
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
-headers.files = $HAEDERS
+headers.files = $HEADERS
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library

@@ -13,12 +13,12 @@
 #include <QDebug>
 
 struct __Debug {
-	__Debug(const char *_file, const char *_func, int _line)
-		: file(_file), func(_func), line(_line) {}
+    __Debug(const char *_file, const char *_func, int _line)
+        : file(_file), func(_func), line(_line) {}
 
-	const char *file;
-	const char *func;
-	int line;
+    const char *file;
+    const char *func;
+    int line;
 };
 
 QDebug operator<<(QDebug lhs, const __Debug &rhs);

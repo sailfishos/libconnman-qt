@@ -64,9 +64,9 @@ const bool NetworkTechnology::connected() const
 
 const QString NetworkTechnology::objPath() const
 {
-	Q_ASSERT(m_technology);
+    Q_ASSERT(m_technology);
 
-	return m_technology->path();
+    return m_technology->path();
 }
 
 // Setters
@@ -87,11 +87,11 @@ void NetworkTechnology::scan()
 
 void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-	QVariant tmp = value.variant();
+    QVariant tmp = value.variant();
 
-	Q_ASSERT(m_technology);
+    Q_ASSERT(m_technology);
 
-	pr_dbg() << m_technology->path() << "property" << name << "changed from"
+    pr_dbg() << m_technology->path() << "property" << name << "changed from"
              << m_propertiesCache[name].toString() << "to" << tmp.toString();
 
     m_propertiesCache[name] = tmp;

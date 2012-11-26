@@ -11,8 +11,8 @@
 
 QDebug operator<<(QDebug lhs, const __Debug &rhs)
 {
-	lhs.nospace() << "libconnman-qt(" << rhs.file << ":" << rhs.func << ":" << rhs.line << ")";
+    lhs.nospace() << "libconnman-qt(" << rhs.file << ":" << rhs.func << ":" << rhs.line << ")";
 
-	return lhs.space();
+    return lhs.space();
 }
 

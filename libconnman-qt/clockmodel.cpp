@@ -57,10 +57,10 @@ void ClockModel::connectToConnman()
 
 void ClockModel::getPropertiesFinished(QDBusPendingCallWatcher *call)
 {
-	QDBusPendingReply<QVariantMap> reply = *call;
-	if (reply.isError()) {
-		qCritical() << "ClockModel: getProperties: " << reply.error().name() << reply.error().message();
-	} else {
+    QDBusPendingReply<QVariantMap> reply = *call;
+    if (reply.isError()) {
+        qCritical() << "ClockModel: getProperties: " << reply.error().name() << reply.error().message();
+    } else {
         QVariantMap properties = reply.value();
 
         Q_ASSERT(properties.contains("Timezone"));
@@ -88,9 +88,9 @@ void ClockModel::getPropertiesFinished(QDBusPendingCallWatcher *call)
 
 void ClockModel::setPropertyFinished(QDBusPendingCallWatcher *call)
 {
-	QDBusPendingReply<> reply = *call;
-	if (reply.isError()) {
-		qCritical() << "ClockModel: setProperty: " << reply.error().name() << reply.error().message();
+    QDBusPendingReply<> reply = *call;
+    if (reply.isError()) {
+        qCritical() << "ClockModel: setProperty: " << reply.error().name() << reply.error().message();
     }
     call->deleteLater();
 }

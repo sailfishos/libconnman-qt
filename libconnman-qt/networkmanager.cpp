@@ -65,7 +65,7 @@ void NetworkManager::connectToConnman(QString)
 
     if (!m_manager->isValid()) {
 
-	    pr_dbg() << "D-Bus net.connman.Manager object is invalid. Connman may not be running or is invalid.";
+        pr_dbg() << "D-Bus net.connman.Manager object is invalid. Connman may not be running or is invalid.";
 
         delete m_manager;
         m_manager = NULL;
@@ -238,7 +238,7 @@ void NetworkManager::getServicesReply(QDBusPendingCallWatcher *call)
             // by connman's documentation, first service is always
             // the default route's one
             if (order == 0)
-	            updateDefaultRoute(service);
+                updateDefaultRoute(service);
         }
 
         // if no service was replied
@@ -304,7 +304,7 @@ void NetworkManager::updateDefaultRoute(NetworkService* defaultRoute)
 void NetworkManager::propertyChanged(const QString &name,
         const QDBusVariant &value)
 {
-	QVariant tmp = value.variant();
+    QVariant tmp = value.variant();
 
     pr_dbg() << "Manager's property" << name << "changed from"
              << m_propertiesCache[name].toString() << "to" << tmp.toString();
@@ -320,35 +320,35 @@ void NetworkManager::propertyChanged(const QString &name,
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
                                      const QVariantMap &properties)
 {
-	NetworkTechnology *tech = new NetworkTechnology(technology.path(),
-	                                                properties, this);
+    NetworkTechnology *tech = new NetworkTechnology(technology.path(),
+                                                    properties, this);
 
-	m_technologiesCache.insert(tech->type(), tech);
+    m_technologiesCache.insert(tech->type(), tech);
 
-	pr_dbg() << "Technology: " << tech->type();
-	pr_dbg() << "\tConnected:" << tech->connected();
-	pr_dbg() << "\tPowered:" << tech->powered();
+    pr_dbg() << "Technology: " << tech->type();
+    pr_dbg() << "\tConnected:" << tech->connected();
+    pr_dbg() << "\tPowered:" << tech->powered();
 
-	emit technologiesChanged();
+    emit technologiesChanged();
 }
 
 void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
 {
-	NetworkTechnology *net;
-	// if we wasn't storing by type() this loop would be unecessary
-	// but since this function will be triggered rarely that's fine
-	foreach (net, m_technologiesCache) {
-		if (net->objPath() == technology.path()) {
+    NetworkTechnology *net;
+    // if we wasn't storing by type() this loop would be unecessary
+    // but since this function will be triggered rarely that's fine
+    foreach (net, m_technologiesCache) {
+        if (net->objPath() == technology.path()) {
 
-			pr_dbg() << "Removing " << net->objPath();
-			m_technologiesCache.remove(net->type());
-			net->deleteLater();
+            pr_dbg() << "Removing " << net->objPath();
+            m_technologiesCache.remove(net->type());
+            net->deleteLater();
 
-			break;
-		}
-	}
+            break;
+        }
+    }
 
-	emit technologiesChanged();
+    emit technologiesChanged();
 }
 
 
@@ -393,7 +393,7 @@ const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
     QVector<NetworkTechnology *> techs(m_technologiesCache.size(), NULL);
 
     foreach (NetworkTechnology *tech, m_technologiesCache) {
-	    techs.push_back(tech);
+        techs.push_back(tech);
     }
 
     return techs;
@@ -406,8 +406,8 @@ const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) 
     // this foreach is based on the m_servicesOrder to keep connman's sort
     // of services.
     foreach (const QString &path, m_servicesOrder.keys()) {
-	    if (tech.isEmpty() || m_servicesCache.value(path)->type() == tech)
-		    services.push_back(m_servicesCache.value(path));
+        if (tech.isEmpty() || m_servicesCache.value(path)->type() == tech)
+            services.push_back(m_servicesCache.value(path));
     }
 
     return services;

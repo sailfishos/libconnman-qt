@@ -43,7 +43,7 @@ public:
     bool isAvailable() const;
 
     NetworkTechnology* getTechnology(const QString &type) const;
-	const QVector<NetworkTechnology *> getTechnologies() const;
+    const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = "") const;
 
     const QString state() const;

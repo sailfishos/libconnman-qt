@@ -168,11 +168,11 @@ void NetworkService::dbg_connectReply(QDBusPendingCallWatcher *call){
 
 void NetworkService::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-	QVariant tmp = value.variant();
+    QVariant tmp = value.variant();
 
-	Q_ASSERT(m_service);
+    Q_ASSERT(m_service);
 
-	pr_dbg() << m_service->path() << "property" << name << "changed from"
+    pr_dbg() << m_service->path() << "property" << name << "changed from"
              << m_propertiesCache[name].toString() << "to" << tmp.toString();
 
     m_propertiesCache[name] = tmp;

@@ -70,10 +70,18 @@ private:
     QDBusPendingCallWatcher *m_getPropertiesWatcher;
     QDBusPendingCallWatcher *m_getTechnologiesWatcher;
     QDBusPendingCallWatcher *m_getServicesWatcher;
+
+    /* Contains all property related to this net.connman.Manager object */
     QVariantMap m_propertiesCache;
-    QMap<QString, NetworkTechnology *> m_technologiesCache;
-    QMap<QString, NetworkService *> m_servicesCache;
-    QMap<QString, uint> m_servicesOrder;
+
+    /* Not just for cache, but actual containers of Network* type objects */
+    QHash<QString, NetworkTechnology *> m_technologiesCache;
+    QHash<QString, NetworkService *> m_servicesCache;
+
+    /* This is for sorting purpose only, never delete an object from here */
+    QVector<NetworkService *> m_servicesOrder;
+
+    /* This variable is used just to send signal if changed */
     NetworkService* m_defaultRoute;
 
     QDBusServiceWatcher *watcher;

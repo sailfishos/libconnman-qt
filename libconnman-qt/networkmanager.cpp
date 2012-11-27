@@ -220,6 +220,7 @@ void NetworkManager::getServicesReply(QDBusPendingCallWatcher *call)
         ConnmanObjectList lst = reply.value();
         ConnmanObject obj;
         int order = -1;
+        NetworkService *service = NULL;
 
         // make sure we don't leak memory
         m_servicesOrder.clear();
@@ -227,11 +228,11 @@ void NetworkManager::getServicesReply(QDBusPendingCallWatcher *call)
         foreach (obj, lst) { // TODO: consider optimizations
             order++;
 
-            NetworkService *service = new NetworkService(obj.objpath.path(),
+            service = new NetworkService(obj.objpath.path(),
                     obj.properties, this);
 
             m_servicesCache.insert(obj.objpath.path(), service);
-            m_servicesOrder.insert(obj.objpath.path(), order);
+            m_servicesOrder.push_back(service);
 
             pr_dbg() << "From Service: " << obj.objpath.path();
 
@@ -263,28 +264,31 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         pr_dbg() << "Removing " << obj.path();
         m_servicesCache.value(obj.path())->deleteLater();
         m_servicesCache.remove(obj.path());
-        m_servicesOrder.remove(obj.path());
     }
 
     ConnmanObject connmanobj;
     int order = -1;
+    NetworkService *service = NULL;
 
     // make sure we don't leak memory
     m_servicesOrder.clear();
 
     foreach (connmanobj, changed) {
         order++;
-        m_servicesOrder.insert(connmanobj.objpath.path(), order);
 
         if (!m_servicesCache.contains(connmanobj.objpath.path())) {
-            NetworkService *service = new NetworkService(connmanobj.objpath.path(),
+            service = new NetworkService(connmanobj.objpath.path(),
                     connmanobj.properties, this);
             m_servicesCache.insert(connmanobj.objpath.path(), service);
             pr_dbg() << "Added service " << connmanobj.objpath.path();
+        } else {
+            service = m_servicesCache.value(connmanobj.objpath.path());
         }
 
+        m_servicesOrder.push_back(service);
+
         if (order == 0)
-            updateDefaultRoute(m_servicesCache.value(connmanobj.objpath.path()));
+            updateDefaultRoute(service);
     }
 
     if (order == -1)
@@ -405,9 +409,9 @@ const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) 
 
     // this foreach is based on the m_servicesOrder to keep connman's sort
     // of services.
-    foreach (const QString &path, m_servicesOrder.keys()) {
-        if (tech.isEmpty() || m_servicesCache.value(path)->type() == tech)
-            services.push_back(m_servicesCache.value(path));
+    foreach (NetworkService *service, m_servicesOrder) {
+        if (tech.isEmpty() || service->type() == tech)
+            services.push_back(service);
     }
 
     return services;

@@ -42,7 +42,7 @@ SOURCES += \
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
-headers.files = $HEADERS
+headers.files = $$HEADERS
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library

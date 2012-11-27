@@ -9,6 +9,7 @@
  */
 
 #include "networktechnology.h"
+#include "debug.h"
 
 const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
@@ -23,7 +24,7 @@ NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &pro
     m_technology = new Technology("net.connman", path, QDBusConnection::systemBus(), this);
 
     if (!m_technology->isValid()) {
-        qDebug() << "invalid technology: " << path;
+        pr_dbg() << "Invalid technology: " << path;
         throw -1; // FIXME
     }
 
@@ -61,6 +62,13 @@ const bool NetworkTechnology::connected() const
     return m_propertiesCache[NetworkTechnology::Connected].toBool();
 }
 
+const QString NetworkTechnology::objPath() const
+{
+    Q_ASSERT(m_technology);
+
+    return m_technology->path();
+}
+
 // Setters
 
 void NetworkTechnology::setPowered(const bool &powered)
@@ -79,12 +87,18 @@ void NetworkTechnology::scan()
 
 void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-    qDebug() << "NetworkTechnology: property " << name << " changed to " << value.variant();
-    m_propertiesCache[name] = value.variant();
+    QVariant tmp = value.variant();
+
+    Q_ASSERT(m_technology);
+
+    pr_dbg() << m_technology->path() << "property" << name << "changed from"
+             << m_propertiesCache[name].toString() << "to" << tmp.toString();
+
+    m_propertiesCache[name] = tmp;
 
     if (name == Powered) {
-        emit poweredChanged(m_propertiesCache[name].toBool());
+        emit poweredChanged(tmp.toBool());
     } else if (name == Connected) {
-        emit connectedChanged(m_propertiesCache[name].toBool());
+        emit connectedChanged(tmp.toBool());
     }
 }

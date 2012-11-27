@@ -9,6 +9,7 @@
  */
 
 #include "networkservice.h"
+#include "debug.h"
 
 const QString NetworkService::Name("Name");
 const QString NetworkService::State("State");
@@ -34,7 +35,7 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     m_service = new Service("net.connman", path, QDBusConnection::systemBus(), this);
 
     if (!m_service->isValid()) {
-        qDebug() << "invalid service: " << path;
+        pr_dbg() << "Invalid service: " << path;
         throw -1; // FIXME
     }
 
@@ -154,44 +155,50 @@ void NetworkService::setProxyConfig(const QVariantMap &proxy)
 
 /* this slot is used for debugging */
 void NetworkService::dbg_connectReply(QDBusPendingCallWatcher *call){
-    qDebug() << "Got something from service.connect()";
+    pr_dbg() << "Got something from service.connect()";
     Q_ASSERT(call);
     QDBusPendingReply<> reply = *call;
     if (!reply.isFinished()) {
-       qDebug() << "connect() not finished yet";
+       pr_dbg() << "connect() not finished yet";
     }
     if (reply.isError()) {
-        qDebug() << "Reply from service.connect(): " << reply.error().message();
+        pr_dbg() << "Reply from service.connect(): " << reply.error().message();
     }
 }
 
 void NetworkService::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-    qDebug() << "NetworkService: property " << name << " changed to " << value.variant();
-    m_propertiesCache[name] = value.variant();
+    QVariant tmp = value.variant();
+
+    Q_ASSERT(m_service);
+
+    pr_dbg() << m_service->path() << "property" << name << "changed from"
+             << m_propertiesCache[name].toString() << "to" << tmp.toString();
+
+    m_propertiesCache[name] = tmp;
 
     if (name == Name) {
-        emit nameChanged(m_propertiesCache[name].toString());
+        emit nameChanged(tmp.toString());
     } else if (name == State) {
-        emit stateChanged(m_propertiesCache[name].toString());
+        emit stateChanged(tmp.toString());
     } else if (name == Security) {
-        emit securityChanged(m_propertiesCache[name].toStringList());
+        emit securityChanged(tmp.toStringList());
     } else if (name == Strength) {
-        emit strengthChanged(m_propertiesCache[name].toUInt());
+        emit strengthChanged(tmp.toUInt());
     } else if (name == Favorite) {
-        emit favoriteChanged(m_propertiesCache[name].toBool());
+        emit favoriteChanged(tmp.toBool());
     } else if (name == IPv4) {
         emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == IPv4Config) {
         emit ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
     } else if (name == Nameservers) {
-        emit nameserversChanged(m_propertiesCache[name].toStringList());
+        emit nameserversChanged(tmp.toStringList());
     } else if (name == NameserversConfig) {
-        emit nameserversConfigChanged(m_propertiesCache[name].toStringList());
+        emit nameserversConfigChanged(tmp.toStringList());
     } else if (name == Domains) {
-        emit domainsChanged(m_propertiesCache[name].toStringList());
+        emit domainsChanged(tmp.toStringList());
     } else if (name == DomainsConfig) {
-        emit domainsConfigChanged(m_propertiesCache[name].toStringList());
+        emit domainsConfigChanged(tmp.toStringList());
     } else if (name == Proxy) {
         emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     } else if (name == ProxyConfig) {

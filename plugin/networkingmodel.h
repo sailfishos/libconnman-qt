@@ -61,8 +61,7 @@ private:
     ServiceReqData* m_req_data;
 
 private slots:
-    void updateTechnologies(const QMap<QString, NetworkTechnology*> &added,
-                            const QStringList &removed);
+    void updateTechnologies();
 
     void managerAvailabilityChanged(bool available);
 

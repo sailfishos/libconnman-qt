@@ -8,10 +8,10 @@
  *
  */
 
-#include "QDebug"
+#include <QDebug>
 #include "networkingmodel.h"
 
-#define AGENT_PATH "/WifiSettings"
+static const char AGENT_PATH[] = "/WifiSettings";
 
 NetworkingModel::NetworkingModel(QObject* parent)
   : QObject(parent),
@@ -19,7 +19,8 @@ NetworkingModel::NetworkingModel(QObject* parent)
     m_wifi(NULL)
 {
     m_manager = NetworkManagerFactory::createInstance();
-    new UserInputAgent(this);
+
+    new UserInputAgent(this); // this object will be freed when NetworkingModel is freed
 
     m_wifi = m_manager->getTechnology("wifi"); // TODO: use constant literal
     if (m_wifi) {
@@ -28,16 +29,20 @@ NetworkingModel::NetworkingModel(QObject* parent)
                 this,
                 SIGNAL(wifiPoweredChanged(bool)));
     }
+
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
+
     connect(m_manager,
-            SIGNAL(technologiesChanged(QMap<QString, NetworkTechnology*>, QStringList)),
+            SIGNAL(technologiesChanged()),
             this,
-            SLOT(updateTechnologies(QMap<QString, NetworkTechnology*>, QStringList)));
+            SLOT(updateTechnologies()));
+
     connect(m_manager,
             SIGNAL(servicesChanged()),
             this,
             SIGNAL(networksChanged()));
+
     QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
     m_manager->registerAgent(QString(AGENT_PATH));
 }
@@ -54,13 +59,11 @@ bool NetworkingModel::isAvailable() const
 
 QList<QObject*> NetworkingModel::networks() const
 {
-    const QString wifi("wifi");
     QList<QObject*> networks;
-    // TODO: get rid of double looping, do filtering in NM::getServices()
-    foreach (NetworkService* network, m_manager->getServices()) {
-        if (network->type() == wifi) {
-            networks.append(network);
-        }
+    // FIXME: how to get rid of this douple looping since we
+    // must return a QList<QObject*>?
+    foreach (NetworkService* network, m_manager->getServices("wifi")) {
+	    networks.append(network);
     }
     return networks;
 }
@@ -92,20 +95,28 @@ void NetworkingModel::requestScan() const
     }
 }
 
-void NetworkingModel::updateTechnologies(const QMap<QString, NetworkTechnology*> &added,
-                                         const QStringList &removed)
+void NetworkingModel::updateTechnologies()
 {
-    QString wifi_str = QString("wifi");
-    if (added.contains(wifi_str)) {
-        m_wifi = added.value(wifi_str);
-        connect(m_wifi,
-                SIGNAL(poweredChanged(bool)),
-                this,
-                SIGNAL(wifiPoweredChanged(bool)));
-    }
-    if (removed.contains(wifi_str)) {
-        m_wifi = NULL; // FIXME: is it needed?
-    }
+	NetworkTechnology *test = NULL;
+	if (m_wifi) {
+		if ((test = m_manager->getTechnology("wifi")) == NULL) {
+			// if wifi is set and manager doesn't return a wifi, it means
+			// that wifi was removed
+			m_wifi = NULL;
+		}
+	} else {
+		if (test = m_manager->getTechnology("wifi")) {
+			// if wifi is not set and manager returns a wifi, it means
+			// that wifi was added
+			m_wifi = test;
+
+			connect(m_wifi,
+			        SIGNAL(poweredChanged(bool)),
+			        this,
+			        SIGNAL(wifiPoweredChanged(bool)));
+		}
+	}
+
     emit technologiesChanged();
 }
 
@@ -172,17 +183,21 @@ void UserInputAgent::RequestInput(const QDBusObjectPath &service_path,
                                        const QVariantMap &fields,
                                        const QDBusMessage &message)
 {
-    QVariantMap json;
     qDebug() << "Service " << service_path.path() << " wants user input";
+
+    QVariantMap json;
     foreach (const QString &key, fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
         json.insert(key, payload);
     }
+
+    message.setDelayedReply(true);
+
     ServiceReqData *reqdata = new ServiceReqData;
     reqdata->fields = json;
-    message.setDelayedReply(true);
     reqdata->reply = message.createReply();
     reqdata->msg = message;
+
     m_networkingmodel->requestUserInput(reqdata);
 }
 

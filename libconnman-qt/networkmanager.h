@@ -43,7 +43,8 @@ public:
     bool isAvailable() const;
 
     NetworkTechnology* getTechnology(const QString &type) const;
-    const QVector<NetworkService*> getServices() const;
+    const QVector<NetworkTechnology *> getTechnologies() const;
+    const QVector<NetworkService*> getServices(const QString &tech = "") const;
 
     const QString state() const;
     bool offlineMode() const;
@@ -59,8 +60,7 @@ signals:
 
     void stateChanged(const QString &state);
     void offlineModeChanged(bool offlineMode);
-    void technologiesChanged(const QMap<QString, NetworkTechnology*> &added,
-                             const QStringList &removed);
+    void technologiesChanged();
     void servicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
 
@@ -70,10 +70,18 @@ private:
     QDBusPendingCallWatcher *m_getPropertiesWatcher;
     QDBusPendingCallWatcher *m_getTechnologiesWatcher;
     QDBusPendingCallWatcher *m_getServicesWatcher;
+
+    /* Contains all property related to this net.connman.Manager object */
     QVariantMap m_propertiesCache;
-    QMap<QString, NetworkTechnology *> m_technologiesCache;
-    QMap<QString, NetworkService *> m_servicesCache;
-    QMap<QString, uint> m_servicesOrder;
+
+    /* Not just for cache, but actual containers of Network* type objects */
+    QHash<QString, NetworkTechnology *> m_technologiesCache;
+    QHash<QString, NetworkService *> m_servicesCache;
+
+    /* This is for sorting purpose only, never delete an object from here */
+    QVector<NetworkService *> m_servicesOrder;
+
+    /* This variable is used just to send signal if changed */
     NetworkService* m_defaultRoute;
 
     QDBusServiceWatcher *watcher;
@@ -93,6 +101,9 @@ private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
     void updateDefaultRoute(NetworkService* defaultRoute);
+    void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
+    void technologyRemoved(const QDBusObjectPath &technology);
+
 
 private:
     Q_DISABLE_COPY(NetworkManager);

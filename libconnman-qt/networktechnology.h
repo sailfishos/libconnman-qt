@@ -31,6 +31,7 @@ public:
     const QString type() const;
     const bool powered() const;
     const bool connected() const;
+    const QString objPath() const;
 
 public slots:
     void setPowered(const bool &powered);

@@ -13,6 +13,16 @@
 
 static const char AGENT_PATH[] = "/WifiSettings";
 
+#define CONNECT_WIFI_SIGNALS(wifi) \
+    connect(wifi, \
+        SIGNAL(poweredChanged(bool)), \
+        this, \
+        SIGNAL(wifiPoweredChanged(bool))); \
+    connect(wifi, \
+            SIGNAL(scanFinished()), \
+            this, \
+            SIGNAL(scanRequestFinished()))
+
 NetworkingModel::NetworkingModel(QObject* parent)
   : QObject(parent),
     m_manager(NULL),
@@ -24,10 +34,7 @@ NetworkingModel::NetworkingModel(QObject* parent)
 
     m_wifi = m_manager->getTechnology("wifi"); // TODO: use constant literal
     if (m_wifi) {
-        connect(m_wifi,
-                SIGNAL(poweredChanged(bool)),
-                this,
-                SIGNAL(wifiPoweredChanged(bool)));
+        CONNECT_WIFI_SIGNALS(m_wifi);
     }
 
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
@@ -63,7 +70,7 @@ QList<QObject*> NetworkingModel::networks() const
     // FIXME: how to get rid of this douple looping since we
     // must return a QList<QObject*>?
     foreach (NetworkService* network, m_manager->getServices("wifi")) {
-	    networks.append(network);
+      networks.append(network);
     }
     return networks;
 }
@@ -97,25 +104,22 @@ void NetworkingModel::requestScan() const
 
 void NetworkingModel::updateTechnologies()
 {
-	NetworkTechnology *test = NULL;
-	if (m_wifi) {
-		if ((test = m_manager->getTechnology("wifi")) == NULL) {
-			// if wifi is set and manager doesn't return a wifi, it means
-			// that wifi was removed
-			m_wifi = NULL;
-		}
-	} else {
-		if (test = m_manager->getTechnology("wifi")) {
-			// if wifi is not set and manager returns a wifi, it means
-			// that wifi was added
-			m_wifi = test;
+    NetworkTechnology *test = NULL;
+    if (m_wifi) {
+        if ((test = m_manager->getTechnology("wifi")) == NULL) {
+            // if wifi is set and manager doesn't return a wifi, it means
+            // that wifi was removed
+            m_wifi = NULL;
+        }
+    } else {
+        if (test = m_manager->getTechnology("wifi")) {
+            // if wifi is not set and manager returns a wifi, it means
+            // that wifi was added
+            m_wifi = test;
 
-			connect(m_wifi,
-			        SIGNAL(poweredChanged(bool)),
-			        this,
-			        SIGNAL(wifiPoweredChanged(bool)));
-		}
-	}
+            CONNECT_WIFI_SIGNALS(m_wifi);
+        }
+    }
 
     emit technologiesChanged();
 }

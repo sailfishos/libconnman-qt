@@ -26,7 +26,10 @@ PageStack {
         running: false
         repeat: true
         triggeredOnStart: true
-        onTriggered: networkingModel.requestScan();
+        onTriggered: {
+            networkingModel.requestScan();
+            txtScanning.text = "Scanning...";
+        }
     }
 
     NetworkingModel {
@@ -73,6 +76,11 @@ PageStack {
         onWifiPoweredChanged: {
             wifiSwitch.checked = networkingModel.wifiPowered;
             scanTimer.running = networkingModel.wifiPowered;
+        }
+
+        onScanRequestFinished: {
+            txtScanning.text = "";
+            console.log("scan finished");
         }
 
         onUserInputRequested: {
@@ -157,6 +165,13 @@ PageStack {
                     text: "WiFi status"
                     color: "white"
                     font.pointSize: 16
+                }
+                Text {
+                    id: txtScanning
+                    anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 20 }
+                    text: ""
+                    color: "red"
+                    font.pointSize: 13
                 }
                 Switch {
                     id: wifiSwitch

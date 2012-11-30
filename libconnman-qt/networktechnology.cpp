@@ -110,6 +110,8 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 
 void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
 {
+    Q_UNUSED(call);
+
     pr_dbg() << "Scan Finished";
 
     emit scanFinished();

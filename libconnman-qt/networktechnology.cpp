@@ -18,7 +18,8 @@ const QString NetworkTechnology::Connected("Connected");
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
-    m_technology(NULL)
+    m_technology(NULL),
+    m_scanWatcher(NULL)
 {
     Q_ASSERT(!path.isEmpty());
     m_technology = new Technology("net.connman", path, QDBusConnection::systemBus(), this);
@@ -80,7 +81,11 @@ void NetworkTechnology::setPowered(const bool &powered)
 void NetworkTechnology::scan()
 {
     Q_ASSERT(m_technology);
-    m_technology->Scan();
+
+    QDBusPendingReply<> reply = m_technology->Scan();
+    m_scanWatcher = new QDBusPendingCallWatcher(reply, m_technology);
+    connect(m_scanWatcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(scanReply(QDBusPendingCallWatcher*)));
 }
 
 // Private
@@ -101,4 +106,13 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
     } else if (name == Connected) {
         emit connectedChanged(tmp.toBool());
     }
+}
+
+void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
+{
+    Q_UNUSED(call);
+
+    pr_dbg() << "Scan Finished";
+
+    emit scanFinished();
 }

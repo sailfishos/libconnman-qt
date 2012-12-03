@@ -30,8 +30,8 @@ public:
 
     const QString name() const;
     const QString type() const;
-    const bool powered() const;
-    const bool connected() const;
+    bool powered() const;
+    bool connected() const;
     const QString objPath() const;
 
 public slots:

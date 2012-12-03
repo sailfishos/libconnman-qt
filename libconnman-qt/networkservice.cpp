@@ -71,15 +71,15 @@ const QStringList NetworkService::security() const {
     return m_propertiesCache.value(Security).toStringList();
 }
 
-const uint NetworkService::strength() const {
+uint NetworkService::strength() const {
     return m_propertiesCache.value(Strength).toUInt();
 }
 
-const bool NetworkService::favorite() const {
+bool NetworkService::favorite() const {
     return m_propertiesCache.value(Favorite).toBool();
 }
 
-const bool NetworkService::autoConnect() const {
+bool NetworkService::autoConnect() const {
     return m_propertiesCache.value(AutoConnect).toBool();
 }
 

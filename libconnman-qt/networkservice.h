@@ -44,16 +44,16 @@ class NetworkService : public QObject
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
-    NetworkService(QObject* parent = 0) { Q_ASSERT(false); };
+    NetworkService(QObject* parent = 0) { Q_ASSERT(false); Q_UNUSED(parent); };
     virtual ~NetworkService();
 
     const QString name() const;
     const QString type() const;
     const QString state() const;
     const QStringList security() const;
-    const uint strength() const;
-    const bool favorite() const;
-    const bool autoConnect() const;
+    bool autoConnect() const;
+    uint strength() const;
+    bool favorite() const;
     const QString path() const;
     const QVariantMap ipv4() const;
     const QVariantMap ipv4Config() const;

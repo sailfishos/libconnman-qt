@@ -10,22 +10,23 @@
 #include "components.h"
 
 #include <networkservice.h>
-#include "networkingmodel.h"
 #include <clockmodel.h>
-
+#include "networkingmodel.h"
+#include "technologymodel.h"
 
 void Components::registerTypes(const char *uri)
 {
-	qmlRegisterUncreatableType<NetworkService>(uri,0,2,"NetworkService",
-            "Please don't create \"NetworkService\" objects manually.");
-	qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
-	qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
+    qmlRegisterUncreatableType<NetworkService>(uri,0,2,"NetworkService",
+        "Please don't create \"NetworkService\" objects manually.");
+    qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
+    qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
+    qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)
 {
     Q_UNUSED(uri);
-	Q_UNUSED(engine);
+    Q_UNUSED(engine);
 }
 
 Q_EXPORT_PLUGIN(Components);

@@ -8,6 +8,7 @@
  *
  */
 
+#include "manager.h"
 #include "networkmanager.h"
 #include "debug.h"
 

@@ -11,8 +11,9 @@
 #ifndef NETWORKTECHNOLOGY_H
 #define NETWORKTECHNOLOGY_H
 
-#include "technology.h"
 #include <QtDBus>
+
+class Technology;
 
 class NetworkTechnology : public QObject
 {

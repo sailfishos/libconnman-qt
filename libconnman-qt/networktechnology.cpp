@@ -8,6 +8,7 @@
  *
  */
 
+#include "technology.h"
 #include "networktechnology.h"
 #include "debug.h"
 

@@ -8,6 +8,7 @@
  *
  */
 
+#include "service.h"
 #include "networkservice.h"
 #include "debug.h"
 
@@ -18,14 +19,18 @@ const QString NetworkService::Security("Security");
 const QString NetworkService::Strength("Strength");
 const QString NetworkService::Error("Error");
 const QString NetworkService::Favorite("Favorite");
+const QString NetworkService::AutoConnect("AutoConnect");
 const QString NetworkService::IPv4("IPv4");
 const QString NetworkService::IPv4Config("IPv4.Configuration");
+const QString NetworkService::IPv6("IPv6");
+const QString NetworkService::IPv6Config("IPv6.Configuration");
 const QString NetworkService::Nameservers("Nameservers");
 const QString NetworkService::NameserversConfig("Nameservers.Configuration");
 const QString NetworkService::Domains("Domains");
 const QString NetworkService::DomainsConfig("Domains.Configuration");
 const QString NetworkService::Proxy("Proxy");
 const QString NetworkService::ProxyConfig("Proxy.Configuration");
+const QString NetworkService::Ethernet("Ethernet");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -73,12 +78,24 @@ const bool NetworkService::favorite() const {
     return m_propertiesCache.value(Favorite).toBool();
 }
 
+const bool NetworkService::autoConnect() const {
+    return m_propertiesCache.value(AutoConnect).toBool();
+}
+
 const QVariantMap NetworkService::ipv4() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
 }
 
 const QVariantMap NetworkService::ipv4Config() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
+}
+
+const QVariantMap NetworkService::ipv6() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
+}
+
+const QVariantMap NetworkService::ipv6Config() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
 }
 
 const QStringList NetworkService::nameservers() const {
@@ -105,6 +122,10 @@ const QVariantMap NetworkService::proxyConfig() const {
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
 }
 
+const QVariantMap NetworkService::ethernet() const {
+    return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
+}
+
 void NetworkService::requestConnect()
 {
     // increase reply timeout when connecting
@@ -129,10 +150,22 @@ void NetworkService::requestDisconnect()
     m_service->Disconnect();
 }
 
+void NetworkService::setAutoConnect(const bool autoconnect)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoconnect)));
+}
+
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)
 {
     // QDBusPendingReply<void> reply =
     m_service->SetProperty(IPv4Config, QDBusVariant(QVariant(ipv4)));
+}
+
+void NetworkService::setIpv6Config(const QVariantMap &ipv6)
+{
+    // QDBusPendingReply<void> reply =
+    m_service->SetProperty(IPv6Config, QDBusVariant(QVariant(ipv6)));
 }
 
 void NetworkService::setNameserversConfig(const QStringList &nameservers)
@@ -191,6 +224,10 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == IPv4Config) {
         emit ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
+    } else if (name == IPv6) {
+        emit ipv6Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6)));
+    } else if (name == IPv6Config) {
+        emit ipv6ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config)));
     } else if (name == Nameservers) {
         emit nameserversChanged(tmp.toStringList());
     } else if (name == NameserversConfig) {
@@ -203,5 +240,7 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     } else if (name == ProxyConfig) {
         emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
+    } else if (name == Ethernet) {
+        emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
     }
 }

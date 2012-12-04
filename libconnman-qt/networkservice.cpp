@@ -34,13 +34,14 @@ const QString NetworkService::Ethernet("Ethernet");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
-    m_service(NULL)
+    m_service(NULL),
+    m_path(path)
 {
-    Q_ASSERT(!path.isEmpty());
-    m_service = new Service("net.connman", path, QDBusConnection::systemBus(), this);
+    Q_ASSERT(!m_path.isEmpty());
+    m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
 
     if (!m_service->isValid()) {
-        pr_dbg() << "Invalid service: " << path;
+        pr_dbg() << "Invalid service: " << m_path;
         throw -1; // FIXME
     }
 
@@ -70,16 +71,20 @@ const QStringList NetworkService::security() const {
     return m_propertiesCache.value(Security).toStringList();
 }
 
-const uint NetworkService::strength() const {
+uint NetworkService::strength() const {
     return m_propertiesCache.value(Strength).toUInt();
 }
 
-const bool NetworkService::favorite() const {
+bool NetworkService::favorite() const {
     return m_propertiesCache.value(Favorite).toBool();
 }
 
-const bool NetworkService::autoConnect() const {
+bool NetworkService::autoConnect() const {
     return m_propertiesCache.value(AutoConnect).toBool();
+}
+
+const QString NetworkService::path() const {
+    return m_path;
 }
 
 const QVariantMap NetworkService::ipv4() const {

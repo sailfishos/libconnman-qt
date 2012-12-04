@@ -29,6 +29,7 @@ class NetworkService : public QObject
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged);
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged);
     Q_PROPERTY(bool autoConnect READ autoConnect WRITE setAutoConnect NOTIFY autoConnectChanged);
+    Q_PROPERTY(QString path READ path NOTIFY pathChanged);
     Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed);
     Q_PROPERTY(QVariantMap ipv4Config READ ipv4Config WRITE setIpv4Config NOTIFY ipv4ConfigChanged);
     Q_PROPERTY(QVariantMap ipv6 READ ipv6 NOTIFY ipv6Changed);
@@ -43,16 +44,17 @@ class NetworkService : public QObject
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
-    NetworkService(QObject* parent = 0) { Q_ASSERT(false); };
+    NetworkService(QObject* parent = 0) { Q_ASSERT(false); Q_UNUSED(parent); };
     virtual ~NetworkService();
 
     const QString name() const;
     const QString type() const;
     const QString state() const;
     const QStringList security() const;
-    const uint strength() const;
-    const bool favorite() const;
-    const bool autoConnect() const;
+    bool autoConnect() const;
+    uint strength() const;
+    bool favorite() const;
+    const QString path() const;
     const QVariantMap ipv4() const;
     const QVariantMap ipv4Config() const;
     const QVariantMap ipv6() const;
@@ -72,6 +74,7 @@ signals:
     void strengthChanged(const uint strength);
     void favoriteChanged(const bool &favorite);
     void autoConnectChanged(const bool autoconnect);
+    void pathChanged(const QString &path);
     void ipv4Changed(const QVariantMap &ipv4);
     void ipv4ConfigChanged(const QVariantMap &ipv4);
     void ipv6Changed(const QVariantMap &ipv6);
@@ -97,6 +100,7 @@ public slots:
 
 private:
     Service *m_service;
+    QString m_path;
     QVariantMap m_propertiesCache;
 
     QDBusPendingCallWatcher *dbg_connectWatcher;

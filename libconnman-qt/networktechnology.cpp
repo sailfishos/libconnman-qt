@@ -54,12 +54,12 @@ const QString NetworkTechnology::type() const
     return m_propertiesCache[NetworkTechnology::Type].toString();
 }
 
-const bool NetworkTechnology::powered() const
+bool NetworkTechnology::powered() const
 {
     return m_propertiesCache[NetworkTechnology::Powered].toBool();
 }
 
-const bool NetworkTechnology::connected() const
+bool NetworkTechnology::connected() const
 {
     return m_propertiesCache[NetworkTechnology::Connected].toBool();
 }

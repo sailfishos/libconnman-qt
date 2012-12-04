@@ -2,8 +2,8 @@ TARGET=ConnmanQtDeclarative
 TEMPLATE = lib
 QT += declarative dbus
 CONFIG += plugin
-SOURCES = components.cpp networkingmodel.cpp
-HEADERS = components.h networkingmodel.h
+SOURCES = components.cpp networkingmodel.cpp technologymodel.cpp useragent.cpp
+HEADERS = components.h networkingmodel.h technologymodel.h useragent.h
 
 INCLUDEPATH += ../libconnman-qt
 LIBS += -L../libconnman-qt -lconnman-qt4

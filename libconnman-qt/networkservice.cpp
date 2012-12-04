@@ -225,6 +225,8 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
         emit strengthChanged(tmp.toUInt());
     } else if (name == Favorite) {
         emit favoriteChanged(tmp.toBool());
+    } else if (name == AutoConnect) {
+        emit autoConnectChanged(tmp.toBool());
     } else if (name == IPv4) {
         emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == IPv4Config) {

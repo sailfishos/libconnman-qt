@@ -1,7 +1,7 @@
 Qt bindings for ConnMan
 =======================
 
-The Qt bindings are dirrect reflection of ConnMan's D-Bus interfaces:
+The Qt bindings are direct reflection of ConnMan's D-Bus interfaces:
 the class `NetworkManager` represents `net.connman.Manager`,
 `NetworkTechnology` represents `net.connman.Technology` and
 `NetworkService` represents `net.connman.Service`.

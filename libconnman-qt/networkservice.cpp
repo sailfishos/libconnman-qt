@@ -12,6 +12,28 @@
 #include "networkservice.h"
 #include "debug.h"
 
+/*
+ * JS returns arrays as QVariantList or a(v) in terms of D-Bus,
+ * but ConnMan requires some properties to be lists of strings
+ * or a(s) thus this function.
+ */
+QVariantMap adaptToConnmanProperties(const QVariantMap &map)
+{
+    QVariantMap buffer;
+    foreach (const QString &key, map.keys()) {
+        if (map.value(key).type() == QVariant::List) {
+            QStringList strList;
+            foreach (const QVariant &value, map.value(key).toList()) {
+                strList.append(value.toString());
+            }
+            buffer.insert(key, strList);
+        } else {
+            buffer.insert(key, map.value(key));
+        }
+    }
+    return buffer;
+}
+
 const QString NetworkService::Name("Name");
 const QString NetworkService::State("State");
 const QString NetworkService::Type("Type");
@@ -193,7 +215,7 @@ void NetworkService::setDomainsConfig(const QStringList &domains)
 void NetworkService::setProxyConfig(const QVariantMap &proxy)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(proxy)));
+    m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
 }
 
 /* this slot is used for debugging */

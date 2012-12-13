@@ -28,18 +28,13 @@ struct ServiceRequestData
 
 /*
  * TechnologyModel is a list model specific to a certain technology (wifi by default).
- * TODO: 1. consider refactoring this class to NetworkServiceModel with
- *          "technologyName" as a filtering property;
- *       2. drop properties NetworkServiceModel.available, NetworkServiceModel.powered;
- *       2. expose NetworkTechnology as QtQuick component.
  */
 class TechnologyModel : public QAbstractListModel
 {
     Q_OBJECT;
     Q_DISABLE_COPY(TechnologyModel);
 
-    // TODO: consider "name" as writeable property of TechnologyModel QtQuck component
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged);
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged);
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
     Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged);
 
@@ -57,6 +52,8 @@ public:
     const QString name() const;
     bool isAvailable() const;
     bool isPowered() const;
+
+    void setName(const QString &name);
 
     void requestUserInput(ServiceRequestData* data);
     void reportError(const QString &error);

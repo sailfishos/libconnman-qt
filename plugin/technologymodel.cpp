@@ -113,6 +113,40 @@ void TechnologyModel::setPowered(const bool &powered)
     }
 }
 
+void TechnologyModel::setName(const QString &name)
+{
+    if (m_techname == name) {
+        return;
+    }
+
+    bool oldPowered(false);
+
+    if (m_tech) {
+        oldPowered = m_tech->powered();
+        disconnect(m_tech, SIGNAL(poweredChanged(bool)),
+                   this, SIGNAL(poweredChanged(bool)));
+        disconnect(m_tech, SIGNAL(scanFinished()),
+                   this, SIGNAL(scanRequestFinished()));
+    }
+
+    m_techname = name;
+    m_tech = m_manager->getTechnology(m_techname);
+    emit nameChanged(m_techname);
+
+    if (!m_tech) {
+        if (oldPowered) {
+            emit poweredChanged(false);
+        }
+        return;
+    }
+
+    if (oldPowered != m_tech->powered()) {
+        emit poweredChanged(!oldPowered);
+    }
+
+    CONNECT_TECHNOLOGY_SIGNALS(m_tech);
+}
+
 void TechnologyModel::requestScan() const
 {
     qDebug() << "scan requested for technology";

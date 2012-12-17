@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<node xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="net.connman.Notification">
+
+    <method name="Release" tp:name-for-bindings="Release" />
+
+    <method name="Update" tp:name-for-bindings="Update"/>
+    <arg name="settings" type="a{sv}">
+    </method>
+
+  </interface>
+</node>

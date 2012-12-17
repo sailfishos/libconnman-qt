@@ -51,3 +51,10 @@ pkgconfig.path = $$INSTALL_ROOT$$PREFIX/lib/pkgconfig
 pkgconfig.files = connman-qt4.pc
 
 INSTALLS += target headers pkgconfig
+
+OTHER_FILES = connman-service.xml \
+    connman-technology.xml \
+    connman-clock.xml \
+    connman-manager.xml \
+    connman-session.xml \
+    connman-notification.xml

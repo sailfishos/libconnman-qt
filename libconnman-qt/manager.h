@@ -76,6 +76,54 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QLatin1String("UnregisterAgent"), argumentList);
     }
 
+    inline QDBusPendingReply<> RegisterCounter(const QDBusObjectPath &path, const uint accuracy, const uint period)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(path);
+        argumentList << QVariant::fromValue(accuracy);
+        argumentList << QVariant::fromValue(period);
+        return asyncCallWithArgumentList(QLatin1String("RegisterCounter"), argumentList);
+    }
+
+    inline QDBusPendingReply<> UnregisterCounter(const QDBusObjectPath &path)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(path);
+        return asyncCallWithArgumentList(QLatin1String("UnregisterCounter"), argumentList);
+    }
+
+    inline QDBusPendingReply<> CreateSession(const QVariantMap &settings, const QDBusObjectPath &notifier)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(settings);
+        argumentList << QVariant::fromValue(notifier);
+        return asyncCallWithArgumentList(QLatin1String("CreateSession"), argumentList);
+    }
+
+
+    inline QDBusPendingReply<> DestroySession(const QDBusObjectPath &path)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(path);
+        return asyncCallWithArgumentList(QLatin1String("DestroySession"), argumentList);
+    }
+
+
+    inline QDBusPendingReply<> RequestPrivateNetwork(const QVariantMap &options)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(options);
+        return asyncCallWithArgumentList(QLatin1String("RequestPrivateNetwork"), argumentList);
+    }
+
+
+    inline QDBusPendingReply<> ReleasePrivateNetwork(const QDBusObjectPath &path)
+    {
+        QList<QVariant> argumentList;
+        argumentList << QVariant::fromValue(path);
+        return asyncCallWithArgumentList(QLatin1String("ReleasePrivateNetwork"), argumentList);
+    }
+
 Q_SIGNALS: // SIGNALS
     void PropertyChanged(const QString &name, const QDBusVariant &value);
     void ServicesChanged(ConnmanObjectList changed, const QList<QDBusObjectPath> &removed);

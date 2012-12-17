@@ -7,38 +7,101 @@
  *
  */
 
+#include <debug.h>
 #include "useragent.h"
 
-UserAgent::UserAgent(TechnologyModel* parent)
+static const char AGENT_PATH[] = "/ConnectivityUserAgent";
+
+UserAgent::UserAgent(QObject* parent) :
+    QObject(parent),
+    m_req_data(NULL),
+    m_manager(NetworkManagerFactory::createInstance())
+{
+    new AgentAdaptor(this); // this object will be freed when UserAgent is freed
+    QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
+
+    if (m_manager->isAvailable()) {
+        m_manager->registerAgent(QString(AGENT_PATH));
+    }
+    connect(m_manager, SIGNAL(availabilityChanged(bool)),
+            this, SLOT(updateMgrAvailability(bool)));
+}
+
+UserAgent::~UserAgent()
+{
+    m_manager->unregisterAgent(QString(AGENT_PATH));
+}
+
+void UserAgent::requestUserInput(ServiceRequestData* data)
+{
+    m_req_data = data;
+    emit userInputRequested(data->objectPath, data->fields);
+}
+
+void UserAgent::cancelUserInput()
+{
+    delete m_req_data;
+    m_req_data = NULL;
+    emit userInputCanceled();
+}
+
+void UserAgent::reportError(const QString &error) {
+    emit errorReported(error);
+}
+
+void UserAgent::sendUserReply(const QVariantMap &input) {
+    if (m_req_data == NULL) {
+        qWarning("Got reply for non-existing request");
+        return;
+    }
+
+    if (!input.isEmpty()) {
+        QDBusMessage &reply = m_req_data->reply;
+        reply << input;
+        QDBusConnection::systemBus().send(reply);
+    } else {
+        QDBusMessage error = m_req_data->msg.createErrorReply(
+            QString("net.connman.Agent.Error.Canceled"),
+            QString("canceled by user"));
+        QDBusConnection::systemBus().send(error);
+    }
+    delete m_req_data;
+    m_req_data = NULL;
+}
+
+void UserAgent::updateMgrAvailability(bool &available)
+{
+    if (available) {
+        m_manager->registerAgent(QString(AGENT_PATH));
+    }
+}
+
+AgentAdaptor::AgentAdaptor(UserAgent* parent)
   : QDBusAbstractAdaptor(parent),
-    m_model(parent)
+    m_userAgent(parent)
 {
-    // TODO
 }
 
-UserAgent::~UserAgent() {}
+AgentAdaptor::~AgentAdaptor() {}
 
-void UserAgent::Release()
+void AgentAdaptor::Release() {}
+
+void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QString &error)
 {
-    // here do clean up
+    pr_dbg() << "From " << service_path.path() << " got this error:\n" << error;
+    m_userAgent->reportError(error);
 }
 
-void UserAgent::ReportError(const QDBusObjectPath &service_path, const QString &error)
+void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
 {
-    qDebug() << "From " << service_path.path() << " got this error:\n" << error;
-    m_model->reportError(error);
+    pr_dbg() << "Service " << service_path.path() << " wants browser to open hotspot's url " << url;
 }
 
-void UserAgent::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
-{
-    qDebug() << "Service " << service_path.path() << " wants browser to open hotspot's url " << url;
-}
-
-void UserAgent::RequestInput(const QDBusObjectPath &service_path,
+void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
                                        const QVariantMap &fields,
                                        const QDBusMessage &message)
 {
-    qDebug() << "Service " << service_path.path() << " wants user input";
+    pr_dbg() << "Service " << service_path.path() << " wants user input";
 
     QVariantMap json;
     foreach (const QString &key, fields.keys()){
@@ -54,10 +117,11 @@ void UserAgent::RequestInput(const QDBusObjectPath &service_path,
     reqdata->reply = message.createReply();
     reqdata->msg = message;
 
-    m_model->requestUserInput(reqdata);
+    m_userAgent->requestUserInput(reqdata);
 }
 
-void UserAgent::Cancel()
+void AgentAdaptor::Cancel()
 {
-    qDebug() << "WARNING: request to agent got canceled";
+    pr_dbg() << "WARNING: request to agent got canceled";
+    m_userAgent->cancelUserInput();
 }

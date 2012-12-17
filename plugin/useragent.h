@@ -10,17 +10,54 @@
 #ifndef USERAGENT_H
 #define USERAGENT_H
 
-#include <QDBusAbstractAdaptor>
-#include "technologymodel.h"
+#include <networkmanager.h>
 
-class UserAgent : public QDBusAbstractAdaptor
+struct ServiceRequestData
+{
+    QString objectPath;
+    QVariantMap fields;
+    QDBusMessage reply;
+    QDBusMessage msg;
+};
+
+class UserAgent : public QObject
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(UserAgent)
+
+public:
+    explicit UserAgent(QObject* parent = 0);
+    virtual ~UserAgent();
+
+    Q_INVOKABLE void sendUserReply(const QVariantMap &input);
+
+signals:
+    void userInputRequested(const QString &servicePath, const QVariantMap &fields);
+    void userInputCanceled();
+    void errorReported(const QString &error);
+
+private slots:
+    void updateMgrAvailability(bool &available);
+
+private:
+    void requestUserInput(ServiceRequestData* data);
+    void cancelUserInput();
+    void reportError(const QString &error);
+
+    ServiceRequestData* m_req_data;
+    NetworkManager* m_manager;
+
+    friend class AgentAdaptor;
+};
+
+class AgentAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT;
     Q_CLASSINFO("D-Bus Interface", "net.connman.Agent");
 
 public:
-    UserAgent(TechnologyModel* parent);
-    virtual ~UserAgent();
+    explicit AgentAdaptor(UserAgent* parent);
+    virtual ~AgentAdaptor();
 
 public slots:
     void Release();
@@ -32,7 +69,7 @@ public slots:
     void Cancel();
 
 private:
-    TechnologyModel* m_model;
+    UserAgent* m_userAgent;
 };
 
 #endif // USERAGENT_H

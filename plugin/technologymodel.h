@@ -18,14 +18,6 @@
 #include <networktechnology.h>
 #include <networkservice.h>
 
-struct ServiceRequestData
-{
-    QString objectPath;
-    QVariantMap fields;
-    QDBusMessage reply;
-    QDBusMessage msg;
-};
-
 /*
  * TechnologyModel is a list model specific to a certain technology (wifi by default).
  */
@@ -55,10 +47,6 @@ public:
 
     void setName(const QString &name);
 
-    void requestUserInput(ServiceRequestData* data);
-    void reportError(const QString &error);
-
-    Q_INVOKABLE void sendUserReply(const QVariantMap &input);
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
 
 public slots:
@@ -71,15 +59,12 @@ signals:
     void poweredChanged(const bool &powered);
     void technologiesChanged();
 
-    void userInputRequested(const QString &servicePath, const QVariantMap &fields);
-    void errorReported(const QString &error);
     void scanRequestFinished();
 
 private:
     QString m_techname;
     NetworkManager* m_manager;
     NetworkTechnology* m_tech;
-    ServiceRequestData* m_req_data;
     QVector<NetworkService *> m_services;
 
 private slots:

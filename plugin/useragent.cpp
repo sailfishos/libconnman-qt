@@ -35,7 +35,17 @@ UserAgent::~UserAgent()
 void UserAgent::requestUserInput(ServiceRequestData* data)
 {
     m_req_data = data;
-    emit userInputRequested(data->objectPath, data->fields);
+    QVariantList fields;
+
+    foreach (const QString &key, data->fields.keys()) {
+        QVariantMap field;
+
+        field.insert("name", key);
+        field.insert("type", data->fields.value(key).toMap().value("Type"));
+        fields.append(QVariant(field));
+    }
+
+    emit userInputRequested(data->objectPath, fields);
 }
 
 void UserAgent::cancelUserInput()

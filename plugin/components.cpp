@@ -13,6 +13,7 @@
 #include <clockmodel.h>
 #include "networkingmodel.h"
 #include "technologymodel.h"
+#include "useragent.h"
 
 void Components::registerTypes(const char *uri)
 {
@@ -20,6 +21,7 @@ void Components::registerTypes(const char *uri)
         "Please don't create \"NetworkService\" objects manually.");
     qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
+    qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");
     qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
 }
 

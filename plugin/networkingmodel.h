@@ -23,6 +23,10 @@ struct ServiceReqData
     QDBusMessage msg;
 };
 
+/*
+ * WARNING: this class is going to be deprecated. Use TechnologyModel and
+ *          UserAgent classes instead.
+ */
 class NetworkingModel : public QObject
 {
     Q_OBJECT;

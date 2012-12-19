@@ -10,9 +10,6 @@
 
 #include <QDebug>
 #include "technologymodel.h"
-#include "useragent.h"
-
-static const char AGENT_PATH[] = "/ConnectivitySettings";
 
 #define CONNECT_TECHNOLOGY_SIGNALS(tech) \
     connect(tech, \
@@ -38,8 +35,6 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
     roles[ServiceRole] = "networkService";
     setRoleNames(roles);
 
-    new UserAgent(this); // this object will be freed when TechnologyModel is freed
-
     m_tech = m_manager->getTechnology(m_techname);
     if (m_tech) {
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
@@ -57,14 +52,10 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
             SIGNAL(servicesChanged()),
             this,
             SLOT(updateServiceList()));
-
-    QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
-    m_manager->registerAgent(QString(AGENT_PATH));
 }
 
 TechnologyModel::~TechnologyModel()
 {
-    m_manager->unregisterAgent(QString(AGENT_PATH));
 }
 
 QVariant TechnologyModel::data(const QModelIndex &index, int role) const
@@ -179,34 +170,7 @@ void TechnologyModel::updateTechnologies()
 
 void TechnologyModel::managerAvailabilityChanged(bool available)
 {
-    if(available)
-        m_manager->registerAgent(QString(AGENT_PATH));
-
     emit availabilityChanged(available);
-}
-
-void TechnologyModel::requestUserInput(ServiceRequestData* data)
-{
-    m_req_data = data;
-    emit userInputRequested(data->objectPath, data->fields);
-}
-
-void TechnologyModel::reportError(const QString &error) {
-    emit errorReported(error);
-}
-
-void TechnologyModel::sendUserReply(const QVariantMap &input) {
-    if (!input.isEmpty()) {
-        QDBusMessage &reply = m_req_data->reply;
-        reply << input;
-        QDBusConnection::systemBus().send(reply);
-    } else {
-        QDBusMessage error = m_req_data->msg.createErrorReply(
-            QString("net.connman.Agent.Error.Canceled"),
-            QString("canceled by user"));
-        QDBusConnection::systemBus().send(error);
-    }
-    delete m_req_data;
 }
 
 int TechnologyModel::indexOf(const QString &dbusObjectPath) const

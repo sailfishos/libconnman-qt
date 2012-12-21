@@ -85,6 +85,10 @@ const QString NetworkService::state() const {
     return m_propertiesCache.value(State).toString();
 }
 
+const QString NetworkService::error() const {
+    return m_propertiesCache.value(Error).toString();
+}
+
 const QString NetworkService::type() const {
     return m_propertiesCache.value(Type).toString();
 }
@@ -244,6 +248,8 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
 
     if (name == Name) {
         emit nameChanged(tmp.toString());
+    } else if (name == Error) {
+        emit errorChanged(tmp.toString());
     } else if (name == State) {
         emit stateChanged(tmp.toString());
     } else if (name == Security) {

@@ -24,6 +24,7 @@ class NetworkService : public QObject
 
     Q_PROPERTY(QString name READ name NOTIFY nameChanged);
     Q_PROPERTY(QString state READ state NOTIFY stateChanged);
+    Q_PROPERTY(QString error READ error NOTIFY errorChanged);
     Q_PROPERTY(QString type READ type);
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged);
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged);
@@ -50,6 +51,7 @@ public:
     const QString name() const;
     const QString type() const;
     const QString state() const;
+    const QString error() const;
     const QStringList security() const;
     bool autoConnect() const;
     uint strength() const;
@@ -70,6 +72,7 @@ public:
 signals:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
+    void errorChanged(const QString &error);
     void securityChanged(const QStringList &security);
     void strengthChanged(const uint strength);
     void favoriteChanged(const bool &favorite);

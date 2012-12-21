@@ -130,7 +130,7 @@ private:
     static const QString Ethernet;
 
 private slots:
-    void propertyChanged(const QString &name, const QDBusVariant &value);
+    void updateProperty(const QString &name, const QDBusVariant &value);
     void handleConnectReply(QDBusPendingCallWatcher *call);
 
 private:

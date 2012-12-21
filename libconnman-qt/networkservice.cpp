@@ -72,7 +72,7 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     connect(m_service,
             SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
             this,
-            SLOT(propertyChanged(const QString&, const QDBusVariant&)));
+            SLOT(updateProperty(const QString&, const QDBusVariant&)));
 }
 
 NetworkService::~NetworkService() {}
@@ -235,7 +235,7 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call){
     }
 }
 
-void NetworkService::propertyChanged(const QString &name, const QDBusVariant &value)
+void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
 {
     QVariant tmp = value.variant();
 

@@ -169,11 +169,11 @@ void NetworkService::requestConnect()
     QDBusPendingReply<> conn_reply = m_service->Connect();
     m_service->setTimeout(old_timeout);
 
-    dbg_connectWatcher = new QDBusPendingCallWatcher(conn_reply, m_service);
-    connect(dbg_connectWatcher,
+    m_connectReqWatcher = new QDBusPendingCallWatcher(conn_reply, m_service);
+    connect(m_connectReqWatcher,
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             this,
-            SLOT(dbg_connectReply(QDBusPendingCallWatcher*)));
+            SLOT(handleConnectReply(QDBusPendingCallWatcher*)));
 }
 
 void NetworkService::requestDisconnect()
@@ -223,7 +223,7 @@ void NetworkService::setProxyConfig(const QVariantMap &proxy)
 }
 
 /* this slot is used for debugging */
-void NetworkService::dbg_connectReply(QDBusPendingCallWatcher *call){
+void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call){
     pr_dbg() << "Got something from service.connect()";
     Q_ASSERT(call);
     QDBusPendingReply<> reply = *call;

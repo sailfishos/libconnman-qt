@@ -107,7 +107,7 @@ private:
     QString m_path;
     QVariantMap m_propertiesCache;
 
-    QDBusPendingCallWatcher *dbg_connectWatcher;
+    QDBusPendingCallWatcher *m_connectReqWatcher;
 
     static const QString Name;
     static const QString State;
@@ -131,7 +131,7 @@ private:
 
 private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);
-    void dbg_connectReply(QDBusPendingCallWatcher *call);
+    void handleConnectReply(QDBusPendingCallWatcher *call);
 
 private:
     Q_DISABLE_COPY(NetworkService);

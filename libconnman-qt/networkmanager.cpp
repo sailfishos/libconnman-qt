@@ -441,3 +441,15 @@ void NetworkManager::unregisterAgent(const QString &path)
     if(m_manager)
         m_manager->UnregisterAgent(QDBusObjectPath(path));
 }
+
+void NetworkManager::registerCounter(const QString &path, quint32 accuracy,quint32 period)
+{
+    if(m_manager)
+        m_manager->RegisterCounter(QDBusObjectPath(path),accuracy, period);
+}
+
+void NetworkManager::unregisterCounter(const QString &path)
+{
+    if(m_manager)
+        m_manager->UnregisterCounter(QDBusObjectPath(path));
+}

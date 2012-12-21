@@ -27,7 +27,8 @@ HEADERS += manager.h \
     clockproxy.h \
     clockmodel.h \
     debug.h \
-    useragent.h
+    useragent.h \
+    counter.h
 
 SOURCES += \
     networkmanager.cpp \
@@ -40,7 +41,8 @@ SOURCES += \
     clockmodel.cpp \
     commondbustypes.cpp \
     debug.cpp \
-    useragent.cpp
+    useragent.cpp \
+    counter.cpp
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 

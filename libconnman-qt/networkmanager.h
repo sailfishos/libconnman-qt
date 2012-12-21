@@ -55,6 +55,8 @@ public slots:
     void setOfflineMode(const bool &offlineMode);
     void registerAgent(const QString &path);
     void unregisterAgent(const QString &path);
+    void registerCounter(const QString &path, quint32 accuracy,quint32 period);
+    void unregisterCounter(const QString &path);
 
 signals:
     void availabilityChanged(bool available);

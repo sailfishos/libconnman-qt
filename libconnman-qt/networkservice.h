@@ -89,6 +89,7 @@ signals:
     void proxyChanged(const QVariantMap &proxy);
     void proxyConfigChanged(const QVariantMap &proxy);
     void ethernetChanged(const QVariantMap &ethernet);
+    void connectRequestFailed(const QString &error);
 
 public slots:
     void requestConnect();

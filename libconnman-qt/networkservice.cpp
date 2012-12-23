@@ -222,16 +222,17 @@ void NetworkService::setProxyConfig(const QVariantMap &proxy)
     m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
 }
 
-/* this slot is used for debugging */
-void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call){
-    pr_dbg() << "Got something from service.connect()";
+void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
+{
     Q_ASSERT(call);
     QDBusPendingReply<> reply = *call;
+
     if (!reply.isFinished()) {
        pr_dbg() << "connect() not finished yet";
     }
     if (reply.isError()) {
         pr_dbg() << "Reply from service.connect(): " << reply.error().message();
+        emit connectRequestFailed(reply.error().message());
     }
 }
 

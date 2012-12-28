@@ -22,19 +22,26 @@ class Counter : public QObject
     Q_OBJECT
     Q_DISABLE_COPY(Counter)
 public:
-    explicit Counter(/*const QString &serviceName, */QObject *parent = 0);
+    explicit Counter(QObject *parent = 0);
     virtual ~Counter();
 
     void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
+    void secondsOnline(const QString &servicePath);
+    QVariantMap latestStats(const QString &servicePath);
+    QPair <quint32, quint32> latestBytes(const QString &servicePath);
 
 signals:
-   // void usage
+   //  "RX.Bytes", "RX.Packets"
+   //  "TX.Bytes", "TX.Packets"
+   //  "Time"
     void counterChanged(const QString servicePath, const QVariantMap &counters,  bool roaming);
     
 public slots:
     
 private:
        NetworkManager* m_manager;
+       QMap <QString,QVariantMap> latestCounts;
+
 };
 
 

@@ -31,7 +31,8 @@ HEADERS += manager.h \
     useragent.h \
     session.h \
     sessionagent.h \
-    networksession.h
+    networksession.h \
+    counter.h
 
 SOURCES += \
     networkmanager.cpp \
@@ -47,7 +48,8 @@ SOURCES += \
     useragent.cpp \
     session.cpp \
     sessionagent.cpp \
-    networksession.cpp
+    networksession.cpp \
+    counter.cpp
 
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib

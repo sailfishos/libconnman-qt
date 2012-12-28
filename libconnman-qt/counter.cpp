@@ -31,7 +31,13 @@ Counter::~Counter()
 
 void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming)
 {
+    latestCounts.insert(servicePath, counters);
     Q_EMIT counterChanged(servicePath, counters, roaming);
+}
+
+QVariantMap Counter::latestStats(const QString &servicePath)
+{
+    return latestCounts[servicePath];
 }
 
 
@@ -56,7 +62,7 @@ void CounterAdaptor::Usage(const QDBusObjectPath &service_path,
     if (roaming.isEmpty()) {
         // home
         m_counter->serviceUsage(service_path.path(), home, false);
-    } else {
+    } else if (home.isEmpty()) {
         //roaming
         m_counter->serviceUsage(service_path.path(), roaming, true);
     }

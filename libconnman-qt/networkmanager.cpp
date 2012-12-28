@@ -27,6 +27,7 @@ NetworkManager* NetworkManagerFactory::createInstance()
 
 const QString NetworkManager::State("State");
 const QString NetworkManager::OfflineMode("OfflineMode");
+const QString NetworkManager::SessionMode("SessionMode");
 
 NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
@@ -319,7 +320,9 @@ void NetworkManager::propertyChanged(const QString &name,
         emit stateChanged(tmp.toString());
     } else if (name == OfflineMode) {
         emit offlineModeChanged(tmp.toBool());
-    }
+    } else if (name == SessionMode) {
+       emit sessionModeChanged(tmp.toBool());
+   }
 }
 
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
@@ -440,4 +443,43 @@ void NetworkManager::unregisterAgent(const QString &path)
 {
     if(m_manager)
         m_manager->UnregisterAgent(QDBusObjectPath(path));
+}
+
+void NetworkManager::registerCounter(const QString &path, quint32 accuracy,quint32 period)
+{
+    if(m_manager)
+        m_manager->RegisterCounter(QDBusObjectPath(path),accuracy, period);
+}
+
+void NetworkManager::unregisterCounter(const QString &path)
+{
+    if(m_manager)
+        m_manager->UnregisterCounter(QDBusObjectPath(path));
+}
+
+QDBusObjectPath NetworkManager::createSession(const QVariantMap &settings, const QString &sessionNotifierPath)
+{
+    qDebug() << Q_FUNC_INFO << sessionNotifierPath << m_manager;
+
+    QDBusPendingReply<QDBusObjectPath> reply;
+    if(m_manager)
+       reply = m_manager->CreateSession(settings,QDBusObjectPath(sessionNotifierPath));
+    return reply;
+}
+
+void NetworkManager::destroySession(const QString &sessionAgentPath)
+{
+    if(m_manager)
+        m_manager->DestroySession(QDBusObjectPath(sessionAgentPath));
+}
+
+void NetworkManager::setSessionMode(const bool &sessionMode)
+{
+    if(m_manager)
+        m_manager->SetProperty(SessionMode, QDBusVariant(QVariant(sessionMode)));
+}
+
+bool NetworkManager::sessionMode() const
+{
+    return m_propertiesCache[SessionMode].toBool();
 }

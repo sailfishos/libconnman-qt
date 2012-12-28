@@ -14,6 +14,7 @@
 #include "networkingmodel.h"
 #include "technologymodel.h"
 #include "useragent.h"
+#include "networksession.h"
 
 void Components::registerTypes(const char *uri)
 {
@@ -23,6 +24,7 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
     qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");
     qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
+    qmlRegisterType<NetworkSession>(uri,0,2,"NetworkSession");
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)
@@ -31,4 +33,4 @@ void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)
     Q_UNUSED(engine);
 }
 
-Q_EXPORT_PLUGIN(Components);
+Q_EXPORT_PLUGIN(Components)

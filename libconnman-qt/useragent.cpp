@@ -21,6 +21,7 @@ UserAgent::UserAgent(QObject* parent) :
     QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
 
     if (m_manager->isAvailable()) {
+        m_manager->unregisterAgent(QString(AGENT_PATH));
         m_manager->registerAgent(QString(AGENT_PATH));
     }
     connect(m_manager, SIGNAL(availabilityChanged(bool)),

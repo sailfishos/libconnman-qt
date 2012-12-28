@@ -37,6 +37,8 @@ class NetworkManager : public QObject
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged);
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged);
 
+    Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged);
+
 public:
     NetworkManager(QObject* parent=0);
     virtual ~NetworkManager();
@@ -51,10 +53,18 @@ public:
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
 
+    bool sessionMode() const;
+
 public slots:
     void setOfflineMode(const bool &offlineMode);
     void registerAgent(const QString &path);
     void unregisterAgent(const QString &path);
+    void registerCounter(const QString &path, quint32 accuracy,quint32 period);
+    void unregisterCounter(const QString &path);
+    QDBusObjectPath createSession(const QVariantMap &settings, const QString &sessionNotifierPath);
+    void destroySession(const QString &sessionAgentPath);
+
+    void setSessionMode(const bool &sessionMode);
 
 signals:
     void availabilityChanged(bool available);
@@ -64,6 +74,7 @@ signals:
     void technologiesChanged();
     void servicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
+    void sessionModeChanged(bool);
 
 private:
     Manager *m_manager;
@@ -89,6 +100,7 @@ private:
 
     static const QString State;
     static const QString OfflineMode;
+    static const QString SessionMode;
 
     bool m_available;
 

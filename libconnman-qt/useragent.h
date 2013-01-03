@@ -37,7 +37,7 @@ signals:
     void errorReported(const QString &error);
 
 private slots:
-    void updateMgrAvailability(bool &available);
+    void updateMgrAvailability(bool available);
 
 private:
     void requestUserInput(ServiceRequestData* data);

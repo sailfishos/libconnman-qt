@@ -80,7 +80,7 @@ void UserAgent::sendUserReply(const QVariantMap &input) {
     m_req_data = NULL;
 }
 
-void UserAgent::updateMgrAvailability(bool &available)
+void UserAgent::updateMgrAvailability(bool available)
 {
     if (available) {
         m_manager->registerAgent(QString(AGENT_PATH));

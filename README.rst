@@ -15,3 +15,11 @@ The class `NetworkingModel` is a QML component adapting a static instance of
 `NetworkManager`. Also it provides the D-Bus interface `net.connman.Agent`.
 
 .. warning:: `NetworkingModel` is going to be deprecated.
+
+QMake CONFIG flags
+-----------
+* notest: doesn't compile test program
+* noplugin: doesn't compile qml plugin
+
+Example:
+``qmake CONFIG+=notest``

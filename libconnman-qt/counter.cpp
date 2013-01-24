@@ -10,6 +10,7 @@
 #include <QtDBus/QDBusConnection>
 
 #include "counter.h"
+#include "networkmanager.h"
 
 static const char COUNTER_PATH[] = "/ConnectivityCounter";
 

@@ -10,7 +10,11 @@
 #ifndef USERAGENT_H
 #define USERAGENT_H
 
-#include <networkmanager.h>
+#include <QDBusMessage>
+#include <QDBusObjectPath>
+#include <QDBusAbstractAdaptor>
+
+class NetworkManager;
 
 struct ServiceRequestData
 {

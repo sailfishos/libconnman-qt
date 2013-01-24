@@ -41,7 +41,8 @@
     </method>
 
     <method name="CreateSession" tp:name-for-bindings="Create_Session">
-        <arg name="settings" type="a{sv}">
+        <arg name="settings" type="a{sv}"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="QVariantMap"/>
         <arg name="notifier" type="o"/>
     </method>
 
@@ -50,10 +51,12 @@
     </method>
 
     <method name="RequestPrivateNetwork" tp:name-for-bindings="Request_Privete_Network">
-    <arg name="options" type="a{sv}">
-    <arg name="path" type="o" direction="out"/>
-    <arg name="dict" type="a{sv}" direction="out"/>
-    <arg name="fd" type="i" direction="out"/>
+        <arg name="options" type="a{sv}"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+        <arg name="path" type="o" direction="out"/>
+        <arg name="dict" type="a{sv}" direction="out"/>
+        <annotation name="com.trolltech.QtDBus.QtTypeName.Out1" value="QVariantMap"/>
+        <arg name="fd" type="i" direction="out"/>
     </method>
 
     <method name="ReleasePrivateNetwork" tp:name-for-bindings="Release_Private_Network">
@@ -72,8 +75,8 @@
 
     <signal name="ServicesChanged" tp:name-for-bindings="Services_Changed">
         <arg name="changed" type="a(oa{sv})"/>
-        <arg name="removed" type="ao"/>
         <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="ConnmanObjectList"/>
+        <arg name="removed" type="ao"/>        
     </signal>
 
     <signal name="PropertyChanged" tp:name-for-bindings="Property_Changed">

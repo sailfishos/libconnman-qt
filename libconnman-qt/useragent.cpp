@@ -7,8 +7,9 @@
  *
  */
 
-#include <debug.h>
+#include "debug.h"
 #include "useragent.h"
+#include "networkmanager.h"
 
 static const char AGENT_PATH[] = "/ConnectivityUserAgent";
 

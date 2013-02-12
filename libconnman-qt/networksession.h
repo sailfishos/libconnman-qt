@@ -19,12 +19,12 @@ class SessionAgent;
 class NetworkSession : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString state READ state)
-    Q_PROPERTY(QString name READ name)
-    Q_PROPERTY(QString bearer READ bearer)
-    Q_PROPERTY(QString sessionInterface READ sessionInterface)
-    Q_PROPERTY(QVariantMap ipv4 READ ipv4)
-    Q_PROPERTY(QVariantMap ipv6 READ ipv6)
+    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(QString bearer READ bearer NOTIFY bearerChanged)
+    Q_PROPERTY(QString sessionInterface READ sessionInterface NOTIFY sessionInterfaceChanged)
+    Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed)
+    Q_PROPERTY(QVariantMap ipv6 READ ipv6 NOTIFY ipv6Changed)
 
     Q_PROPERTY(QString path READ path WRITE setPath)
 
@@ -56,18 +56,25 @@ signals:
     void connectionTypeChanged(const QString &type);
     void settingsChanged(const QVariantMap &settings);
 
+    void stateChanged(const QString &state);
+    void nameChanged(const QString &name);
+    void bearerChanged(const QString &bearer);
+    void sessionInterfaceChanged(const QString &sessionInterface);
+    void ipv4Changed(const QVariantMap&settings);
+    void ipv6Changed(const QVariantMap&settings);
+
 public slots:
     void requestDestroy();
     void requestConnect();
     void requestDisconnect();
     void sessionSettingsUpdated(const QVariantMap &settings);
     void setPath(const QString &path);
-    void registerSession();
 
 private:
     SessionAgent *m_sessionAgent;
     QVariantMap settingsMap;
     QString m_path;
+    void createSession();
 };
 
 #endif // SESSIONSERVICE_H

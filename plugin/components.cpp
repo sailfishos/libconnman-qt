@@ -18,13 +18,15 @@
 
 void Components::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<NetworkService>(uri,0,2,"NetworkService",
-        "Please don't create \"NetworkService\" objects manually.");
+    qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
     qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
     qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");
     qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
     qmlRegisterType<NetworkSession>(uri,0,2,"NetworkSession");
+    qmlRegisterType<NetworkManager>(uri,0,2,"NetworkManager");
+    qmlRegisterType<NetworkTechnology>(uri,0,2,"NetworkTechnology");
+
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)

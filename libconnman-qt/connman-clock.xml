@@ -4,7 +4,7 @@
     <interface name="net.connman.Clock">
         <method name="GetProperties">
             <arg type="a{sv}" direction="out"/>
-            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
         </method>
         <method name="SetProperty">
             <arg type="s" direction="in"/>

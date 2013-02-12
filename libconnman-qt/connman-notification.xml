@@ -6,6 +6,7 @@
 
     <method name="Update" tp:name-for-bindings="Update"/>
     <arg name="settings" type="a{sv}">
+    <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value=QVariantMap"/>
     </method>
 
   </interface>

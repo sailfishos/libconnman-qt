@@ -4,7 +4,7 @@
 
     <method name="GetProperties" tp:name-for-bindings="Get_Properties">
       <arg name="properties" type="a{sv}" direction="out"/>
-      <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
     </method>
 
     <method name="SetProperty" tp:name-for-bindings="Set_Property">

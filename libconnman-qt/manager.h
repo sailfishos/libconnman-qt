@@ -92,14 +92,12 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QLatin1String("UnregisterCounter"), argumentList);
     }
 
-    inline QDBusPendingReply<> CreateSession(const QVariantMap &settings, const QDBusObjectPath &notifier)
+    inline QDBusPendingReply<QDBusObjectPath> CreateSession(const QVariantMap &settings, const QDBusObjectPath &notifier)
     {
         QList<QVariant> argumentList;
-        argumentList << QVariant::fromValue(settings);
-        argumentList << QVariant::fromValue(notifier);
+        argumentList << QVariant::fromValue(settings) << QVariant::fromValue(notifier);
         return asyncCallWithArgumentList(QLatin1String("CreateSession"), argumentList);
     }
-
 
     inline QDBusPendingReply<> DestroySession(const QDBusObjectPath &path)
     {

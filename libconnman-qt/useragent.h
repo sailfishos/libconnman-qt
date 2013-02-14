@@ -23,29 +23,48 @@ struct ServiceRequestData
 class UserAgent : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString connectionRequestType READ connectionRequestType WRITE setConnectionRequestType)
     Q_DISABLE_COPY(UserAgent)
 
 public:
     explicit UserAgent(QObject* parent = 0);
     virtual ~UserAgent();
+enum ConnectionRequestType {
+    TYPE_DEFAULT =0,
+    TYPE_SUPPRESS,
+    TYPE_CLEAR
+};
 
-    Q_INVOKABLE void sendUserReply(const QVariantMap &input);
+public slots:
+    void sendUserReply(const QVariantMap &input);
+
+    void sendConnectReply(const QString &replyMessage, int timeout = 120);
+    void setConnectionRequestType(const QString &type);
+    QString connectionRequestType() const;
 
 signals:
     void userInputRequested(const QString &servicePath, const QVariantList &fields);
     void userInputCanceled();
     void errorReported(const QString &error);
 
+    void userConnectRequested(const QDBusMessage &message);
+    void connectionRequest();
+
 private slots:
-    void updateMgrAvailability(bool &available);
+    void updateMgrAvailability(bool);
+
+    void requestTimeout();
 
 private:
     void requestUserInput(ServiceRequestData* data);
     void cancelUserInput();
     void reportError(const QString &error);
+    void requestConnect(const QDBusMessage &msg);
 
     ServiceRequestData* m_req_data;
     NetworkManager* m_manager;
+    QDBusMessage currentDbusMessage;
+    ConnectionRequestType requestType;
 
     friend class AgentAdaptor;
 };
@@ -63,6 +82,8 @@ public slots:
     void Release();
     void ReportError(const QDBusObjectPath &service_path, const QString &error);
     void RequestBrowser(const QDBusObjectPath &service_path, const QString &url);
+    void RequestConnect(const QDBusMessage &message);
+
     Q_NOREPLY void RequestInput(const QDBusObjectPath &service_path,
                                 const QVariantMap &fields,
                                 const QDBusMessage &message);

@@ -16,6 +16,7 @@ UserAgent::UserAgent(QObject* parent) :
     QObject(parent),
     m_req_data(NULL),
     m_manager(NetworkManagerFactory::createInstance())
+  , requestType(TYPE_DEFAULT)
 {
     new AgentAdaptor(this); // this object will be freed when UserAgent is freed
     QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
@@ -56,11 +57,13 @@ void UserAgent::cancelUserInput()
     emit userInputCanceled();
 }
 
-void UserAgent::reportError(const QString &error) {
+void UserAgent::reportError(const QString &error)
+{
     emit errorReported(error);
 }
 
-void UserAgent::sendUserReply(const QVariantMap &input) {
+void UserAgent::sendUserReply(const QVariantMap &input)
+{
     if (m_req_data == NULL) {
         qWarning("Got reply for non-existing request");
         return;
@@ -80,26 +83,86 @@ void UserAgent::sendUserReply(const QVariantMap &input) {
     m_req_data = NULL;
 }
 
-void UserAgent::updateMgrAvailability(bool &available)
+void UserAgent::requestTimeout()
+{
+    setConnectionRequestType("Clear");
+}
+
+void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)
+{
+    setConnectionRequestType(replyMessage);
+    QTimer::singleShot(timeout * 1000, this,SLOT(requestTimeout()));
+}
+
+void UserAgent::updateMgrAvailability(bool available)
 {
     if (available) {
         m_manager->registerAgent(QString(AGENT_PATH));
     }
 }
 
+void UserAgent::setConnectionRequestType(const QString &type)
+{
+    if (type == "Suppress") {
+        requestType = TYPE_SUPPRESS;
+    } else if (type == "Clear") {
+        requestType = TYPE_CLEAR;
+    } else {
+        requestType = TYPE_DEFAULT;
+    }
+}
+
+QString UserAgent::connectionRequestType() const
+{
+    switch (requestType) {
+    case TYPE_SUPPRESS:
+        return "Suppress";
+        break;
+    case TYPE_CLEAR:
+        return "Clear";
+        break;
+    default:
+        break;
+    }
+    return QString();
+}
+
+void UserAgent::requestConnect(const QDBusMessage &msg)
+{
+    QList<QVariant> arguments;
+    arguments << QVariant(connectionRequestType());
+    QDBusMessage error = msg.createReply(arguments);
+
+    if (!QDBusConnection::systemBus().send(error)) {
+        qDebug() << "Could not queue message";
+    }
+    if (connectionRequestType() == "Suppress") {
+        return;
+    }
+
+    setConnectionRequestType("Suppress");
+    Q_EMIT userConnectRequested(msg);
+    Q_EMIT connectionRequest();
+}
+
+////////////////////
 AgentAdaptor::AgentAdaptor(UserAgent* parent)
   : QDBusAbstractAdaptor(parent),
     m_userAgent(parent)
 {
 }
 
-AgentAdaptor::~AgentAdaptor() {}
+AgentAdaptor::~AgentAdaptor()
+{
+}
 
-void AgentAdaptor::Release() {}
+void AgentAdaptor::Release()
+{
+}
 
 void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QString &error)
 {
-    pr_dbg() << "From " << service_path.path() << " got this error:\n" << error;
+    Q_UNUSED(service_path)
     m_userAgent->reportError(error);
 }
 
@@ -112,8 +175,6 @@ void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
                                        const QVariantMap &fields,
                                        const QDBusMessage &message)
 {
-    pr_dbg() << "Service " << service_path.path() << " wants user input";
-
     QVariantMap json;
     foreach (const QString &key, fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
@@ -133,6 +194,10 @@ void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
 
 void AgentAdaptor::Cancel()
 {
-    pr_dbg() << "WARNING: request to agent got canceled";
     m_userAgent->cancelUserInput();
+}
+
+void AgentAdaptor::RequestConnect(const QDBusMessage &message)
+{
+    m_userAgent->requestConnect(message);
 }

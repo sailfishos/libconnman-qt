@@ -39,8 +39,8 @@ SessionAgent::SessionAgent(const QString &path, QObject* parent) :
 
 SessionAgent::~SessionAgent()
 {
-    m_manager->destroySession(agentPath);
     m_manager->setSessionMode(false);
+    m_manager->destroySession(agentPath);
 }
 
 void SessionAgent::setAllowedBearers(const QStringList &bearers)

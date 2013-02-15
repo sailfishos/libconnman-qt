@@ -81,6 +81,10 @@ const QString NetworkService::state() const {
     return m_propertiesCache.value(State).toString();
 }
 
+const QString NetworkService::error() const {
+    return m_propertiesCache.value(Error).toString();
+}
+
 const QString NetworkService::type() const {
     return m_propertiesCache.value(Type).toString();
 }
@@ -161,11 +165,11 @@ void NetworkService::requestConnect()
     QDBusPendingReply<> conn_reply = m_service->Connect();
     m_service->setTimeout(old_timeout);
 
-    dbg_connectWatcher = new QDBusPendingCallWatcher(conn_reply, m_service);
-    connect(dbg_connectWatcher,
+    m_connectReqWatcher = new QDBusPendingCallWatcher(conn_reply, m_service);
+    connect(m_connectReqWatcher,
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             this,
-            SLOT(dbg_connectReply(QDBusPendingCallWatcher*)));
+            SLOT(handleConnectReply(QDBusPendingCallWatcher*)));
 }
 
 void NetworkService::requestDisconnect()
@@ -214,21 +218,21 @@ void NetworkService::setProxyConfig(const QVariantMap &proxy)
     m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
 }
 
-/* this slot is used for debugging */
-void NetworkService::dbg_connectReply(QDBusPendingCallWatcher *call)
+void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
 {
-    pr_dbg() << "Got something from service.connect()";
     Q_ASSERT(call);
     QDBusPendingReply<> reply = *call;
+
     if (!reply.isFinished()) {
        pr_dbg() << "connect() not finished yet";
     }
     if (reply.isError()) {
         pr_dbg() << "Reply from service.connect(): " << reply.error().message();
+        emit connectRequestFailed(reply.error().message());
     }
 }
 
-void NetworkService::propertyChanged(const QString &name, const QDBusVariant &value)
+void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
 {
     QVariant tmp = value.variant();
 
@@ -238,6 +242,8 @@ void NetworkService::propertyChanged(const QString &name, const QDBusVariant &va
 
     if (name == Name) {
         emit nameChanged(tmp.toString());
+    } else if (name == Error) {
+        emit errorChanged(tmp.toString());
     } else if (name == State) {
         emit stateChanged(tmp.toString());
     } else if (name == Security) {

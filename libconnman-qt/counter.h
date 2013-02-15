@@ -15,7 +15,7 @@
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtDBus/QDBusObjectPath>
 
-#include <networkmanager.h>
+class NetworkManager;
 
 class Counter : public QObject
 {

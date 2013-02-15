@@ -51,6 +51,7 @@ public:
     const QString name() const;
     const QString type() const;
     const QString state() const;
+    const QString error() const;
     const QStringList security() const;
     bool autoConnect() const;
     uint strength() const;
@@ -73,6 +74,7 @@ public:
 signals:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
+    void errorChanged(const QString &error);
     void securityChanged(const QStringList &security);
     void strengthChanged(const uint strength);
     void favoriteChanged(const bool &favorite);
@@ -89,6 +91,7 @@ signals:
     void proxyChanged(const QVariantMap &proxy);
     void proxyConfigChanged(const QVariantMap &proxy);
     void ethernetChanged(const QVariantMap &ethernet);
+    void connectRequestFailed(const QString &error);
     void typeChanged(const QString &type);
 
 public slots:
@@ -108,7 +111,7 @@ private:
     QString m_path;
     QVariantMap m_propertiesCache;
 
-    QDBusPendingCallWatcher *dbg_connectWatcher;
+    QDBusPendingCallWatcher *m_connectReqWatcher;
 
     static const QString Name;
     static const QString State;
@@ -131,8 +134,8 @@ private:
     static const QString Ethernet;
 
 private slots:
-    void propertyChanged(const QString &name, const QDBusVariant &value);
-    void dbg_connectReply(QDBusPendingCallWatcher *call);
+    void updateProperty(const QString &name, const QDBusVariant &value);
+    void handleConnectReply(QDBusPendingCallWatcher *call);
 
 private:
     Q_DISABLE_COPY(NetworkService);

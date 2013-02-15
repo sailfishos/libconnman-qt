@@ -39,15 +39,19 @@
     <method name="UnregisterCounter" tp:name-for-bindings="Unregister_Counter">
         <arg name="path" type="o"/>
     </method>
+        <arg name="settings" type="a{sv}"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
     <method name="DestroySession" tp:name-for-bindings="Destroy_Session">
         <arg name="session" type="o"/>
     </method>
 
     <method name="RequestPrivateNetwork" tp:name-for-bindings="Request_Privete_Network">
-    <arg name="options" type="a{sv}">
-    <arg name="path" type="o" direction="out"/>
-    <arg name="dict" type="a{sv}" direction="out"/>
-    <arg name="fd" type="i" direction="out"/>
+        <arg name="options" type="a{sv}"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+        <arg name="path" type="o" direction="out"/>
+        <arg name="dict" type="a{sv}" direction="out"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.Out1" value="QVariantMap"/>
+        <arg name="fd" type="i" direction="out"/>
     <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
     </method>
 
@@ -67,8 +71,8 @@
 
     <signal name="ServicesChanged" tp:name-for-bindings="Services_Changed">
         <arg name="changed" type="a(oa{sv})"/>
-        <arg name="removed" type="ao"/>
         <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="ConnmanObjectList"/>
+        <arg name="removed" type="ao"/>        
     </signal>
 
     <signal name="PropertyChanged" tp:name-for-bindings="Property_Changed">

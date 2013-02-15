@@ -19,11 +19,7 @@
     connect(tech, \
             SIGNAL(scanFinished()), \
             this, \
-            SLOT(finishedScan())); \
-    connect(tech, \
-            SIGNAL(stateChanged(QString)), \
-            this, \
-            SIGNAL(stateChanged(QString)))
+            SLOT(finishedScan()));
 
 
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)

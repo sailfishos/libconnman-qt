@@ -16,7 +16,6 @@ const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
 const QString NetworkTechnology::Powered("Powered");
 const QString NetworkTechnology::Connected("Connected");
-const QString NetworkTechnology::State("State");
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -56,11 +55,12 @@ void NetworkTechnology::init(const QString &path)
         throw -1; // FIXME
     }
 
-    if (m_propertiesCache.isEmpty()) {
+//    if (m_propertiesCache.isEmpty()) {
         QDBusReply<QVariantMap> reply;
         reply = m_technology->GetProperties();
         m_propertiesCache = reply.value();
-    }
+        qDebug() << Q_FUNC_INFO << m_propertiesCache;
+//    }
 
     connect(m_technology,
             SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
@@ -139,13 +139,10 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
     Q_ASSERT(m_technology);
 
     m_propertiesCache[name] = tmp;
-
     if (name == Powered) {
         emit poweredChanged(tmp.toBool());
     } else if (name == Connected) {
         emit connectedChanged(tmp.toBool());
-    } else if (name == State) {
-        Q_EMIT stateChanged(tmp.toString());
     }
 }
 
@@ -154,11 +151,6 @@ void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
     Q_UNUSED(call);
 
     emit scanFinished();
-}
-
-QString NetworkTechnology::state() const
-{
-    return m_propertiesCache[NetworkTechnology::State].toString();
 }
 
 QString NetworkTechnology::path() const

@@ -23,8 +23,6 @@ class NetworkTechnology : public QObject
     Q_PROPERTY(QString type READ type)
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
-    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
-
     Q_PROPERTY(QString path READ path WRITE setPath)
 
 public:
@@ -38,7 +36,6 @@ public:
     bool powered() const;
     bool connected() const;
     const QString objPath() const;
-    QString state() const;
 
     QString path() const;
 
@@ -51,7 +48,6 @@ signals:
     void poweredChanged(const bool &powered);
     void connectedChanged(const bool &connected);
     void scanFinished();
-    void stateChanged(const QString &state);
 
 private:
     Technology *m_technology;
@@ -62,7 +58,6 @@ private:
     static const QString Type;
     static const QString Powered;
     static const QString Connected;
-    static const QString State;
 
     QString m_path;
     void init(const QString &path);

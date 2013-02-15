@@ -58,7 +58,6 @@ signals:
     void availabilityChanged(const bool &available);
     void poweredChanged(const bool &powered);
     void technologiesChanged();
-    void stateChanged(const QString &state);
 
     void scanRequestFinished();
 

@@ -24,8 +24,8 @@ class NetworkService : public QObject
 
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged);
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
+    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged)
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged)

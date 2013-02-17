@@ -110,7 +110,6 @@ private:
     static const QString State;
     static const QString OfflineMode;
     static const QString SessionMode;
-    QStringList m_servicesList;
 
     bool m_available;
 

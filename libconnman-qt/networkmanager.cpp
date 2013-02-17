@@ -428,3 +428,12 @@ QString NetworkManager::technologyPathForType(const QString &techType)
     }
     return QString();
 }
+
+QStringList NetworkManager::technologiesList()
+{
+    QStringList techList;
+    foreach (NetworkTechnology *tech, m_technologiesCache) {
+        techList << tech->type();
+    }
+    return techList;
+}

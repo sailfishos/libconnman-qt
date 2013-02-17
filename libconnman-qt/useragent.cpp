@@ -16,8 +16,8 @@ static const char AGENT_PATH[] = "/ConnectivityUserAgent";
 UserAgent::UserAgent(QObject* parent) :
     QObject(parent),
     m_req_data(NULL),
-    m_manager(NetworkManagerFactory::createInstance())
-  , requestType(TYPE_DEFAULT)
+    m_manager(NetworkManagerFactory::createInstance()),
+    requestType(TYPE_DEFAULT)
 {
     new AgentAdaptor(this); // this object will be freed when UserAgent is freed
     QDBusConnection::systemBus().registerObject(AGENT_PATH, this);

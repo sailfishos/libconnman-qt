@@ -31,7 +31,7 @@ SessionAgent::SessionAgent(const QString &path, QObject* parent) :
     QObject(parent),
     agentPath(path),
     m_session(0),
-  m_manager(NetworkManagerFactory::createInstance())
+    m_manager(NetworkManagerFactory::createInstance())
 {
     m_manager->setSessionMode(true);
     createSession();

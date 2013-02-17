@@ -57,6 +57,7 @@ signals:
 private slots:
     void updateMgrAvailability(bool);
 
+
     void requestTimeout();
 
 private:

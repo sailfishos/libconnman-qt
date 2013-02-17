@@ -110,32 +110,25 @@ void TechnologyModel::setName(const QString &name)
     if (m_techname == name) {
         return;
     }
-    QStringList netTypes;
-    netTypes << "ethernet";
-    netTypes << "wifi";
-    netTypes << "cellular";
-    netTypes << "bluetooth";
+    QStringList netTypes = m_manager->technologiesList();
 
     if (!netTypes.contains(name)) {
-        qDebug() << name <<  "is not a known technology name";
+        qDebug() << name <<  "is not a known technology name:" << netTypes;
         return;
     }
 
-    bool oldPowered(false);
+    if (m_tech) {
+        delete m_tech;
+        m_tech = 0;
+    }
 
-    m_techname = name;
-    m_tech = m_manager->getTechnology(m_techname);
+    m_tech = m_manager->getTechnology(name);
 
     if (!m_tech) {
-        if (oldPowered) {
-            emit poweredChanged(false);
-        }
         return;
     } else {
+        m_techname = name;
         emit nameChanged(m_techname);
-        if (oldPowered != m_tech->powered()) {
-            emit poweredChanged(!oldPowered);
-        }
 
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
     }
@@ -230,3 +223,4 @@ void TechnologyModel::finishedScan()
     if (tech->type() == m_tech->type())
         Q_EMIT scanRequestFinished();
 }
+

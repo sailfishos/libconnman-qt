@@ -304,6 +304,6 @@ void NetworkService::setPath(const QString &path)
         }
 
         connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                this, SLOT(propertyChanged(QString,QDBusVariant)));
+                this, SLOT(updateProperty(QString,QDBusVariant)));
     }
 }

@@ -59,7 +59,6 @@ void NetworkTechnology::init(const QString &path)
         QDBusReply<QVariantMap> reply;
         reply = m_technology->GetProperties();
         m_propertiesCache = reply.value();
-        qDebug() << Q_FUNC_INFO << m_propertiesCache;
 //    }
 
     connect(m_technology,

@@ -59,8 +59,6 @@ private slots:
 
     void requestTimeout();
 
-    void requestTimeout();
-
 private:
     void requestUserInput(ServiceRequestData* data);
     void cancelUserInput();

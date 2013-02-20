@@ -38,7 +38,6 @@ class NetworkManager : public QObject
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
-    Q_PROPERTY(QString serviceAdded NOTIFY serviceAdded)
 
 public:
     NetworkManager(QObject* parent=0);

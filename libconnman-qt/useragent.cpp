@@ -17,22 +17,19 @@ UserAgent::UserAgent(QObject* parent) :
     QObject(parent),
     m_req_data(NULL),
     m_manager(NetworkManagerFactory::createInstance()),
-    requestType(TYPE_DEFAULT)
+    requestType(TYPE_DEFAULT),
+    agentPath(QString())
 {
-    new AgentAdaptor(this); // this object will be freed when UserAgent is freed
-    QDBusConnection::systemBus().registerObject(AGENT_PATH, this);
-
-    if (m_manager->isAvailable()) {
-        m_manager->unregisterAgent(QString(AGENT_PATH));
-        m_manager->registerAgent(QString(AGENT_PATH));
-    }
+    QString agentpath = QLatin1String("/ConnectivityUserAgent");
+    setAgentPath(agentpath);
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(updateMgrAvailability(bool)));
+
 }
 
 UserAgent::~UserAgent()
 {
-    m_manager->unregisterAgent(QString(AGENT_PATH));
+    m_manager->unregisterAgent(QString(agentPath));
 }
 
 void UserAgent::requestUserInput(ServiceRequestData* data)
@@ -98,7 +95,7 @@ void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)
 void UserAgent::updateMgrAvailability(bool available)
 {
     if (available) {
-        m_manager->registerAgent(QString(AGENT_PATH));
+        m_manager->registerAgent(QString(agentPath));
     }
 }
 
@@ -137,16 +134,34 @@ void UserAgent::requestConnect(const QDBusMessage &msg)
     if (!QDBusConnection::systemBus().send(error)) {
         qDebug() << "Could not queue message";
     }
+
     if (connectionRequestType() == "Suppress") {
         return;
     }
 
-    setConnectionRequestType("Suppress");
-    Q_EMIT userConnectRequested(msg);
     Q_EMIT connectionRequest();
+    Q_EMIT userConnectRequested(msg);
+    setConnectionRequestType("Suppress");
+}
+
+QString UserAgent::path() const
+{
+    return agentPath;
+}
+
+void UserAgent::setAgentPath(QString &path)
+{
+        new AgentAdaptor(this); // this object will be freed when UserAgent is freed
+        agentPath = path;
+        QDBusConnection::systemBus().registerObject(agentPath, this);
+
+        if (m_manager->isAvailable()) {
+            m_manager->registerAgent(QString(agentPath));
+        }
 }
 
 ////////////////////
+
 AgentAdaptor::AgentAdaptor(UserAgent* parent)
   : QDBusAbstractAdaptor(parent),
     m_userAgent(parent)
@@ -202,3 +217,5 @@ void AgentAdaptor::RequestConnect(const QDBusMessage &message)
 {
     m_userAgent->requestConnect(message);
 }
+
+

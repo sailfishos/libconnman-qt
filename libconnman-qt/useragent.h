@@ -28,6 +28,8 @@ class UserAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString connectionRequestType READ connectionRequestType WRITE setConnectionRequestType)
+    Q_PROPERTY(void connectionRequest NOTIFY connectionRequest)
+    Q_PROPERTY(QString path READ path WRITE setAgentPath)
     Q_DISABLE_COPY(UserAgent)
 
 public:
@@ -46,6 +48,9 @@ public slots:
     void setConnectionRequestType(const QString &type);
     QString connectionRequestType() const;
 
+    QString path() const;
+    void setAgentPath(QString &path);
+
 signals:
     void userInputRequested(const QString &servicePath, const QVariantList &fields);
     void userInputCanceled();
@@ -56,8 +61,6 @@ signals:
 
 private slots:
     void updateMgrAvailability(bool);
-
-
     void requestTimeout();
 
 private:
@@ -70,6 +73,7 @@ private:
     NetworkManager* m_manager;
     QDBusMessage currentDbusMessage;
     ConnectionRequestType requestType;
+    QString agentPath;
 
     friend class AgentAdaptor;
 };

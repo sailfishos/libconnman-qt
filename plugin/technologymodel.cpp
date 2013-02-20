@@ -112,14 +112,19 @@ void TechnologyModel::setName(const QString &name)
     }
     QStringList netTypes = m_manager->technologiesList();
 
+    bool oldPowered(false);
+
     if (!netTypes.contains(name)) {
         qDebug() << name <<  "is not a known technology name:" << netTypes;
         return;
     }
 
     if (m_tech) {
-        delete m_tech;
-        m_tech = 0;
+        oldPowered = m_tech->powered();
+        disconnect(m_tech, SIGNAL(poweredChanged(bool)),
+                this, SLOT(changedPower(bool)));
+        disconnect(m_tech, SIGNAL(scanFinished()),
+                this, SLOT(finishedScan()));
     }
 
     m_tech = m_manager->getTechnology(name);
@@ -129,7 +134,9 @@ void TechnologyModel::setName(const QString &name)
     } else {
         m_techname = name;
         emit nameChanged(m_techname);
-
+        if (oldPowered != m_tech->powered()) {
+            emit poweredChanged(!oldPowered);
+        }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
     }
 }

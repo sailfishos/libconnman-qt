@@ -289,6 +289,7 @@ void NetworkService::setPath(const QString &path)
         if (m_service) {
             delete m_service;
             m_service = 0;
+            m_propertiesCache.clear();
         }
         m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
 

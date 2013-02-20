@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
-SUBDIRS += libconnman-qt
-SUBDIRS +=  test
 CONFIG += ordered
+SUBDIRS += libconnman-qt
 
 # CONFIG flag to disable qml plugin
 !noplugin {

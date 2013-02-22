@@ -36,7 +36,7 @@ public:
     Q_INVOKABLE void sendUserReply(const QVariantMap &input);
 
 signals:
-    void userInputRequested(const QString &servicePath, const QVariantList &fields);
+    void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
     void errorReported(const QString &error);
 

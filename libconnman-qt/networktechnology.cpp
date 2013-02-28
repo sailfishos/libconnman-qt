@@ -47,6 +47,9 @@ void NetworkTechnology::init(const QString &path)
     if (m_technology) {
         delete m_technology;
         m_technology = 0;
+        // TODO: After resetting the path iterate through old properties, compare their values
+        //       with new ones and emit corresponding signals if changed.
+        m_propertiesCache.clear();
     }
     m_technology = new Technology("net.connman", path, QDBusConnection::systemBus(), this);
 
@@ -55,11 +58,11 @@ void NetworkTechnology::init(const QString &path)
         throw -1; // FIXME
     }
 
-//    if (m_propertiesCache.isEmpty()) {
+    if (m_propertiesCache.isEmpty()) {
         QDBusReply<QVariantMap> reply;
         reply = m_technology->GetProperties();
         m_propertiesCache = reply.value();
-//    }
+    }
 
     connect(m_technology,
             SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),

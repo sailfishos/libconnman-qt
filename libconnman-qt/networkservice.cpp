@@ -60,8 +60,8 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     m_path(QString())
 {
     Q_ASSERT(!path.isEmpty());
-    setPath(path);
     m_propertiesCache = properties;
+    setPath(path);
 }
 
 NetworkService::NetworkService(QObject* parent)
@@ -289,6 +289,8 @@ void NetworkService::setPath(const QString &path)
         if (m_service) {
             delete m_service;
             m_service = 0;
+            // TODO: After resetting the path iterate through old properties, compare their values
+            //       with new ones and emit corresponding signals if changed.
             m_propertiesCache.clear();
         }
         m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
@@ -297,11 +299,14 @@ void NetworkService::setPath(const QString &path)
             pr_dbg() << "Invalid service: " << m_path;
             return;
         }
-        QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
-        if (reply.isError()) {
-            qDebug() << Q_FUNC_INFO << reply.error().message();
-        } else {
-            m_propertiesCache = reply.value();
+
+        if (m_propertiesCache.isEmpty()) {
+            QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+            if (reply.isError()) {
+                qDebug() << Q_FUNC_INFO << reply.error().message();
+            } else {
+                m_propertiesCache = reply.value();
+            }
         }
 
         connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),

@@ -25,21 +25,14 @@
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
-    m_tech(NULL)
+    m_tech(NULL),
+    m_techname(QString())
 {
     m_manager = NetworkManagerFactory::createInstance();
-
-    // set default value of the "name" property
-    m_techname = QString("wifi");
 
     QHash<int, QByteArray> roles;
     roles[ServiceRole] = "networkService";
     setRoleNames(roles);
-
-    m_tech = m_manager->getTechnology(m_techname);
-    if (m_tech) {
-        CONNECT_TECHNOLOGY_SIGNALS(m_tech);
-    }
 
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
@@ -138,6 +131,7 @@ void TechnologyModel::setName(const QString &name)
             emit poweredChanged(!oldPowered);
         }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
+        updateServiceList();
     }
 }
 

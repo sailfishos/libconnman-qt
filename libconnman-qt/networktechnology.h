@@ -17,15 +17,18 @@ class Technology;
 
 class NetworkTechnology : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 
-    Q_PROPERTY(QString name READ name);
-    Q_PROPERTY(QString type READ type);
-    Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged);
-    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged);
+    Q_PROPERTY(QString name READ name)
+    Q_PROPERTY(QString type READ type)
+    Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
+    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(QString path READ path WRITE setPath)
 
 public:
     NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent);
+    NetworkTechnology(QObject* parent=0);
+
     virtual ~NetworkTechnology();
 
     const QString name() const;
@@ -34,9 +37,12 @@ public:
     bool connected() const;
     const QString objPath() const;
 
+    QString path() const;
+
 public slots:
     void setPowered(const bool &powered);
     void scan();
+    void setPath(const QString &path);
 
 signals:
     void poweredChanged(const bool &powered);
@@ -53,12 +59,16 @@ private:
     static const QString Powered;
     static const QString Connected;
 
+    QString m_path;
+    void init(const QString &path);
+
+
 private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void scanReply(QDBusPendingCallWatcher *call);
 
 private:
-    Q_DISABLE_COPY(NetworkTechnology);
+    Q_DISABLE_COPY(NetworkTechnology)
 };
 
 #endif //NETWORKTECHNOLOGY_H

@@ -22,30 +22,31 @@ class NetworkService : public QObject
 {
     Q_OBJECT;
 
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged);
-    Q_PROPERTY(QString state READ state NOTIFY stateChanged);
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged);
-    Q_PROPERTY(QString type READ type);
-    Q_PROPERTY(QStringList security READ security NOTIFY securityChanged);
-    Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged);
-    Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged);
-    Q_PROPERTY(bool autoConnect READ autoConnect WRITE setAutoConnect NOTIFY autoConnectChanged);
-    Q_PROPERTY(QString path READ path NOTIFY pathChanged);
-    Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed);
-    Q_PROPERTY(QVariantMap ipv4Config READ ipv4Config WRITE setIpv4Config NOTIFY ipv4ConfigChanged);
-    Q_PROPERTY(QVariantMap ipv6 READ ipv6 NOTIFY ipv6Changed);
-    Q_PROPERTY(QVariantMap ipv6Config READ ipv6Config WRITE setIpv6Config NOTIFY ipv6ConfigChanged);
-    Q_PROPERTY(QStringList nameservers READ nameservers NOTIFY nameserversChanged);
-    Q_PROPERTY(QStringList nameserversConfig READ nameserversConfig WRITE setNameserversConfig NOTIFY nameserversConfigChanged);
-    Q_PROPERTY(QStringList domains READ domains NOTIFY domainsChanged);
-    Q_PROPERTY(QStringList domainsConfig READ domainsConfig WRITE setDomainsConfig NOTIFY domainsConfigChanged);
-    Q_PROPERTY(QVariantMap proxy READ proxy NOTIFY proxyChanged);
-    Q_PROPERTY(QVariantMap proxyConfig READ proxyConfig WRITE setProxyConfig NOTIFY proxyConfigChanged);
-    Q_PROPERTY(QVariantMap ethernet READ ethernet NOTIFY ethernetChanged);
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(QString type READ type NOTIFY typeChanged)
+    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
+    Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
+    Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged)
+    Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged)
+    Q_PROPERTY(bool autoConnect READ autoConnect WRITE setAutoConnect NOTIFY autoConnectChanged)
+    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QVariantMap ipv4 READ ipv4 NOTIFY ipv4Changed)
+    Q_PROPERTY(QVariantMap ipv4Config READ ipv4Config WRITE setIpv4Config NOTIFY ipv4ConfigChanged)
+    Q_PROPERTY(QVariantMap ipv6 READ ipv6 NOTIFY ipv6Changed)
+    Q_PROPERTY(QVariantMap ipv6Config READ ipv6Config WRITE setIpv6Config NOTIFY ipv6ConfigChanged)
+    Q_PROPERTY(QStringList nameservers READ nameservers NOTIFY nameserversChanged)
+    Q_PROPERTY(QStringList nameserversConfig READ nameserversConfig WRITE setNameserversConfig NOTIFY nameserversConfigChanged)
+    Q_PROPERTY(QStringList domains READ domains NOTIFY domainsChanged)
+    Q_PROPERTY(QStringList domainsConfig READ domainsConfig WRITE setDomainsConfig NOTIFY domainsConfigChanged)
+    Q_PROPERTY(QVariantMap proxy READ proxy NOTIFY proxyChanged)
+    Q_PROPERTY(QVariantMap proxyConfig READ proxyConfig WRITE setProxyConfig NOTIFY proxyConfigChanged)
+    Q_PROPERTY(QVariantMap ethernet READ ethernet NOTIFY ethernetChanged)
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
-    NetworkService(QObject* parent = 0) { Q_ASSERT(false); Q_UNUSED(parent); };
+    NetworkService(QObject* parent = 0);
+
     virtual ~NetworkService();
 
     const QString name() const;
@@ -69,6 +70,8 @@ public:
     const QVariantMap proxyConfig() const;
     const QVariantMap ethernet() const;
 
+    void setPath(const QString &path);
+
 signals:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
@@ -90,6 +93,7 @@ signals:
     void proxyConfigChanged(const QVariantMap &proxy);
     void ethernetChanged(const QVariantMap &ethernet);
     void connectRequestFailed(const QString &error);
+    void typeChanged(const QString &type);
 
 public slots:
     void requestConnect();

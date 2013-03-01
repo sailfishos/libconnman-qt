@@ -15,21 +15,24 @@ NetworkSession::NetworkSession(QObject *parent) :
     m_sessionAgent(0),
     m_path("/ConnmanQmlSessionAgent")
 {
+    createSession();
 }
 
 NetworkSession::~NetworkSession()
 {
 }
 
-void NetworkSession::registerSession()
+void NetworkSession::createSession()
 {
     if (m_path.isEmpty())
         return;
+    if (m_sessionAgent) {
+        delete m_sessionAgent;
+        m_sessionAgent = 0;
+    }
     m_sessionAgent = new SessionAgent(m_path ,this);
     connect(m_sessionAgent,SIGNAL(settingsUpdated(QVariantMap)),
             this,SLOT(sessionSettingsUpdated(QVariantMap)));
-
-    m_sessionAgent->registerSession();
 }
 
 QString NetworkSession::state() const
@@ -74,13 +77,13 @@ QString NetworkSession::connectionType() const
 
 void NetworkSession::setAllowedBearers(const QStringList &bearers)
 {
-    settingsMap.insert("AllowedBearers",  qVariantFromValue(bearers));
+    settingsMap.insert("AllowedBearers", qVariantFromValue(bearers));
     m_sessionAgent->setAllowedBearers(bearers);
 }
 
 void NetworkSession::setConnectionType(const QString &type)
 {
-    settingsMap.insert("ConnectionType",  qVariantFromValue(type));
+    settingsMap.insert("ConnectionType", qVariantFromValue(type));
     m_sessionAgent->setConnectionType(type);
 }
 
@@ -103,6 +106,24 @@ void NetworkSession::sessionSettingsUpdated(const QVariantMap &settings)
 {
     Q_FOREACH(const QString &name, settings.keys()) {
         settingsMap.insert(name,settings[name]);
+
+        if (name == QLatin1String("State")) {
+            Q_EMIT stateChanged(settings[name].toString());
+        } else if (name == QLatin1String("Name")) {
+            Q_EMIT nameChanged(settings[name].toString());
+        } else if (name == QLatin1String("Bearer")) {
+            Q_EMIT bearerChanged(settings[name].toString());
+        } else if (name == QLatin1String("Interface")) {
+            Q_EMIT sessionInterfaceChanged(settings[name].toString());
+        } else if (name == QLatin1String("IPv4")) {
+            Q_EMIT ipv4Changed(ipv4());
+        } else if (name == QLatin1String("IPv6")) {
+            Q_EMIT ipv6Changed(ipv6());
+        } else if (name == QLatin1String("AllowedBearers")) {
+            Q_EMIT allowedBearersChanged(allowedBearers());
+        } else if (name == QLatin1String("ConnectionType")) {
+            Q_EMIT connectionTypeChanged(settings[name].toString());
+        }
     }
     Q_EMIT settingsChanged(settings);
 }
@@ -114,5 +135,8 @@ QString NetworkSession::path() const
 
 void NetworkSession::setPath(const QString &path)
 {
-    m_path = path;
+    if (path != m_path) {
+        m_path = path;
+        createSession();
+    }
 }

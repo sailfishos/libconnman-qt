@@ -30,14 +30,15 @@ public:
 
 class NetworkManager : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 
-    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
-    Q_PROPERTY(QString state READ state NOTIFY stateChanged);
-    Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged);
-    Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged);
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
+    Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
 
-    Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged);
+    Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
+    Q_PROPERTY(QString serviceAdded NOTIFY serviceAdded)
 
 public:
     NetworkManager(QObject* parent=0);
@@ -48,6 +49,12 @@ public:
     NetworkTechnology* getTechnology(const QString &type) const;
     const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = "") const;
+
+    Q_INVOKABLE QStringList servicesList(const QString &tech);
+    Q_INVOKABLE QStringList technologiesList();
+    Q_INVOKABLE QString technologyPathForService(const QString &path);
+    Q_INVOKABLE QString technologyPathForType(const QString &type);
+
 
     const QString state() const;
     bool offlineMode() const;
@@ -75,11 +82,13 @@ signals:
     void servicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
     void sessionModeChanged(bool);
+    void servicesListChanged(const QStringList &list);
+    void serviceAdded(const QString &servicePath);
+    void serviceRemoved(const QString &servicePath);
 
 private:
     Manager *m_manager;
 
-    QDBusPendingCallWatcher *m_getPropertiesWatcher;
     QDBusPendingCallWatcher *m_getTechnologiesWatcher;
     QDBusPendingCallWatcher *m_getServicesWatcher;
 
@@ -108,9 +117,8 @@ private slots:
     void connectToConnman(QString = "");
     void disconnectFromConnman(QString = "");
     void connmanUnregistered(QString = "");
-    void getPropertiesReply(QDBusPendingCallWatcher *call);
-    void getTechnologiesReply(QDBusPendingCallWatcher *call);
-    void getServicesReply(QDBusPendingCallWatcher *call);
+    void setupTechnologies();
+    void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
     void updateDefaultRoute(NetworkService* defaultRoute);

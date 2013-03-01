@@ -30,16 +30,17 @@ Example:
 SessionAgent::SessionAgent(const QString &path, QObject* parent) :
     QObject(parent),
     agentPath(path),
-    m_session(0)
+    m_session(0),
+    m_manager(NetworkManagerFactory::createInstance())
 {
-    m_manager = new Manager("net.connman", "/", QDBusConnection::systemBus(), this);
-    const QString sessionmode = "SessionMode";
-    m_manager->SetProperty(sessionmode, QDBusVariant(true));
+    m_manager->setSessionMode(true);
+    createSession();
 }
 
 SessionAgent::~SessionAgent()
 {
-    m_manager->DestroySession(QDBusObjectPath(agentPath));
+    m_manager->setSessionMode(false);
+    m_manager->destroySession(agentPath);
 }
 
 void SessionAgent::setAllowedBearers(const QStringList &bearers)
@@ -48,7 +49,11 @@ void SessionAgent::setAllowedBearers(const QStringList &bearers)
         return;
     QVariantMap map;
     map.insert("AllowedBearers",  qVariantFromValue(bearers));
-    m_session->Change("AllowedBearers",QDBusVariant(bearers));
+    QDBusPendingReply<> reply = m_session->Change("AllowedBearers",QDBusVariant(bearers));
+    if (reply.isError()) {
+        qDebug() << Q_FUNC_INFO << reply.error();
+    }
+
 }
 
 void SessionAgent::setConnectionType(const QString &type)
@@ -60,20 +65,32 @@ void SessionAgent::setConnectionType(const QString &type)
     m_session->Change("ConnectionType",QDBusVariant(type));
 }
 
-void SessionAgent::registerSession()
+void SessionAgent::createSession()
 {
-    if (m_manager->isValid()) {
-        QDBusPendingReply<QDBusObjectPath> obpath = m_manager->CreateSession(QVariantMap(),QDBusObjectPath(agentPath));
-        m_session = new Session(obpath.value().path(), this);
-        new SessionNotificationAdaptor(this);
-        QDBusConnection::systemBus().registerObject(agentPath, this);
+    if (m_manager->isAvailable()) {
+        QDBusObjectPath obpath = m_manager->createSession(QVariantMap(),agentPath);
+        if (!obpath.path().isEmpty()) {
+            m_session = new Session(obpath.path(), this);
+            new SessionNotificationAdaptor(this);
+            QDBusConnection::systemBus().unregisterObject(agentPath);
+            if (!QDBusConnection::systemBus().registerObject(agentPath, this)) {
+                qDebug() << "Could not register agent object";
+            }
+        } else {
+            qDebug() << "agentPath is not valid" << agentPath;
+        }
+    } else {
+        qDebug() << Q_FUNC_INFO << "manager not valid";
     }
 }
 
 void SessionAgent::requestConnect()
 {
-    if (m_session)
-        m_session->Connect();
+    if (m_session) {
+      QDBusPendingReply<> reply = m_session->Connect();
+      if (reply.isError())
+          qDebug() << reply.error().message();
+    }
 }
 
 void SessionAgent::requestDisconnect()

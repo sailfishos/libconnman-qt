@@ -57,22 +57,18 @@ const QString NetworkService::Ethernet("Ethernet");
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
     m_service(NULL),
-    m_path(path)
+    m_path(QString())
 {
-    Q_ASSERT(!m_path.isEmpty());
-    m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
-
-    if (!m_service->isValid()) {
-        pr_dbg() << "Invalid service: " << m_path;
-        throw -1; // FIXME
-    }
-
+    Q_ASSERT(!path.isEmpty());
     m_propertiesCache = properties;
+    setPath(path);
+}
 
-    connect(m_service,
-            SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
-            this,
-            SLOT(updateProperty(const QString&, const QDBusVariant&)));
+NetworkService::NetworkService(QObject* parent)
+    : QObject(parent),
+      m_service(NULL),
+      m_path(QString())
+{
 }
 
 NetworkService::~NetworkService() {}
@@ -242,9 +238,6 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
 
     Q_ASSERT(m_service);
 
-    pr_dbg() << m_service->path() << "property" << name << "changed from"
-             << m_propertiesCache[name].toString() << "to" << tmp.toString();
-
     m_propertiesCache[name] = tmp;
 
     if (name == Name) {
@@ -283,5 +276,40 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
     } else if (name == Ethernet) {
         emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
+    } else if (name == QLatin1String("type")) {
+        Q_EMIT typeChanged(tmp.toString());
+    }
+}
+
+void NetworkService::setPath(const QString &path)
+{
+    if (path != m_path) {
+        m_path = path;
+
+        if (m_service) {
+            delete m_service;
+            m_service = 0;
+            // TODO: After resetting the path iterate through old properties, compare their values
+            //       with new ones and emit corresponding signals if changed.
+            m_propertiesCache.clear();
+        }
+        m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
+
+        if (!m_service->isValid()) {
+            pr_dbg() << "Invalid service: " << m_path;
+            return;
+        }
+
+        if (m_propertiesCache.isEmpty()) {
+            QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+            if (reply.isError()) {
+                qDebug() << Q_FUNC_INFO << reply.error().message();
+            } else {
+                m_propertiesCache = reply.value();
+            }
+        }
+
+        connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+                this, SLOT(updateProperty(QString,QDBusVariant)));
     }
 }

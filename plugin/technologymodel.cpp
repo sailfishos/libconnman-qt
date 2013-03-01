@@ -15,30 +15,24 @@
     connect(tech, \
         SIGNAL(poweredChanged(bool)), \
         this, \
-        SIGNAL(poweredChanged(bool))); \
+        SLOT(changedPower(bool))); \
     connect(tech, \
             SIGNAL(scanFinished()), \
             this, \
-            SIGNAL(scanRequestFinished()))
+            SLOT(finishedScan()));
+
 
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
-    m_tech(NULL)
+    m_tech(NULL),
+    m_techname(QString())
 {
     m_manager = NetworkManagerFactory::createInstance();
-
-    // set default value of the "name" property
-    m_techname = QString("wifi");
 
     QHash<int, QByteArray> roles;
     roles[ServiceRole] = "networkService";
     setRoleNames(roles);
-
-    m_tech = m_manager->getTechnology(m_techname);
-    if (m_tech) {
-        CONNECT_TECHNOLOGY_SIGNALS(m_tech);
-    }
 
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
@@ -109,38 +103,40 @@ void TechnologyModel::setName(const QString &name)
     if (m_techname == name) {
         return;
     }
+    QStringList netTypes = m_manager->technologiesList();
 
     bool oldPowered(false);
+
+    if (!netTypes.contains(name)) {
+        qDebug() << name <<  "is not a known technology name:" << netTypes;
+        return;
+    }
 
     if (m_tech) {
         oldPowered = m_tech->powered();
         disconnect(m_tech, SIGNAL(poweredChanged(bool)),
-                   this, SIGNAL(poweredChanged(bool)));
+                this, SLOT(changedPower(bool)));
         disconnect(m_tech, SIGNAL(scanFinished()),
-                   this, SIGNAL(scanRequestFinished()));
+                this, SLOT(finishedScan()));
     }
 
-    m_techname = name;
-    m_tech = m_manager->getTechnology(m_techname);
-    emit nameChanged(m_techname);
+    m_tech = m_manager->getTechnology(name);
 
     if (!m_tech) {
-        if (oldPowered) {
-            emit poweredChanged(false);
-        }
         return;
+    } else {
+        m_techname = name;
+        emit nameChanged(m_techname);
+        if (oldPowered != m_tech->powered()) {
+            emit poweredChanged(!oldPowered);
+        }
+        CONNECT_TECHNOLOGY_SIGNALS(m_tech);
+        updateServiceList();
     }
-
-    if (oldPowered != m_tech->powered()) {
-        emit poweredChanged(!oldPowered);
-    }
-
-    CONNECT_TECHNOLOGY_SIGNALS(m_tech);
 }
 
 void TechnologyModel::requestScan() const
 {
-    qDebug() << "scan requested for technology";
     if (m_tech) {
         m_tech->scan();
     }
@@ -154,6 +150,7 @@ void TechnologyModel::updateTechnologies()
             // if wifi is set and manager doesn't return a wifi, it means
             // that wifi was removed
             m_tech = NULL;
+            Q_EMIT technologiesChanged();
         }
     } else {
         if ((test = m_manager->getTechnology(m_techname)) != NULL) {
@@ -162,10 +159,9 @@ void TechnologyModel::updateTechnologies()
             m_tech = test;
 
             CONNECT_TECHNOLOGY_SIGNALS(m_tech);
+            emit technologiesChanged();
         }
     }
-
-    emit technologiesChanged();
 }
 
 void TechnologyModel::managerAvailabilityChanged(bool available)
@@ -214,3 +210,18 @@ void TechnologyModel::updateServiceList()
         endRemoveRows();
     }
 }
+
+void TechnologyModel::changedPower(bool b)
+{
+    NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
+    if (tech->type() == m_tech->type())
+        Q_EMIT poweredChanged(b);
+}
+
+void TechnologyModel::finishedScan()
+{
+    NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
+    if (tech->type() == m_tech->type())
+        Q_EMIT scanRequestFinished();
+}
+

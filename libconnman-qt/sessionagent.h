@@ -10,7 +10,7 @@
 #ifndef SESSIONAGENT_H
 #define SESSIONAGENT_H
 
-#include "manager.h"
+#include "networkmanager.h"
 
 class Session;
 
@@ -24,7 +24,6 @@ public:
 
     void setAllowedBearers(const QStringList &bearers);
     void setConnectionType(const QString &type);
-    void registerSession();
     void requestConnect();
     void requestDisconnect();
     void requestDestroy();
@@ -32,6 +31,7 @@ public:
 public slots:
     void release();
     void update(const QVariantMap &settings);
+    void createSession();
 
 Q_SIGNALS:
     void settingsUpdated(const QVariantMap &settings);
@@ -40,7 +40,7 @@ Q_SIGNALS:
 private:
     QString agentPath;
     QVariantMap sessionSettings;
-    Manager* m_manager;
+    NetworkManager* m_manager;
     Session *m_session;
 
     friend class SessionNotificationAdaptor;

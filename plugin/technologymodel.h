@@ -23,12 +23,12 @@
  */
 class TechnologyModel : public QAbstractListModel
 {
-    Q_OBJECT;
-    Q_DISABLE_COPY(TechnologyModel);
+    Q_OBJECT
+    Q_DISABLE_COPY(TechnologyModel)
 
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged);
-    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
-    Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged);
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged)
 
 public:
     enum ItemRoles {
@@ -71,6 +71,8 @@ private slots:
     void updateTechnologies();
     void updateServiceList();
     void managerAvailabilityChanged(bool available);
+    void changedPower(bool);
+    void finishedScan();
 };
 
 #endif // TECHNOLOGYMODEL_H

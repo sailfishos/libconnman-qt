@@ -22,6 +22,13 @@
             SLOT(finishedScan()));
 
 
+#define DISCONNECT_TECHNOLOGY_SIGNALS(tech) \
+    disconnect(tech, SIGNAL(poweredChanged(bool)), \
+               this, SLOT(changedPower(bool))); \
+    disconnect(tech, SIGNAL(scanFinished()), \
+               this, SLOT(finishedScan()))
+
+
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
@@ -114,10 +121,7 @@ void TechnologyModel::setName(const QString &name)
 
     if (m_tech) {
         oldPowered = m_tech->powered();
-        disconnect(m_tech, SIGNAL(poweredChanged(bool)),
-                this, SLOT(changedPower(bool)));
-        disconnect(m_tech, SIGNAL(scanFinished()),
-                this, SLOT(finishedScan()));
+        DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
     }
 
     m_tech = m_manager->getTechnology(name);
@@ -149,6 +153,7 @@ void TechnologyModel::updateTechnologies()
         if ((test = m_manager->getTechnology(m_techname)) == NULL) {
             // if wifi is set and manager doesn't return a wifi, it means
             // that wifi was removed
+            DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
             m_tech = NULL;
             Q_EMIT technologiesChanged();
         }
@@ -157,7 +162,6 @@ void TechnologyModel::updateTechnologies()
             // if wifi is not set and manager returns a wifi, it means
             // that wifi was added
             m_tech = test;
-
             CONNECT_TECHNOLOGY_SIGNALS(m_tech);
             emit technologiesChanged();
         }

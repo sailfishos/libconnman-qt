@@ -102,7 +102,19 @@ void NetworkManager::disconnectFromConnman(QString)
         delete m_manager;
         m_manager = NULL;
     }
-    // FIXME: should we delete technologies and services?
+
+    foreach (QString skey, m_servicesCache.keys()) {
+        m_servicesCache.value(skey)->deleteLater();
+        m_servicesCache.remove(skey);
+    }
+    m_servicesOrder.clear();
+    emit servicesChanged();
+
+    foreach (QString tkey, m_technologiesCache.keys()) {
+        m_technologiesCache.value(tkey)->deleteLater();
+        m_technologiesCache.remove(tkey);
+    }
+    emit technologiesChanged();
 }
 
 
@@ -189,8 +201,13 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
 
     foreach (QDBusObjectPath obj, removed) {
         Q_EMIT serviceRemoved(obj.path());
-        m_servicesCache.value(obj.path())->deleteLater();
-        m_servicesCache.remove(obj.path());
+        if (m_servicesCache.contains(obj.path())) {
+            m_servicesCache.value(obj.path())->deleteLater();
+            m_servicesCache.remove(obj.path());
+        } else {
+            // connman maintains a virtual "hidden" wifi network and removes it upon init
+            pr_dbg() << "attempted to remove non-existing service";
+        }
     }
 
     ConnmanObject connmanobj;

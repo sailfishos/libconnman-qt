@@ -147,7 +147,7 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
     } else if (name == Connected) {
         emit connectedChanged(tmp.toBool());
     } else if (name == IdleTimeout) {
-      emit idleTimeoutChanged(tmp.toInt());
+      emit idleTimeoutChanged(tmp.toUInt());
     }
 }
 
@@ -170,15 +170,15 @@ void NetworkTechnology::setPath(const QString &path)
     }
 }
 
-int NetworkTechnology::idleTimetout() const
+quint32 NetworkTechnology::idleTimetout() const
 {
     if (m_propertiesCache.contains(NetworkTechnology::IdleTimeout))
-        return m_propertiesCache[NetworkTechnology::IdleTimeout].toInt();
+        return m_propertiesCache[NetworkTechnology::IdleTimeout].toUInt();
     else
         return 0;
 }
 
-void NetworkTechnology::setIdleTimeout(int timeout)
+void NetworkTechnology::setIdleTimeout(quint32 timeout)
 {
     if (m_technology)
         m_technology->SetProperty(IdleTimeout, QDBusVariant(QVariant(timeout)));

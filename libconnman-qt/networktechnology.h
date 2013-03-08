@@ -24,6 +24,7 @@ class NetworkTechnology : public QObject
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
     Q_PROPERTY(QString path READ path WRITE setPath)
+    Q_PROPERTY(int idleTimetout READ idleTimetout WRITE setIdleTimeout NOTIFY idleTimeoutChanged)
 
 public:
     NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -39,6 +40,9 @@ public:
 
     QString path() const;
 
+    int idleTimetout() const;
+    void setIdleTimeout(int);
+
 public slots:
     void setPowered(const bool &powered);
     void scan();
@@ -48,6 +52,7 @@ signals:
     void poweredChanged(const bool &powered);
     void connectedChanged(const bool &connected);
     void scanFinished();
+    void idleTimeoutChanged(int timeout);
 
 private:
     Technology *m_technology;
@@ -58,6 +63,7 @@ private:
     static const QString Type;
     static const QString Powered;
     static const QString Connected;
+    static const QString IdleTimeout;
 
     QString m_path;
     void init(const QString &path);

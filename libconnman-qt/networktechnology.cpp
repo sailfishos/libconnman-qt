@@ -16,6 +16,7 @@ const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
 const QString NetworkTechnology::Powered("Powered");
 const QString NetworkTechnology::Connected("Connected");
+const QString NetworkTechnology::IdleTimeout("IdleTimeout");
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -145,6 +146,8 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
         emit poweredChanged(tmp.toBool());
     } else if (name == Connected) {
         emit connectedChanged(tmp.toBool());
+    } else if (name == IdleTimeout) {
+      emit idleTimeoutChanged(tmp.toInt());
     }
 }
 
@@ -165,4 +168,18 @@ void NetworkTechnology::setPath(const QString &path)
     if (path != m_path) {
         init(path);
     }
+}
+
+int NetworkTechnology::idleTimetout() const
+{
+    if (m_propertiesCache.contains(NetworkTechnology::IdleTimeout))
+        return m_propertiesCache[NetworkTechnology::IdleTimeout].toInt();
+    else
+        return 0;
+}
+
+void NetworkTechnology::setIdleTimeout(int timeout)
+{
+    if (m_technology)
+        m_technology->SetProperty(IdleTimeout, QDBusVariant(QVariant(timeout)));
 }

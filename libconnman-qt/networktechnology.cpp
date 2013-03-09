@@ -16,6 +16,10 @@ const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
 const QString NetworkTechnology::Powered("Powered");
 const QString NetworkTechnology::Connected("Connected");
+const QString NetworkTechnology::IdleTimeout("IdleTimeout");
+const QString NetworkTechnology::Tethering("Tethering");
+const QString NetworkTechnology::TetheringIdentifier("TetheringIdentifier");
+const QString NetworkTechnology::TetheringPassphrase("TetheringPassphrase");
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -145,6 +149,14 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
         emit poweredChanged(tmp.toBool());
     } else if (name == Connected) {
         emit connectedChanged(tmp.toBool());
+    } else if (name == IdleTimeout) {
+      emit idleTimeoutChanged(tmp.toUInt());
+    } else if (name == Tethering) {
+      emit tetheringChanged(tmp.toBool());
+    } else if (name == TetheringIdentifier) {
+      emit tetheringIdChanged(tmp.toString());
+    } else if (name == TetheringPassphrase) {
+      emit tetheringPassphraseChanged(tmp.toString());
     }
 }
 
@@ -165,4 +177,62 @@ void NetworkTechnology::setPath(const QString &path)
     if (path != m_path) {
         init(path);
     }
+}
+
+quint32 NetworkTechnology::idleTimetout() const
+{
+    if (m_propertiesCache.contains(NetworkTechnology::IdleTimeout))
+        return m_propertiesCache[NetworkTechnology::IdleTimeout].toUInt();
+    else
+        return 0;
+}
+
+void NetworkTechnology::setIdleTimeout(quint32 timeout)
+{
+    if (m_technology)
+        m_technology->SetProperty(IdleTimeout, QDBusVariant(QVariant(timeout)));
+}
+
+bool NetworkTechnology::tethering() const
+{
+    if (m_propertiesCache.contains(NetworkTechnology::Tethering))
+        return m_propertiesCache[NetworkTechnology::Tethering].toBool();
+    else
+        return false;
+}
+
+void NetworkTechnology::setTethering(bool b)
+{
+    if (m_technology)
+        m_technology->SetProperty(Tethering, QDBusVariant(QVariant(b)));
+}
+
+
+QString NetworkTechnology::tetheringId() const
+{
+    if (m_propertiesCache.contains(NetworkTechnology::TetheringIdentifier))
+        return m_propertiesCache[NetworkTechnology::TetheringIdentifier].toString();
+    else
+        return QString();
+}
+
+void NetworkTechnology::setTetheringId(const QString &id)
+{
+    if (m_technology)
+        m_technology->SetProperty(TetheringIdentifier, QDBusVariant(QVariant(id)));
+}
+
+QString NetworkTechnology::tetheringPassphrase() const
+{
+    if (m_propertiesCache.contains(NetworkTechnology::TetheringPassphrase))
+        return m_propertiesCache[NetworkTechnology::TetheringPassphrase].toString();
+    else
+        return QString();
+
+}
+
+void NetworkTechnology::setTetheringPassphrase(const QString &pass)
+{
+    if (m_technology)
+        m_technology->SetProperty(TetheringPassphrase, QDBusVariant(QVariant(pass)));
 }

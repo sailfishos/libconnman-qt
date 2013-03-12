@@ -67,6 +67,8 @@ void NetworkTechnology::init(const QString &path)
         reply = m_technology->GetProperties();
         m_propertiesCache = reply.value();
     }
+    emit poweredChanged(powered());
+    emit connectedChanged(connected());
 
     connect(m_technology,
             SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),

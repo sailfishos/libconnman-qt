@@ -62,10 +62,11 @@ void NetworkTechnology::init(const QString &path)
         throw -1; // FIXME
     }
 
-    QDBusReply<QVariantMap> reply;
-    reply = m_technology->GetProperties();
-    m_propertiesCache = reply.value();
-
+    if (m_propertiesCache.isEmpty()) {
+        QDBusReply<QVariantMap> reply;
+        reply = m_technology->GetProperties();
+        m_propertiesCache = reply.value();
+    }
     emit poweredChanged(powered());
     emit connectedChanged(connected());
 

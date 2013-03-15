@@ -17,41 +17,82 @@
 
 class NetworkManager;
 
+/*
+ * Proxy class for interface net.connman.Counter
+ */
 class Counter : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(quint32 bytesReceived READ bytesReceived NOTIFY bytesReceivedChanged)
+    Q_PROPERTY(quint32 bytesTransmitted READ bytesTransmitted NOTIFY bytesTransmittedChanged)
+    Q_PROPERTY(quint32 secondsOnline READ secondsOnline NOTIFY secondsOnlineChanged)
+    Q_PROPERTY(bool roaming READ roaming NOTIFY roamingChanged)
+    Q_PROPERTY(quint32 accuracy READ accuracy WRITE setAccuracy NOTIFY accuracyChanged)
+    Q_PROPERTY(quint32 interval READ interval WRITE setInterval NOTIFY intervalChanged)
+
+    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
+
     Q_DISABLE_COPY(Counter)
 public:
     explicit Counter(QObject *parent = 0);
     virtual ~Counter();
 
-    void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
-    void secondsOnline(const QString &servicePath);
-    QVariantMap latestStats(const QString &servicePath);
-    QPair <quint32, quint32> latestBytes(const QString &servicePath);
+    quint32 bytesReceived() const;
+    quint32 bytesTransmitted() const;
+    quint32 secondsOnline() const;
+
+    bool roaming() const;
+
+    quint32 accuracy() const;
+    void setAccuracy(quint32 accuracy);
+
+    quint32 interval() const;
+    void setInterval(quint32 interval);
+
+    bool running() const;
+    void setRunning(bool on);
 
 signals:
-   //  "RX.Bytes", "RX.Packets"
-   //  "TX.Bytes", "TX.Packets"
-   //  "Time"
-    void counterChanged(const QString servicePath, const QVariantMap &counters,  bool roaming);
-    
-public slots:
+    void counterChanged(const QString servicePath, const QVariantMap &counters, bool roaming);
+    void bytesReceivedChanged(quint32 bytesRx);
+    void bytesTransmittedChanged(quint32 bytesTx);
+    void secondsOnlineChanged(quint32 seconds);
+    void roamingChanged(bool roaming);
+    void accuracyChanged(quint32 accuracy);
+    void intervalChanged(quint32 interval);
+    void runningChanged(bool running);
     
 private:
        NetworkManager* m_manager;
-       QMap <QString,QVariantMap> latestCounts;
 
+       friend class CounterAdaptor;
+
+       void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
+       void release();
+
+       quint32 bytesInHome;
+       quint32 bytesOutHome;
+       quint32 secondsOnlineHome;
+
+       quint32 bytesInRoaming;
+       quint32 bytesOutRoaming;
+       quint32 secondsOnlineRoaming;
+
+       bool roamingEnabled;
+       quint32 currentInterval;
+       quint32 currentAccuracy;
+       bool isRunning;
+
+       void reRegister();
 };
-
 
 class CounterAdaptor : public QDBusAbstractAdaptor
 {
-    Q_OBJECT;
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Counter");
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "net.connman.Counter")
 
 public:
-    explicit CounterAdaptor(Counter* parent);
+    explicit CounterAdaptor(Counter *parent);
     virtual ~CounterAdaptor();
 
 public slots:
@@ -61,7 +102,6 @@ public slots:
                                 const QVariantMap &roaming);
 
 private:
-    Counter* m_counter;
-    friend class CounterAdaptor;
+    Counter *m_counter;
 };
 #endif // COUNTER_H

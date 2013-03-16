@@ -15,6 +15,7 @@
 #include "technologymodel.h"
 #include "useragent.h"
 #include "networksession.h"
+#include "counter.h"
 
 void Components::registerTypes(const char *uri)
 {
@@ -26,6 +27,7 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<NetworkSession>(uri,0,2,"NetworkSession");
     qmlRegisterType<NetworkManager>(uri,0,2,"NetworkManager");
     qmlRegisterType<NetworkTechnology>(uri,0,2,"NetworkTechnology");
+    qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
 
 }
 

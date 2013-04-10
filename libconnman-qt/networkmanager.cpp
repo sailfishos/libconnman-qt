@@ -198,18 +198,6 @@ void NetworkManager::setupServices()
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
-
-    foreach (QDBusObjectPath obj, removed) {
-        Q_EMIT serviceRemoved(obj.path());
-        if (m_servicesCache.contains(obj.path())) {
-            m_servicesCache.value(obj.path())->deleteLater();
-            m_servicesCache.remove(obj.path());
-        } else {
-            // connman maintains a virtual "hidden" wifi network and removes it upon init
-            pr_dbg() << "attempted to remove non-existing service";
-        }
-    }
-
     ConnmanObject connmanobj;
     int order = -1;
     NetworkService *service = NULL;
@@ -219,21 +207,35 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     QStringList serviceList;
     foreach (connmanobj, changed) {
         order++;
+        bool addedService = false;
 
         if (!m_servicesCache.contains(connmanobj.objpath.path())) {
             service = new NetworkService(connmanobj.objpath.path(),
                                          connmanobj.properties, this);
             m_servicesCache.insert(connmanobj.objpath.path(), service);
-            Q_EMIT serviceAdded(connmanobj.objpath.path());
+            addedService = true;
         } else {
             service = m_servicesCache.value(connmanobj.objpath.path());
         }
-
         m_servicesOrder.push_back(service);
         serviceList.push_back(service->path());
 
         if (order == 0)
             updateDefaultRoute(service);
+        if (addedService) { //emit this after m_servicesOrder is updated
+            Q_EMIT serviceAdded(connmanobj.objpath.path());
+        }
+    }
+
+    foreach (QDBusObjectPath obj, removed) {
+        if (m_servicesCache.contains(obj.path())) {
+            m_servicesCache.value(obj.path())->deleteLater();
+            m_servicesCache.remove(obj.path());
+            Q_EMIT serviceRemoved(obj.path());
+        } else {
+            // connman maintains a virtual "hidden" wifi network and removes it upon init
+            pr_dbg() << "attempted to remove non-existing service";
+        }
     }
 
     if (order == -1)

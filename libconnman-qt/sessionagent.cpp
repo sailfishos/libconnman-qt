@@ -17,9 +17,6 @@ Example:
     SessionAgent *sessionAgent = new SessionAgent("/ConnmanSessionAgent",this);
     connect(sessionAgent,SIGNAL(settingsUpdated(QVariantMap)),
             this,SLOT(sessionSettingsUpdated(QVariantMap)));
-
-    sessionAgent->registerSession(); // you MUST call this!
-
     sessionAgent->setAllowedBearers(QStringList() << "wifi" << "ethernet" << "cellular");
     sessionAgent->requestConnect();
 

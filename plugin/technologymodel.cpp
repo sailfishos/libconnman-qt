@@ -37,10 +37,9 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
-    QHash<int, QByteArray> roles;
-    roles[ServiceRole] = "networkService";
-    setRoleNames(roles);
-
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    setRoleNames(roleNames());
+#endif
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(managerAvailabilityChanged(bool)));
 
@@ -57,6 +56,13 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
 
 TechnologyModel::~TechnologyModel()
 {
+}
+
+QHash<int, QByteArray> TechnologyModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[ServiceRole] = "networkService";
+    return roles;
 }
 
 QVariant TechnologyModel::data(const QModelIndex &index, int role) const

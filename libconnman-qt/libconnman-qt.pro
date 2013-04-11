@@ -4,7 +4,8 @@ CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus
 QT          -= gui
-TARGET       = $$qtLibraryTarget(connman-qt4)
+equals(QT_MAJOR_VERSION, 4): TARGET = $$qtLibraryTarget(connman-qt4)
+equals(QT_MAJOR_VERSION, 5): TARGET = $$qtLibraryTarget(connman-qt5)
 
 OBJECTS_DIR += build
 MOC_DIR     += build

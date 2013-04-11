@@ -1,20 +1,32 @@
 #include <QApplication>
 #include <QWidget>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QQuickView>
+#include <qqml.h>
+#else
+#include <QGLWidget>
 #include <QDeclarativeView>
 #include <QDeclarativeContext>
-#include <QGLWidget>
 #include <qdeclarative.h>
+#endif
+
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
+    QApplication a(argc, argv);
 
-	QDeclarativeView *view = new QDeclarativeView;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    QQuickView *view = new QQuickView;
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+#else
+    QDeclarativeView *view = new QDeclarativeView;
     view->setViewport(new QGLWidget);
-	view->setSource(QUrl::fromLocalFile("main.qml"));
-	view->setGeometry(0,0,800,480);
-	view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
-	view->show();
+    view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+#endif
+    view->setSource(QUrl::fromLocalFile("main.qml"));
+    view->setGeometry(0,0,800,480);
+    view->show();
 
     return a.exec();
 }

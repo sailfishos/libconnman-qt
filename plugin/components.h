@@ -8,9 +8,19 @@
 
 #ifndef COMPONENTS_H
 #define COMPONENTS_H
+#include <QtPlugin>
 
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+# include <QtQml>
+# include <QQmlEngine>
+# include <QQmlExtensionPlugin>
+# define QDeclarativeEngine QQmlEngine
+# define QDeclarativeExtensionPlugin QQmlExtensionPlugin
+#else
+# include <QtDeclarative>
+# include <QDeclarativeEngine>
+# include <QDeclarativeExtensionPlugin>
+#endif
 
 class Components : public QDeclarativeExtensionPlugin
 {
@@ -18,6 +28,7 @@ class Components : public QDeclarativeExtensionPlugin
 
 public:
     void registerTypes(const char *uri);
+
     void initializeEngine(QDeclarativeEngine *engine, const char *uri);
 };
 

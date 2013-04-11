@@ -4,9 +4,18 @@
 #
 #-------------------------------------------------
 
-QT += core declarative gui opengl
+QT += core  gui
 
-TARGET = testconnman-qt
+equals(QT_MAJOR_VERSION, 4): {
+    QT += declarative opengl
+    TARGET = testconnman-qt
+    target.path = $$INSTALL_ROOT/usr/lib/libconnman-qt4/test
+}
+equals(QT_MAJOR_VERSION, 5): {
+    QT += quick
+    TARGET = testconnman-qt5
+    target.path = $$INSTALL_ROOT/usr/lib/libconnman-qt5/test
+}
 CONFIG   += console
 CONFIG   -= app_bundle
 
@@ -19,7 +28,6 @@ SOURCES += main.cpp
 
 HEADERS +=
 
-target.path = $$INSTALL_ROOT/usr/lib/libconnman-qt4/test
 
 qml.files = $$OTHER_FILES
 qml.path = $$target.path

@@ -39,8 +39,14 @@
     <method name="UnregisterCounter" tp:name-for-bindings="Unregister_Counter">
         <arg name="path" type="o"/>
     </method>
+
+    <method name="CreateSession" tp:name-for-bindings="Create_Session">
         <arg name="settings" type="a{sv}"/>
         <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+        <arg name="notifier" type="o"/>
+        <arg name="session" type="o" direction="out"/>
+    </method>
+
     <method name="DestroySession" tp:name-for-bindings="Destroy_Session">
         <arg name="session" type="o"/>
     </method>
@@ -79,14 +85,6 @@
       <arg name="name" type="s"/>
       <arg name="value" type="v"/>
     </signal>
-
-    <method name="CreateSession" tp:name-for-bindings="Create_Session">
-        <arg name="settings" type="a{sv}">
-        <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
-        <arg name="notifier" type="o"/>
-        <arg type="o" direction="out"/>
-    </method>
-
 
   </interface>
 </node>

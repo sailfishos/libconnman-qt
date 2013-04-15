@@ -53,6 +53,7 @@ const QString NetworkService::DomainsConfig("Domains.Configuration");
 const QString NetworkService::Proxy("Proxy");
 const QString NetworkService::ProxyConfig("Proxy.Configuration");
 const QString NetworkService::Ethernet("Ethernet");
+const QString NetworkService::Roaming("Roaming");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -73,84 +74,109 @@ NetworkService::NetworkService(QObject* parent)
 
 NetworkService::~NetworkService() {}
 
-const QString NetworkService::name() const {
+const QString NetworkService::name() const
+{
     return m_propertiesCache.value(Name).toString();
 }
 
-const QString NetworkService::state() const {
+const QString NetworkService::state() const
+{
     return m_propertiesCache.value(State).toString();
 }
 
-const QString NetworkService::error() const {
+const QString NetworkService::error() const
+{
     return m_propertiesCache.value(Error).toString();
 }
 
-const QString NetworkService::type() const {
+const QString NetworkService::type() const
+{
     return m_propertiesCache.value(Type).toString();
 }
 
-const QStringList NetworkService::security() const {
+const QStringList NetworkService::security() const
+{
     return m_propertiesCache.value(Security).toStringList();
 }
 
-uint NetworkService::strength() const {
+uint NetworkService::strength() const
+{
     return m_propertiesCache.value(Strength).toUInt();
 }
 
-bool NetworkService::favorite() const {
+bool NetworkService::favorite() const
+{
     return m_propertiesCache.value(Favorite).toBool();
 }
 
-bool NetworkService::autoConnect() const {
+bool NetworkService::autoConnect() const
+{
     return m_propertiesCache.value(AutoConnect).toBool();
 }
 
-const QString NetworkService::path() const {
+const QString NetworkService::path() const
+{
     return m_path;
 }
 
-const QVariantMap NetworkService::ipv4() const {
+const QVariantMap NetworkService::ipv4() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
 }
 
-const QVariantMap NetworkService::ipv4Config() const {
+const QVariantMap NetworkService::ipv4Config() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
 }
 
-const QVariantMap NetworkService::ipv6() const {
+const QVariantMap NetworkService::ipv6() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
 }
 
-const QVariantMap NetworkService::ipv6Config() const {
+const QVariantMap NetworkService::ipv6Config() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
 }
 
-const QStringList NetworkService::nameservers() const {
+const QStringList NetworkService::nameservers() const
+{
     return m_propertiesCache.value(Nameservers).toStringList();
 }
 
-const QStringList NetworkService::nameserversConfig() const {
+const QStringList NetworkService::nameserversConfig() const
+{
     return m_propertiesCache.value(NameserversConfig).toStringList();
 }
 
-const QStringList NetworkService::domains() const {
+const QStringList NetworkService::domains() const
+{
     return m_propertiesCache.value(Domains).toStringList();
 }
 
-const QStringList NetworkService::domainsConfig() const {
+const QStringList NetworkService::domainsConfig() const
+{
     return m_propertiesCache.value(DomainsConfig).toStringList();
 }
 
-const QVariantMap NetworkService::proxy() const {
+const QVariantMap NetworkService::proxy() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
 }
 
-const QVariantMap NetworkService::proxyConfig() const {
+const QVariantMap NetworkService::proxyConfig() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
 }
 
-const QVariantMap NetworkService::ethernet() const {
+const QVariantMap NetworkService::ethernet() const
+{
     return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
+}
+
+bool NetworkService::roaming() const
+{
+    return m_propertiesCache.value(Roaming).toBool();
 }
 
 void NetworkService::requestConnect()
@@ -278,6 +304,8 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
     } else if (name == QLatin1String("type")) {
         Q_EMIT typeChanged(tmp.toString());
+    } else if (name == Roaming) {
+        emit roamingChanged(tmp.toBool());
     }
 }
 

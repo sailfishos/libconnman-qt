@@ -1,0 +1,60 @@
+Name: connman-qt5
+Summary: qt bindings for connman
+Version: 1.0.1
+Release: 1
+Group: System/GUI/Other
+License: Apache License
+URL: https://github.com/nemomobile/libconnman-qt.git
+Sources:
+    - "%{name}-%{version}.tar.bz2"
+Description: |
+    This is a library for working with connman using Qt
+
+Requires:
+    - connman >= 1.10
+PkgBR:
+    - doxygen
+    - qt5-tools
+PkgConfigBR:
+    - Qt5Core
+    - Qt5DBus
+    - Qt5Gui
+    - Qt5Quick
+    - Qt5Qml
+    - dbus-1
+Configure: none
+Builder: qmake
+Files:
+    - "%{_libdir}/libconnman-qt5.so.*"
+SubPackages:
+ - Name: tests
+   Summary: tests for connman-qt
+   Group: Development/Libraries
+   Description: |
+    This package contains the test applications for testing libconnman-qt
+   Requires:
+    - connman-qt-declarative
+   Files:
+    - "%{_usr}/lib/libconnman-qt5/test"
+ - Name: declarative
+   Summary: Declarative plugin for Qt Quick for connman-qt
+   Group: Development/Libraries
+   Description: |
+    This package contains the files necessary to develop
+    applications using libconnman-qt
+   Requires:
+    - connman-qt
+   Files:
+    - "%{_usr}/lib/qt5/imports/MeeGo/Connman"
+ - Name: devel
+   Summary: Development files for connman-qt
+   Group: Development/Libraries
+   Description: |
+    This package contains the files necessary to develop
+    applications using libconnman-qt
+   Files:
+    - "%{_usr}/include/connman-qt"
+    - "%{_usr}/lib/pkgconfig/connman-qt5.pc"
+    - "%{_usr}/lib/connman-qt5.pc"
+    - "%{_usr}/lib/libconnman-qt5.prl"
+    - "%{_usr}/lib/libconnman-qt5.so"

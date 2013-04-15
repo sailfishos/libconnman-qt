@@ -66,6 +66,7 @@ private:
     NetworkManager* m_manager;
     NetworkTechnology* m_tech;
     QVector<NetworkService *> m_services;
+    QHash<int, QByteArray> roleNames() const;
 
 private slots:
     void updateTechnologies();

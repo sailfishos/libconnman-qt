@@ -8,8 +8,8 @@ Name:       connman-qt
 # >> macros
 # << macros
 
-Summary:    qt bindings for connman
-Version:    1.0.1
+Summary:    Qt bindings for connman
+Version:    1.0.2
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License
@@ -32,7 +32,7 @@ This is a library for working with connman using Qt
 
 
 %package tests
-Summary:    tests for connman-qt
+Summary:    Tests for connman-qt
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   connman-qt-declarative

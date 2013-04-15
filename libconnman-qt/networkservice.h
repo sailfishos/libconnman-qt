@@ -146,4 +146,6 @@ private:
     Q_DISABLE_COPY(NetworkService);
 };
 
+Q_DECLARE_METATYPE(NetworkService*)
+
 #endif // NETWORKSERVICE_H

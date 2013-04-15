@@ -336,7 +336,7 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
 
 const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
 {
-    QVector<NetworkTechnology *> techs(m_technologiesCache.size(), NULL);
+    QVector<NetworkTechnology *> techs;
 
     foreach (NetworkTechnology *tech, m_technologiesCache) {
         techs.push_back(tech);

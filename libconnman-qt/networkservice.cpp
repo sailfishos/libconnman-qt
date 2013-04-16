@@ -60,6 +60,8 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     m_service(NULL),
     m_path(QString())
 {
+    qRegisterMetaType<NetworkService *>();
+
     Q_ASSERT(!path.isEmpty());
     m_propertiesCache = properties;
     setPath(path);
@@ -70,6 +72,7 @@ NetworkService::NetworkService(QObject* parent)
       m_service(NULL),
       m_path(QString())
 {
+    qRegisterMetaType<NetworkService *>();
 }
 
 NetworkService::~NetworkService() {}

@@ -400,9 +400,11 @@ void NetworkManager::unregisterCounter(const QString &path)
 
 QDBusObjectPath NetworkManager::createSession(const QVariantMap &settings, const QString &sessionNotifierPath)
 {
-    QDBusPendingReply<QDBusObjectPath> reply;
-    if(m_manager)
-       reply = m_manager->CreateSession(settings,QDBusObjectPath(sessionNotifierPath));
+    if(!m_manager)
+        return QDBusObjectPath();
+
+    QDBusPendingReply<QDBusObjectPath> reply =
+        m_manager->CreateSession(settings,QDBusObjectPath(sessionNotifierPath));
     reply.waitForFinished();
     return reply.value();
 }

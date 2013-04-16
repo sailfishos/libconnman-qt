@@ -32,8 +32,7 @@
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
-    m_tech(NULL),
-    m_techname(QString())
+    m_tech(NULL)
 {
     m_manager = NetworkManagerFactory::createInstance();
 

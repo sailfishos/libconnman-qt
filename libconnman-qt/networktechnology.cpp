@@ -24,7 +24,6 @@ const QString NetworkTechnology::TetheringPassphrase("TetheringPassphrase");
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
     m_technology(NULL),
-    m_scanWatcher(NULL),
     m_path(QString())
 {
     Q_ASSERT(!path.isEmpty());
@@ -35,7 +34,6 @@ NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &pro
 NetworkTechnology::NetworkTechnology(QObject* parent)
     : QObject(parent),
       m_technology(NULL),
-      m_scanWatcher(NULL),
       m_path(QString())
 {
 }
@@ -133,8 +131,8 @@ void NetworkTechnology::scan()
     Q_ASSERT(m_technology);
 
     QDBusPendingReply<> reply = m_technology->Scan();
-    m_scanWatcher = new QDBusPendingCallWatcher(reply, m_technology);
-    connect(m_scanWatcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, m_technology);
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
             this, SLOT(scanReply(QDBusPendingCallWatcher*)));
 }
 
@@ -164,9 +162,9 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 
 void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
 {
-    Q_UNUSED(call);
-
     emit scanFinished();
+
+    call->deleteLater();
 }
 
 QString NetworkTechnology::path() const

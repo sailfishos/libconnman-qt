@@ -88,9 +88,6 @@ signals:
 private:
     Manager *m_manager;
 
-    QDBusPendingCallWatcher *m_getTechnologiesWatcher;
-    QDBusPendingCallWatcher *m_getServicesWatcher;
-
     /* Contains all property related to this net.connman.Manager object */
     QVariantMap m_propertiesCache;
 

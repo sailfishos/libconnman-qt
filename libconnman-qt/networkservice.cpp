@@ -194,8 +194,8 @@ void NetworkService::requestConnect()
     QDBusPendingReply<> conn_reply = m_service->Connect();
     m_service->setTimeout(old_timeout);
 
-    m_connectReqWatcher = new QDBusPendingCallWatcher(conn_reply, m_service);
-    connect(m_connectReqWatcher,
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(conn_reply, m_service);
+    connect(watcher,
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             this,
             SLOT(handleConnectReply(QDBusPendingCallWatcher*)));
@@ -259,6 +259,8 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
         pr_dbg() << "Reply from service.connect(): " << reply.error().message();
         emit connectRequestFailed(reply.error().message());
     }
+
+    call->deleteLater();
 }
 
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)

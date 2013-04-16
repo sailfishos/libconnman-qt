@@ -47,6 +47,8 @@ void SessionAgent::setAllowedBearers(const QStringList &bearers)
     QVariantMap map;
     map.insert("AllowedBearers",  qVariantFromValue(bearers));
     QDBusPendingReply<> reply = m_session->Change("AllowedBearers",QDBusVariant(bearers));
+    // hope this is not a lengthy task
+    reply.waitForFinished();
     if (reply.isError()) {
         qDebug() << Q_FUNC_INFO << reply.error();
     }
@@ -85,8 +87,9 @@ void SessionAgent::requestConnect()
 {
     if (m_session) {
       QDBusPendingReply<> reply = m_session->Connect();
-      if (reply.isError())
-          qDebug() << reply.error().message();
+      QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+      connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+          this, SLOT(onConnectFinished(QDBusPendingCallWatcher*)));
     }
 }
 
@@ -110,6 +113,15 @@ void SessionAgent::release()
 void SessionAgent::update(const QVariantMap &settings)
 {
     Q_EMIT settingsUpdated(settings);
+}
+
+void SessionAgent::onConnectFinished(QDBusPendingCallWatcher *call)
+{
+  QDBusPendingReply<> reply = *call;
+  if (reply.isError())
+    qDebug() << reply.error().message();
+
+  call->deleteLater();
 }
 
 SessionNotificationAdaptor::SessionNotificationAdaptor(SessionAgent* parent)

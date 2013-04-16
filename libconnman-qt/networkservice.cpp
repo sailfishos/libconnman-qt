@@ -333,6 +333,7 @@ void NetworkService::setPath(const QString &path)
 
         if (m_propertiesCache.isEmpty()) {
             QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+            reply.waitForFinished();
             if (reply.isError()) {
                 qDebug() << Q_FUNC_INFO << reply.error().message();
             } else {

@@ -37,6 +37,9 @@ Q_SIGNALS:
     void settingsUpdated(const QVariantMap &settings);
     void released();
 
+private slots:
+    void onConnectFinished(QDBusPendingCallWatcher *watcher);
+
 private:
     QString agentPath;
     QVariantMap sessionSettings;

@@ -76,6 +76,7 @@ void NetworkManager::connectToConnman(QString)
     } else {
 
         QDBusPendingReply<QVariantMap> props_reply = m_manager->GetProperties();
+        props_reply.waitForFinished();
         if (!props_reply.isError()) {
             m_propertiesCache = props_reply.value();
 
@@ -129,6 +130,7 @@ void NetworkManager::connmanUnregistered(QString)
 void NetworkManager::setupTechnologies()
 {
     QDBusPendingReply<ConnmanObjectList> reply = m_manager->GetTechnologies();
+    reply.waitForFinished();
     if (!reply.isError()) {
         ConnmanObjectList lst = reply.value();
         ConnmanObject obj;
@@ -157,6 +159,7 @@ void NetworkManager::setupTechnologies()
 void NetworkManager::setupServices()
 {
     QDBusPendingReply<ConnmanObjectList> reply = m_manager->GetServices();
+    reply.waitForFinished();
     if (!reply.isError()) {
 
         ConnmanObjectList lst = reply.value();

@@ -74,7 +74,6 @@ signals:
 private:
     Technology *m_technology;
     QVariantMap m_propertiesCache;
-    QDBusPendingCallWatcher *m_scanWatcher;
 
     static const QString Name;
     static const QString Type;

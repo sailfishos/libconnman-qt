@@ -115,8 +115,6 @@ private:
     QString m_path;
     QVariantMap m_propertiesCache;
 
-    QDBusPendingCallWatcher *m_connectReqWatcher;
-
     static const QString Name;
     static const QString State;
     static const QString Type;

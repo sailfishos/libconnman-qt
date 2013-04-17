@@ -8,6 +8,7 @@
  */
 
 #include "clockmodel.h"
+#include "connman_clock_interface.h"
 
 #define CONNMAN_SERVICE "net.connman"
 #define CONNMAN_CLOCK_INTERFACE CONNMAN_SERVICE ".Clock"
@@ -33,7 +34,8 @@ void ClockModel::connectToConnman()
     if (mClockProxy && mClockProxy->isValid())
         return;
 
-    mClockProxy = new ClockProxy(CONNMAN_SERVICE, "/", QDBusConnection::systemBus(), this);
+    mClockProxy = new NetConnmanClockInterface(CONNMAN_SERVICE, "/", QDBusConnection::systemBus(),
+        this);
 
     if (!mClockProxy->isValid()) {
         qCritical("ClockModel: unable to connect to connman");

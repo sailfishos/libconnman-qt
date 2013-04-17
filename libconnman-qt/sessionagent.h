@@ -12,7 +12,7 @@
 
 #include "networkmanager.h"
 
-class Session;
+class NetConnmanSessionInterface;
 
 class SessionAgent : public QObject
 {
@@ -44,7 +44,7 @@ private:
     QString agentPath;
     QVariantMap sessionSettings;
     NetworkManager* m_manager;
-    Session *m_session;
+    NetConnmanSessionInterface *m_session;
 
     friend class SessionNotificationAdaptor;
 };

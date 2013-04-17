@@ -10,7 +10,15 @@
 #ifndef CLOCKMODEL_H
 #define CLOCKMODEL_H
 
-#include "clockproxy.h"
+#include <QtCore/QDate>
+#include <QtCore/QObject>
+#include <QtCore/QStringList>
+#include <QtCore/QTime>
+
+class QDBusPendingCallWatcher;
+class QDBusVariant;
+
+class NetConnmanClockInterface;
 
 class ClockModel : public QObject {
     Q_OBJECT;
@@ -52,7 +60,7 @@ private slots:
     void propertyChanged(const QString&, const QDBusVariant&);
 
 private:
-    ClockProxy *mClockProxy;
+    NetConnmanClockInterface *mClockProxy;
     QString mTimezone;
     QString mTimezoneUpdates;
     QString mTimeUpdates;

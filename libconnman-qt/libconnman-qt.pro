@@ -11,44 +11,34 @@ isEmpty(PREFIX) {
   PREFIX=/usr
 }
 
-#system(qdbusxml2cpp -c Manager -p manager -N connman_manager.xml)
-system(qdbusxml2cpp -c Service -p service -N connman_service.xml)
-system(qdbusxml2cpp -c Technology -p technology -N connman_technology.xml)
-#system(qdbusxml2cpp -c Session -p session -N connman_session.xml)
+DBUS_INTERFACES = \
+    connman_clock.xml \
+    connman_manager.xml \
+    connman_service.xml \
+    connman_session.xml \
+    connman_technology.xml \
 
-HEADERS += manager.h \
-    service.h \
-    technology.h \
+HEADERS += \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \
     commondbustypes.h \
-    clockproxy.h \
     clockmodel.h \
     debug.h \
     useragent.h \
-    session.h \
     sessionagent.h \
     networksession.h \
-    counter.h
 
 SOURCES += \
     networkmanager.cpp \
     networktechnology.cpp \
     networkservice.cpp \
-    manager.cpp \
-    service.cpp \
-    technology.cpp \
-    clockproxy.cpp \
     clockmodel.cpp \
     commondbustypes.cpp \
     debug.cpp \
     useragent.cpp \
-    session.cpp \
     sessionagent.cpp \
     networksession.cpp \
-    counter.cpp
-
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 

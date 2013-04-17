@@ -1,10 +1,12 @@
-#include <QApplication>
-#include <QWidget>
+
+#include <QObject>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QtWidgets>
 #include <QQuickView>
 #include <qqml.h>
 #else
+#include <QApplication>
 #include <QGLWidget>
 #include <QDeclarativeView>
 #include <QDeclarativeContext>

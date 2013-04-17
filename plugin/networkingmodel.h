@@ -34,7 +34,6 @@ class NetworkingModel : public QObject
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
     Q_PROPERTY(bool wifiPowered READ isWifiPowered WRITE setWifiPowered NOTIFY wifiPoweredChanged);
     Q_PROPERTY(QList<QObject*> networks READ networks NOTIFY networksChanged);
-    Q_PROPERTY(NOTIFY scanRequestFinished);
 
 public:
     NetworkingModel(QObject* parent=0);

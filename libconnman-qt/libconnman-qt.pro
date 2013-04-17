@@ -7,9 +7,6 @@ QT          -= gui
 equals(QT_MAJOR_VERSION, 4): TARGET = $$qtLibraryTarget(connman-qt4)
 equals(QT_MAJOR_VERSION, 5): TARGET = $$qtLibraryTarget(connman-qt5)
 
-OBJECTS_DIR += build
-MOC_DIR     += build
-
 isEmpty(PREFIX) {
   PREFIX=/usr
 }

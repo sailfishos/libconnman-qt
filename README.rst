@@ -45,3 +45,4 @@ Extra make targets
 -----------
 
 * check: run tests directly inside build tree
+* coverage: generate code coverage report

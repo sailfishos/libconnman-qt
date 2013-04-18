@@ -51,6 +51,7 @@ protected:
     static QVariantMap defaultManagerProperties();
     static QVariantMap defaultServiceProperties();
     static QVariantMap defaultTechnologyProperties();
+    static QVariantMap alternateDefaultTechnologyProperties();
     static QVariantMap defaultClockProperties();
 };
 
@@ -429,6 +430,29 @@ inline QVariantMap TestBase::defaultTechnologyProperties()
     properties["TetheringIdentifier"] = "foo-tether-identifier";
     properties["TetheringPassphrase"] = "foo-tether-passwd";
     properties["IdleTimeout"] = 42;
+
+    initialized = true;
+
+    return properties;
+}
+
+inline QVariantMap TestBase::alternateDefaultTechnologyProperties()
+{
+    static QVariantMap properties;
+    static bool initialized = false;
+
+    if (initialized) {
+        return properties;
+    }
+
+    properties["Powered"] = false;
+    properties["Connected"] = true;
+    properties["Name"] = "Ethernet interface BAR";
+    properties["Type"] = "ethernet";
+    properties["Tethering"] = true;
+    properties["TetheringIdentifier"] = "bar-tether-identifier";
+    properties["TetheringPassphrase"] = "bar-tether-passwd";
+    properties["IdleTimeout"] = 24;
 
     initialized = true;
 

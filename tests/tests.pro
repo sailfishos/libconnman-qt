@@ -4,6 +4,7 @@ TEMPLATE = subdirs
 SUBDIRS = \
     ut_clock.pro \
     ut_manager.pro \
+    ut_technology.pro \
 
 runtest_sh.path = $${INSTALL_TESTDIR}
 runtest_sh.files = runtest.sh

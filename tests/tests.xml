@@ -32,6 +32,11 @@
                 <step>/opt/tests/connman-qt/runtest.sh ut_service</step>
             </case>
 
+            <case name="ut_agent">
+                <description>Tests the UserAgent class</description>
+                <step>/opt/tests/connman-qt/runtest.sh ut_agent</step>
+            </case>
+
         </set>
 
     </suite>

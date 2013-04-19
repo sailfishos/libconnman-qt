@@ -2,6 +2,7 @@ include(tests_common.pri)
 
 TEMPLATE = subdirs
 SUBDIRS = \
+    ut_agent.pro \
     ut_clock.pro \
     ut_manager.pro \
     ut_service.pro \

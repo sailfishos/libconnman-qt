@@ -17,6 +17,11 @@
                 <step>/opt/tests/connman-qt/runtest.sh ut_clock</step>
             </case>
 
+            <case name="ut_session">
+                <description>Tests the NetworkSession and SessionAgent classes</description>
+                <step>/opt/tests/connman-qt/runtest.sh ut_session</step>
+            </case>
+
             <case name="ut_technology">
                 <description>Tests the NetworkTechnology class</description>
                 <step>/opt/tests/connman-qt/runtest.sh ut_technology</step>

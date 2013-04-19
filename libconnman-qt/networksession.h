@@ -14,6 +14,10 @@
 #include <QObject>
 #include <QtDBus>
 
+namespace Tests {
+    class UtSession;
+}
+
 class SessionAgent;
 
 class NetworkSession : public QObject
@@ -30,6 +34,8 @@ class NetworkSession : public QObject
 
     Q_PROPERTY(QStringList allowedBearers READ allowedBearers WRITE setAllowedBearers NOTIFY allowedBearersChanged)
     Q_PROPERTY(QString connectionType READ connectionType WRITE setConnectionType NOTIFY connectionTypeChanged)
+
+    friend class Tests::UtSession;
 
 public:
     NetworkSession(QObject *parent = 0);

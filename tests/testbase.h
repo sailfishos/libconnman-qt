@@ -47,9 +47,11 @@ protected:
     static QString managerDBusProperty2QtProperty(const QString &property);
     static QString serviceDBusProperty2QtProperty(const QString &property);
     static QString technologyDBusProperty2QtProperty(const QString &property);
+    static QString clockDBusProperty2QtProperty(const QString &property);
     static QVariantMap defaultManagerProperties();
     static QVariantMap defaultServiceProperties();
     static QVariantMap defaultTechnologyProperties();
+    static QVariantMap defaultClockProperties();
 };
 
 class TestBase::MainObjectMock : public QObject
@@ -290,6 +292,19 @@ inline QString TestBase::technologyDBusProperty2QtProperty(const QString &proper
     return firstLower;
 }
 
+inline QString TestBase::clockDBusProperty2QtProperty(const QString &property)
+{
+    static const QSet<QString> notInQtApi = QSet<QString>()
+        << "Time";
+
+    if (notInQtApi.contains(property)) {
+        return QString();
+    }
+
+    const QString firstLower = QString(property).replace(0, 1, property.at(0).toLower());
+    return firstLower;
+}
+
 inline QVariantMap TestBase::defaultManagerProperties()
 {
     static QVariantMap properties;
@@ -414,6 +429,26 @@ inline QVariantMap TestBase::defaultTechnologyProperties()
     properties["TetheringIdentifier"] = "foo-tether-identifier";
     properties["TetheringPassphrase"] = "foo-tether-passwd";
     properties["IdleTimeout"] = 42;
+
+    initialized = true;
+
+    return properties;
+}
+
+inline QVariantMap TestBase::defaultClockProperties()
+{
+    static QVariantMap properties;
+    static bool initialized = false;
+
+    if (initialized) {
+        return properties;
+    }
+
+    properties["Time"] = 0;
+    properties["Timezone"] = "Europe/Prague";
+    properties["TimezoneUpdates"] = "auto";
+    properties["TimeUpdates"] = "auto";
+    properties["Timeservers"] = QStringList() << "time1.foo.org" << "time2.foo.org";
 
     initialized = true;
 

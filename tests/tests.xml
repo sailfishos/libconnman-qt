@@ -12,6 +12,11 @@
                 <step>/opt/tests/connman-qt/runtest.sh ut_manager</step>
             </case>
 
+            <case name="ut_clock">
+                <description>Tests the ClockModel class</description>
+                <step>/opt/tests/connman-qt/runtest.sh ut_clock</step>
+            </case>
+
         </set>
 
     </suite>

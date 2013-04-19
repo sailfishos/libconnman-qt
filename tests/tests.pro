@@ -2,6 +2,7 @@ include(tests_common.pri)
 
 TEMPLATE = subdirs
 SUBDIRS = \
+    ut_clock.pro \
     ut_manager.pro \
 
 runtest_sh.path = $${INSTALL_TESTDIR}

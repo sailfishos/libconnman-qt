@@ -27,6 +27,11 @@
                 <step>/opt/tests/connman-qt/runtest.sh ut_technology</step>
             </case>
 
+            <case name="ut_service">
+                <description>Tests the NetworkService class</description>
+                <step>/opt/tests/connman-qt/runtest.sh ut_service</step>
+            </case>
+
         </set>
 
     </suite>

@@ -50,6 +50,7 @@ protected:
     static QString clockDBusProperty2QtProperty(const QString &property);
     static QVariantMap defaultManagerProperties();
     static QVariantMap defaultServiceProperties();
+    static QVariantMap alternateDefaultServiceProperties();
     static QVariantMap defaultTechnologyProperties();
     static QVariantMap alternateDefaultTechnologyProperties();
     static QVariantMap defaultClockProperties();
@@ -406,6 +407,95 @@ inline QVariantMap TestBase::defaultServiceProperties()
     ethernet["Interface"] = "eth123";
     ethernet["Address"] = "de:ad:be:ef:de:ad";
     ethernet["MTU"] = 1542;
+    properties["Ethernet"] = ethernet;
+
+    initialized = true;
+
+    return properties;
+}
+
+inline QVariantMap TestBase::alternateDefaultServiceProperties()
+{
+    static QVariantMap properties;
+    static bool initialized = false;
+
+    if (initialized) {
+        return properties;
+    }
+
+    properties["State"] = "disconnect";
+    properties["Error"] = "unknown-error";
+    properties["Name"] = "Ethernet Foo";
+    properties["Type"] = "ethernet";
+    properties["Security"] = QStringList() << "none";
+    properties["Strength"] = 24;
+    properties["Favorite"] = true;
+    properties["Immutable"] = false;
+    properties["AutoConnect"] = false;
+    properties["Roaming"] = false;
+    properties["Nameservers"] = QStringList() << "10.1.0.1" << "10.1.0.2";
+    properties["Nameservers.Configuration"] = QStringList() << "127.1.0.1" << "127.1.0.2";
+    properties["Timeservers"] = QStringList() << "time1.bar.org" << "time2.bar.org";
+    properties["Timeservers.Configuration"] = QStringList() << "time1.bar.com" << "time2.bar.com";
+    properties["Domains"] = QStringList() << "bar.org" << "bar.com";
+    properties["Domains.Configuration"] = QStringList() << "foo.org" << "foo.com";
+
+    QVariantMap ipv4;
+    ipv4["Method"] = "manual";
+    ipv4["Address"] = "10.0.42.42";
+    ipv4["Netmask"] = "255.255.242.0";
+    ipv4["Gateway"] = "10.0.42.1";
+    properties["IPv4"] = ipv4;
+
+    QVariantMap ipv4Config;
+    ipv4Config["Method"] = "dhcp";
+    ipv4Config["Address"] = "10.0.0.42";
+    ipv4Config["Netmask"] = "255.255.255.0";
+    ipv4Config["Gateway"] = "10.0.0.1";
+    properties["IPv4.Configuration"] = ipv4Config;
+
+    QVariantMap ipv6;
+    ipv6["Method"] = "manual";
+    ipv6["Address"] = "fd30:84f5:4397:1676:b:e:e:f";
+    ipv6["PrefixLength"] = 64;
+    ipv6["Gateway"] = "fd30:84f5:4397:1676:b:e:e:1";
+    ipv6["Privacy"] = "enabled";
+    properties["IPv6"] = ipv6;
+
+    QVariantMap ipv6Config;
+    ipv6Config["Method"] = "dhcp";
+    ipv6Config["Address"] = "fd30:84f5:4397:1676:d:e:a:d";
+    ipv6Config["PrefixLength"] = 64;
+    ipv6Config["Gateway"] = "fd30:84f5:4397:1676:d:e:a:1";
+    ipv6Config["Privacy"] = "prefered";
+    properties["IPv6.Configuration"] = ipv6Config;
+
+    QVariantMap proxy;
+    proxy["Method"] = "manual";
+    proxy["URL"] = "";
+    proxy["Servers"] = QStringList() << "proxy42.foo.org";
+    proxy["Excludes"] = QStringList() << "drct1.org" << "drct2.org";
+    properties["Proxy"] = proxy;
+
+    QVariantMap proxyConfig;
+    proxyConfig["Method"] = "auto";
+    proxyConfig["URL"] = "proxy.foo.org";
+    proxyConfig["Servers"] = QStringList();
+    proxyConfig["Excludes"] = QStringList();
+    properties["Proxy.Configuration"] = proxyConfig;
+
+    QVariantMap provider;
+    provider["Host"] = "24.24.24.24";
+    provider["Domain"] = "24.org";
+    provider["Name"] = "Twentyfour";
+    provider["Type"] = "ciscovpn";
+    properties["Provider"] = provider;
+
+    QVariantMap ethernet;
+    ethernet["Method"] = "manual";
+    ethernet["Interface"] = "eth321";
+    ethernet["Address"] = "de:ad:be:ef:be:ef";
+    ethernet["MTU"] = 1524;
     properties["Ethernet"] = ethernet;
 
     initialized = true;

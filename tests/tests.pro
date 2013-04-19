@@ -4,6 +4,7 @@ TEMPLATE = subdirs
 SUBDIRS = \
     ut_clock.pro \
     ut_manager.pro \
+    ut_service.pro \
     ut_session.pro \
     ut_technology.pro \
 

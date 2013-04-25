@@ -57,12 +57,12 @@ QString NetworkSession::sessionInterface() const
 
 QVariantMap NetworkSession::ipv4() const
 {
-    return settingsMap.value("IPv4").toMap();
+    return qdbus_cast<QVariantMap>(settingsMap.value("IPv4"));
 }
 
 QVariantMap NetworkSession::ipv6() const
 {
-    return settingsMap.value("IPv6").toMap();
+    return qdbus_cast<QVariantMap>(settingsMap.value("IPv6"));
 }
 
 QStringList NetworkSession::allowedBearers() const

@@ -2,6 +2,10 @@ TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS += libconnman-qt
 
+check.depends = all
+check.CONFIG = phony recursive
+QMAKE_EXTRA_TARGETS += check
+
 # CONFIG flag to disable qml plugin
 !noplugin {
     SUBDIRS += plugin
@@ -10,6 +14,11 @@ SUBDIRS += libconnman-qt
 # CONFIG flag to disable test program
 !notest {
     SUBDIRS += test
+}
+
+# CONFIG flag to disable automatic test
+!notests {
+    SUBDIRS += tests
 }
 
 equals(QT_MAJOR_VERSION, 4):  {

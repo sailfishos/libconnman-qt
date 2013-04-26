@@ -1,0 +1,2 @@
+INSTALL_TESTDIR = /opt/tests/connman-qt
+INSTALL_TESTDATADIR = $${INSTALL_TESTDIR}/data

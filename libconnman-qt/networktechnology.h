@@ -24,7 +24,7 @@ class NetworkTechnology : public QObject
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
     Q_PROPERTY(QString path READ path WRITE setPath)
-    Q_PROPERTY(quint32 idleTimetout READ idleTimetout WRITE setIdleTimeout NOTIFY idleTimeoutChanged)
+    Q_PROPERTY(quint32 idleTimeout READ idleTimeout WRITE setIdleTimeout NOTIFY idleTimeoutChanged)
 
     Q_PROPERTY(bool tethering READ tethering WRITE setTethering NOTIFY tetheringChanged)
     Q_PROPERTY(QString tetheringId READ tetheringId WRITE setTetheringId NOTIFY tetheringIdChanged)
@@ -44,7 +44,7 @@ public:
 
     QString path() const;
 
-    quint32 idleTimetout() const;
+    quint32 idleTimeout() const;
     void setIdleTimeout(quint32);
 
     bool tethering() const;

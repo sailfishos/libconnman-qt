@@ -307,7 +307,7 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
     } else if (name == Ethernet) {
         emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
-    } else if (name == QLatin1String("type")) {
+    } else if (name == QLatin1String("Type")) {
         Q_EMIT typeChanged(tmp.toString());
     } else if (name == Roaming) {
         emit roamingChanged(tmp.toBool());

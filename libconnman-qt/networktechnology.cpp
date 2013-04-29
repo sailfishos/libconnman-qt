@@ -179,7 +179,7 @@ void NetworkTechnology::setPath(const QString &path)
     }
 }
 
-quint32 NetworkTechnology::idleTimetout() const
+quint32 NetworkTechnology::idleTimeout() const
 {
     if (m_propertiesCache.contains(NetworkTechnology::IdleTimeout))
         return m_propertiesCache[NetworkTechnology::IdleTimeout].toUInt();

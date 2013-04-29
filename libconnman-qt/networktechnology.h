@@ -13,7 +13,7 @@
 
 #include <QtDBus>
 
-class Technology;
+class NetConnmanTechnologyInterface;
 
 class NetworkTechnology : public QObject
 {
@@ -72,7 +72,7 @@ signals:
     void tetheringPassphraseChanged(const QString &passphrase);
 
 private:
-    Technology *m_technology;
+    NetConnmanTechnologyInterface *m_technology;
     QVariantMap m_propertiesCache;
 
     static const QString Name;

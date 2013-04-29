@@ -16,7 +16,7 @@
 #define CONNECT_TIMEOUT 180000 // user is supposed to provide input for unconfigured networks
 #define CONNECT_TIMEOUT_FAVORITE 60000
 
-class Service;
+class NetConnmanServiceInterface;
 
 class NetworkService : public QObject
 {
@@ -111,7 +111,7 @@ public slots:
     void setProxyConfig(const QVariantMap &proxy);
 
 private:
-    Service *m_service;
+    NetConnmanServiceInterface *m_service;
     QString m_path;
     QVariantMap m_propertiesCache;
 

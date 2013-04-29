@@ -17,7 +17,7 @@
 #include "networkservice.h"
 #include <QtDBus>
 
-class Manager;
+class NetConnmanManagerInterface;
 class NetworkManager;
 
 class NetworkManagerFactory
@@ -86,7 +86,7 @@ signals:
     void serviceRemoved(const QString &servicePath);
 
 private:
-    Manager *m_manager;
+    NetConnmanManagerInterface *m_manager;
 
     /* Contains all property related to this net.connman.Manager object */
     QVariantMap m_propertiesCache;

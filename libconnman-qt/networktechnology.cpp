@@ -8,8 +8,8 @@
  *
  */
 
-#include "technology.h"
 #include "networktechnology.h"
+#include "connman_technology_interface.h"
 #include "debug.h"
 
 const QString NetworkTechnology::Name("Name");
@@ -53,7 +53,8 @@ void NetworkTechnology::init(const QString &path)
         //       with new ones and emit corresponding signals if changed.
         m_propertiesCache.clear();
     }
-    m_technology = new Technology("net.connman", path, QDBusConnection::systemBus(), this);
+    m_technology = new NetConnmanTechnologyInterface("net.connman", path,
+        QDBusConnection::systemBus(), this);
 
     if (!m_technology->isValid()) {
         pr_dbg() << "Invalid technology: " << path;

@@ -8,8 +8,8 @@
  *
  */
 
-#include "service.h"
 #include "networkservice.h"
+#include "connman_service_interface.h"
 #include "debug.h"
 
 /*
@@ -326,7 +326,8 @@ void NetworkService::setPath(const QString &path)
             //       with new ones and emit corresponding signals if changed.
             m_propertiesCache.clear();
         }
-        m_service = new Service("net.connman", m_path, QDBusConnection::systemBus(), this);
+        m_service = new NetConnmanServiceInterface("net.connman", m_path,
+            QDBusConnection::systemBus(), this);
 
         if (!m_service->isValid()) {
             pr_dbg() << "Invalid service: " << m_path;

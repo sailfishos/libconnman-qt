@@ -13,9 +13,3 @@ testconnman-qt
 Makefile*
 *.pc
 *.prl
-
-# dbus api
-clock.*
-service.*
-technology.*
-

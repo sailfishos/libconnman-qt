@@ -112,7 +112,7 @@ void NetworkingModel::updateTechnologies()
             m_wifi = NULL;
         }
     } else {
-        if (test = m_manager->getTechnology("wifi")) {
+        if ((test = m_manager->getTechnology("wifi")) != NULL) {
             // if wifi is not set and manager returns a wifi, it means
             // that wifi was added
             m_wifi = test;

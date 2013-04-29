@@ -8,8 +8,13 @@
  *
  */
 
-#include "manager.h"
 #include "networkmanager.h"
+
+#include "commondbustypes.h"
+#include "connman_manager_interface.h"
+#include "connman_manager_interface.cpp" // not bug
+#include "moc_connman_manager_interface.cpp" // not bug
+
 #include "debug.h"
 
 static NetworkManager* staticInstance = NULL;
@@ -62,7 +67,7 @@ NetworkManager::~NetworkManager()
 void NetworkManager::connectToConnman(QString)
 {
     disconnectFromConnman();
-    m_manager = new Manager("net.connman", "/",
+    m_manager = new NetConnmanManagerInterface("net.connman", "/",
             QDBusConnection::systemBus(), this);
 
     if (!m_manager->isValid()) {

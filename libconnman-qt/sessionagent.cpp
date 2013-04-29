@@ -9,7 +9,7 @@
 
 #include "debug.h"
 #include "sessionagent.h"
-#include "session.h"
+#include "connman_session_interface.h"
 
 /*
 This class is used to run a connman session.
@@ -69,7 +69,8 @@ void SessionAgent::createSession()
     if (m_manager->isAvailable()) {
         QDBusObjectPath obpath = m_manager->createSession(QVariantMap(),agentPath);
         if (!obpath.path().isEmpty()) {
-            m_session = new Session(obpath.path(), this);
+            m_session = new NetConnmanSessionInterface("net.connman", obpath.path(),
+                QDBusConnection::systemBus(), this);
             new SessionNotificationAdaptor(this);
             QDBusConnection::systemBus().unregisterObject(agentPath);
             if (!QDBusConnection::systemBus().registerObject(agentPath, this)) {

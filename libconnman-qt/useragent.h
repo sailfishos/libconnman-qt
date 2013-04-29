@@ -28,7 +28,6 @@ class UserAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString connectionRequestType READ connectionRequestType WRITE setConnectionRequestType)
-    Q_PROPERTY(void connectionRequest NOTIFY connectionRequest)
     Q_PROPERTY(QString path READ path WRITE setAgentPath)
     Q_DISABLE_COPY(UserAgent)
 

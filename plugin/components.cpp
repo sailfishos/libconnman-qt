@@ -26,6 +26,7 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
     qmlRegisterType<NetworkSession>(uri,0,2,"NetworkSession");
     qmlRegisterType<NetworkManager>(uri,0,2,"NetworkManager");
+    qmlRegisterType<NetworkManagerFactory>(uri,0,2,"NetworkManagerFactory");
     qmlRegisterType<NetworkTechnology>(uri,0,2,"NetworkTechnology");
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
 

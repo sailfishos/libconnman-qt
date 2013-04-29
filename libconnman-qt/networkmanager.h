@@ -11,6 +11,7 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
+#include <QDeclarativeItem>
 #include "commondbustypes.h"
 
 #include "networktechnology.h"
@@ -20,12 +21,15 @@
 class NetConnmanManagerInterface;
 class NetworkManager;
 
-class NetworkManagerFactory
+class NetworkManagerFactory : public QDeclarativeItem
 {
-public:
-    NetworkManagerFactory() {}
+    Q_OBJECT
 
+    Q_PROPERTY(QObject* instance READ instance CONSTANT)
+
+public:
     static NetworkManager* createInstance();
+    QObject* instance();
 };
 
 class NetworkManager : public QObject

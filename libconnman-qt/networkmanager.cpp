@@ -27,9 +27,9 @@ NetworkManager* NetworkManagerFactory::createInstance()
     return staticInstance;
 }
 
-QObject* NetworkManagerFactory::instance()
+NetworkManager* NetworkManagerFactory::instance()
 {
-    return qobject_cast<QObject*>(createInstance());
+    return createInstance();
 }
 
 // NetworkManager implementation

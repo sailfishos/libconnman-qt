@@ -2,7 +2,7 @@ TEMPLATE     = lib
 VERSION      = 0.3.0
 CONFIG      += qt debug
 CONFIG      += create_pc create_prl
-QT          += core dbus
+QT          += core dbus declarative
 QT          -= gui
 equals(QT_MAJOR_VERSION, 4): TARGET = $$qtLibraryTarget(connman-qt4)
 equals(QT_MAJOR_VERSION, 5): TARGET = $$qtLibraryTarget(connman-qt5)
@@ -28,6 +28,7 @@ HEADERS += \
     useragent.h \
     sessionagent.h \
     networksession.h \
+    counter.h \
 
 SOURCES += \
     networkmanager.cpp \
@@ -39,6 +40,7 @@ SOURCES += \
     useragent.cpp \
     sessionagent.cpp \
     networksession.cpp \
+    counter.cpp \
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 

@@ -4,8 +4,18 @@ CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus
 QT          -= gui
-equals(QT_MAJOR_VERSION, 4): TARGET = $$qtLibraryTarget(connman-qt4)
-equals(QT_MAJOR_VERSION, 5): TARGET = $$qtLibraryTarget(connman-qt5)
+
+equals(QT_MAJOR_VERSION, 4): {
+    TARGET = $$qtLibraryTarget(connman-qt4)
+    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
+    pkgconfig.files = connman-qt4.pc
+}
+
+equals(QT_MAJOR_VERSION, 5): {
+    TARGET = $$qtLibraryTarget(connman-qt5)
+    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt5
+    pkgconfig.files = connman-qt5.pc
+}
 
 isEmpty(PREFIX) {
   PREFIX=/usr
@@ -45,12 +55,11 @@ SOURCES += \
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
 headers.files = $$HEADERS
-headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library
 QMAKE_PKGCONFIG_INCDIR = $$headers.path
+
 pkgconfig.path = $$INSTALL_ROOT$$PREFIX/lib/pkgconfig
-pkgconfig.files = connman-qt4.pc
 
 INSTALLS += target headers pkgconfig
 

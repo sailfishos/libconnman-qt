@@ -25,6 +25,7 @@ path property to that of an appropriate dbus path, will re-initialize the object
 QMake CONFIG flags
 -----------
 * notest: doesn't compile test program
+* notests: doesn't compile tests
 * noplugin: doesn't compile qml plugin
 
 Example:
@@ -40,3 +41,8 @@ The Agent class has two answers it can handle "Clear" and "Suppress"
 "Suppress" will suppress the request signal for the timeout period or until "Clear" is sent to the agent.
 
 
+Extra make targets
+-----------
+
+* check: run tests directly inside build tree
+* coverage: generate code coverage report

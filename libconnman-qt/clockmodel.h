@@ -20,6 +20,10 @@ class QDBusVariant;
 
 class NetConnmanClockInterface;
 
+namespace Tests {
+    class UtClock;
+}
+
 class ClockModel : public QObject {
     Q_OBJECT;
 
@@ -27,6 +31,8 @@ class ClockModel : public QObject {
     Q_PROPERTY(QString timezoneUpdates READ timezoneUpdates WRITE setTimezoneUpdates NOTIFY timezoneUpdatesChanged);
     Q_PROPERTY(QString timeUpdates READ timeUpdates WRITE setTimeUpdates NOTIFY timeUpdatesChanged);
     Q_PROPERTY(QStringList timeservers READ timeservers WRITE setTimeservers NOTIFY timeserversChanged);
+
+    friend class Tests::UtClock;
 
 public:
     ClockModel();

@@ -16,7 +16,13 @@ include(coverage.pri)
 
 # CONFIG flag to disable test program
 !notest {
-    SUBDIRS += test
+    equals(QT_MAJOR_VERSION, 4): {
+        SUBDIRS += test
+    }
+}
+
+example {
+    SUBDIRS += examples/counters
 }
 
 # CONFIG flag to disable automatic test

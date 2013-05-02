@@ -11,11 +11,7 @@ equals(QT_MAJOR_VERSION, 4): {
     TARGET = testconnman-qt
     target.path = $$INSTALL_ROOT/usr/lib/libconnman-qt4/test
 }
-equals(QT_MAJOR_VERSION, 5): {
-    QT += quick widgets
-    TARGET = testconnman-qt5
-    target.path = $$INSTALL_ROOT/usr/lib/libconnman-qt5/test
-}
+
 CONFIG   += console
 CONFIG   -= app_bundle
 

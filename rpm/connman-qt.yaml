@@ -34,7 +34,7 @@ SubPackages:
    Requires:
     - connman-qt-declarative
    Files:
-    - "%{_usr}/lib/libconnman-qt4/test"
+    - "/opt"
  - Name: declarative
    Summary: Declarative plugin for Qt Quick for connman-qt
    Group: Development/Libraries

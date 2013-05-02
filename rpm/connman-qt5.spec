@@ -31,7 +31,7 @@ This is a library for working with connman using Qt
 
 
 %package tests
-Summary:    Tests for connman-qt
+Summary:    Tests for connman-qt5
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   connman-qt5-declarative
@@ -102,9 +102,9 @@ export QT_SELECT=5
 # >> files
 # << files
 
-#%files tests
-#%defattr(-,root,root,-)
-#%{_usr}/lib/libconnman-qt5/test
+%files tests
+%defattr(-,root,root,-)
+/opt
 # >> files tests
 # << files tests
 

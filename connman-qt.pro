@@ -14,13 +14,6 @@ include(coverage.pri)
     SUBDIRS += plugin
 }
 
-# CONFIG flag to disable test program
-!notest {
-    equals(QT_MAJOR_VERSION, 4): {
-        SUBDIRS += test
-    }
-}
-
 example {
     SUBDIRS += examples/counters
 }

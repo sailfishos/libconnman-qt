@@ -16,7 +16,6 @@
 #include "useragent.h"
 #include "networksession.h"
 #include "counter.h"
-#include <QtDeclarative>
 
 void Components::registerTypes(const char *uri)
 {

@@ -7,13 +7,14 @@ HEADERS = components.h networkingmodel.h technologymodel.h
 INCLUDEPATH += ../libconnman-qt
 LIBS += -L../libconnman-qt
 QT -= gui
-QT += declarative
 
 equals(QT_MAJOR_VERSION, 4): {
+    QT += declarative
     LIBS += -lconnman-qt4
 }
 
 equals(QT_MAJOR_VERSION, 5): {
+    QT += quick
     LIBS += -lconnman-qt5
     OTHER_FILES += plugin.json qmldirs
 }

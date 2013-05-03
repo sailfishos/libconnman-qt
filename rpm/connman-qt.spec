@@ -21,7 +21,6 @@ Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(QtCore) >= 4.6.0
 BuildRequires:  pkgconfig(QtDBus)
-BuildRequires:  pkgconfig(QtOpenGL)
 BuildRequires:  pkgconfig(QtGui)
 BuildRequires:  pkgconfig(dbus-1)
 BuildRequires:  doxygen

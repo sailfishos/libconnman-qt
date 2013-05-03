@@ -10,17 +10,7 @@
 #define COMPONENTS_H
 #include <QtPlugin>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-# include <QtQml>
-# include <QQmlEngine>
-# include <QQmlExtensionPlugin>
-# define QDeclarativeEngine QQmlEngine
-# define QDeclarativeExtensionPlugin QQmlExtensionPlugin
-#else
-# include <QtDeclarative>
-# include <QDeclarativeEngine>
-# include <QDeclarativeExtensionPlugin>
-#endif
+#include <QDeclarativeExtensionPlugin>
 
 class Components : public QDeclarativeExtensionPlugin
 {

@@ -3,7 +3,7 @@ VERSION      = 0.3.0
 CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus
-QT          -= gui
+QT -= gui
 
 equals(QT_MAJOR_VERSION, 4): {
     TARGET = $$qtLibraryTarget(connman-qt4)
@@ -38,7 +38,7 @@ HEADERS += \
     useragent.h \
     sessionagent.h \
     networksession.h \
-    counter.h \
+    counter.h
 
 SOURCES += \
     networkmanager.cpp \
@@ -50,7 +50,7 @@ SOURCES += \
     useragent.cpp \
     sessionagent.cpp \
     networksession.cpp \
-    counter.cpp \
+    counter.cpp
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
@@ -69,3 +69,4 @@ OTHER_FILES = connman_service.xml \
     connman_manager.xml \
     connman_session.xml \
     connman_notification.xml
+

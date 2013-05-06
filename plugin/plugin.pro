@@ -6,6 +6,7 @@ SOURCES = components.cpp networkingmodel.cpp technologymodel.cpp
 HEADERS = components.h networkingmodel.h technologymodel.h 
 INCLUDEPATH += ../libconnman-qt
 LIBS += -L../libconnman-qt
+QT -= gui
 
 equals(QT_MAJOR_VERSION, 4): {
     QT += declarative
@@ -13,7 +14,7 @@ equals(QT_MAJOR_VERSION, 4): {
 }
 
 equals(QT_MAJOR_VERSION, 5): {
-    QT += quick
+    QT += qml
     LIBS += -lconnman-qt5
     OTHER_FILES += plugin.json qmldirs
 }

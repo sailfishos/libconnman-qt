@@ -18,7 +18,6 @@ PkgBR:
 PkgConfigBR:
     - QtCore >= 4.6.0
     - QtDBus
-    - QtOpenGL
     - QtGui
     - dbus-1
 Configure: none

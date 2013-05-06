@@ -21,10 +21,8 @@ Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
-BuildRequires:  pkgconfig(Qt5OpenGL)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(dbus-1)
-BuildRequires:  doxygen
 
 %description
 This is a library for working with connman using Qt
@@ -73,8 +71,7 @@ applications using libconnman-qt
 
 # XXX remove the following line when Qt5 builds are fixed
 export QT_SELECT=5
-%qmake
-
+%qmake5
 
 make %{?jobs:-j%jobs}
 
@@ -102,9 +99,10 @@ export QT_SELECT=5
 # >> files
 # << files
 
-%files tests
-%defattr(-,root,root,-)
-/opt
+#fixme for qt5
+#%files tests
+#%defattr(-,root,root,-)
+#/opt
 # >> files tests
 # << files tests
 

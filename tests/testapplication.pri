@@ -5,11 +5,19 @@ pro_file_basename = $$replace(pro_file_basename, '.pro', '')
 
 TEMPLATE = app
 QT += dbus testlib
+
+equals(QT_MAJOR_VERSION, 4): {
+    LIBS += -l$$qtLibraryTarget(connman-qt4) -L$${OUT_PWD}/../libconnman-qt
+}
+
+equals(QT_MAJOR_VERSION, 5):  {
+    LIBS += -l$$qtLibraryTarget(connman-qt5) -L$${OUT_PWD}/../libconnman-qt5
+}
+
 TARGET = $${pro_file_basename}.bin
 
 SOURCES = $${pro_file_basename}.cpp
 
-LIBS += -L$${OUT_PWD}/../libconnman-qt -l$$qtLibraryTarget(connman-qt4)
 
 target.path = $${INSTALL_TESTDIR}
 INSTALLS += target

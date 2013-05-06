@@ -12,28 +12,26 @@ Description: |
 
 Requires:
     - connman >= 1.10
-PkgBR:
-    - doxygen
 PkgConfigBR:
     - Qt5Core
-    - Qt5DBus
-    - Qt5OpenGL
     - Qt5Qml
+    - Qt5DBus
     - dbus-1
+
 Configure: none
 Builder: qmake5
 Files:
     - "%{_libdir}/libconnman-qt5.so.*"
 SubPackages:
- - Name: tests
-   Summary: Tests for connman-qt5
-   Group: Development/Libraries
-   Description: |
-    This package contains the test applications for testing libconnman-qt
-   Requires:
-    - connman-qt5-declarative
-   Files:
-    - "/opt"
+ #- Name: tests
+ #  Summary: Tests for connman-qt5
+ #  Group: Development/Libraries
+ #  Description: |
+ #   This package contains the test applications for testing libconnman-qt
+ #  Requires:
+ #   - connman-qt5-declarative
+ #  Files:
+ #   - "/opt"
  - Name: declarative
    Summary: Declarative plugin for Qt Quick for connman-qt
    Group: Development/Libraries

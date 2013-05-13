@@ -5,6 +5,10 @@ CONFIG      += create_pc create_prl
 QT          += core dbus
 QT -= gui
 
+isEmpty(PREFIX) {
+  PREFIX=/usr
+}
+
 equals(QT_MAJOR_VERSION, 4): {
     TARGET = $$qtLibraryTarget(connman-qt4)
     headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
@@ -17,9 +21,6 @@ equals(QT_MAJOR_VERSION, 5): {
     pkgconfig.files = connman-qt5.pc
 }
 
-isEmpty(PREFIX) {
-  PREFIX=/usr
-}
 
 DBUS_INTERFACES = \
     connman_clock.xml \

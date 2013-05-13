@@ -11,5 +11,5 @@ then
 fi
 
 eval `dbus-launch --sh-syntax`
-trap "kill $${DBUS_SESSION_BUS_PID}" EXIT
+trap "kill ${DBUS_SESSION_BUS_PID}" EXIT
 ./${TEST_NAME}.bin "${@}"

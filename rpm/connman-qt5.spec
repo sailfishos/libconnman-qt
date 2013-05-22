@@ -9,7 +9,7 @@ Name:       connman-qt5
 # << macros
 
 Summary:    Qt bindings for connman
-Version:    1.0.7
+Version:    1.0.13
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License
@@ -84,7 +84,7 @@ rm -rf %{buildroot}
 # << install pre
 # XXX remove the following line when Qt5 builds are fixed
 export QT_SELECT=5
-%qmake_install
+%qmake5_install
 
 # >> install post
 # << install post

@@ -20,22 +20,12 @@ Requires:   connman >= 1.10
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)
-BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(Qt5Qml)
+BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(dbus-1)
 
 %description
 This is a library for working with connman using Qt
-
-
-%package tests
-Summary:    Tests for connman-qt5
-Group:      Development/Libraries
-Requires:   %{name} = %{version}-%{release}
-Requires:   connman-qt5-declarative
-
-%description tests
-This package contains the test applications for testing libconnman-qt
 
 
 %package declarative
@@ -69,9 +59,7 @@ applications using libconnman-qt
 # >> build pre
 # << build pre
 
-# XXX remove the following line when Qt5 builds are fixed
-export QT_SELECT=5
-%qmake5
+%qmake5 
 
 make %{?jobs:-j%jobs}
 
@@ -82,9 +70,7 @@ make %{?jobs:-j%jobs}
 rm -rf %{buildroot}
 # >> install pre
 # << install pre
-# XXX remove the following line when Qt5 builds are fixed
-export QT_SELECT=5
-%qmake_install
+%qmake5_install
 
 # >> install post
 # << install post
@@ -99,16 +85,9 @@ export QT_SELECT=5
 # >> files
 # << files
 
-#fixme for qt5
-#%files tests
-#%defattr(-,root,root,-)
-#/opt
-# >> files tests
-# << files tests
-
 %files declarative
 %defattr(-,root,root,-)
-%{_usr}/lib/qt5/imports/MeeGo/Connman
+%{_usr}/lib/qt5/qml/MeeGo/Connman
 # >> files declarative
 # << files declarative
 

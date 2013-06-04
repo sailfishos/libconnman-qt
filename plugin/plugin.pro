@@ -19,8 +19,12 @@ equals(QT_MAJOR_VERSION, 5): {
     OTHER_FILES += plugin.json qmldirs
 }
 
-target.path = $$[QT_INSTALL_IMPORTS]/MeeGo/Connman
+MODULENAME = MeeGo/Connman
+equals(QT_MAJOR_VERSION, 4): TARGETPATH = $$[QT_INSTALL_IMPORTS]/$$MODULENAME
+equals(QT_MAJOR_VERSION, 5): TARGETPATH = $$[QT_INSTALL_QML]/$$MODULENAME
+
+target.path = $$TARGETPATH
 qmldir.files += qmldir
-qmldir.path = $$[QT_INSTALL_IMPORTS]/MeeGo/Connman
+qmldir.path = $$TARGETPATH
 
 INSTALLS += target qmldir

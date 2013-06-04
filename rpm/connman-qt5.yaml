@@ -41,7 +41,7 @@ SubPackages:
    Requires:
     - connman-qt5
    Files:
-    - "%{_usr}/lib/qt5/imports/MeeGo/Connman"
+    - "%{_usr}/lib/qt5/qml/MeeGo/Connman"
  - Name: devel
    Summary: Development files for connman-qt
    Group: Development/Libraries

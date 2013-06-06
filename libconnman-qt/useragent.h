@@ -53,7 +53,7 @@ public slots:
 signals:
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
-    void errorReported(const QString &error);
+    void errorReported(const QString &servicePath, const QString &error);
 
     void userConnectRequested(const QDBusMessage &message);
     void connectionRequest();
@@ -65,7 +65,7 @@ private slots:
 private:
     void requestUserInput(ServiceRequestData* data);
     void cancelUserInput();
-    void reportError(const QString &error);
+    void reportError(const QString &servicePath, const QString &error);
     void requestConnect(const QDBusMessage &msg);
 
     ServiceRequestData* m_req_data;

@@ -215,9 +215,10 @@ void UtAgent::testReportError()
 {
     QDBusInterface manager("net.connman", "/", "net.connman.Manager", bus());
 
-    SignalSpy errorReportedSpy(m_userAgent, SIGNAL(errorReported(QString)));
+    SignalSpy errorReportedSpy(m_userAgent, SIGNAL(errorReported(QString, QString)));
 
-    const QDBusObjectPath injectedService = QDBusObjectPath("/foo");
+    const QString injectedServicePath = "/foo";
+    const QDBusObjectPath injectedService = QDBusObjectPath(injectedServicePath);
     const QString injectedError = "foo-error-foo";
 
     QDBusPendingReply<> reply = manager.asyncCall("mock_reportError",
@@ -227,8 +228,8 @@ void UtAgent::testReportError()
     QVERIFY(waitForSignal(&errorReportedSpy));
 
     QCOMPARE(errorReportedSpy.count(), 1);
-    // 'service' field is not emitted
-    QCOMPARE(errorReportedSpy.at(0).at(0).toString(), injectedError);
+    QCOMPARE(errorReportedSpy.at(0).at(0).toString(), injectedServicePath);
+    QCOMPARE(errorReportedSpy.at(0).at(1).toString(), injectedError);
 
     reply.waitForFinished();
     QVERIFY(reply.isValid());

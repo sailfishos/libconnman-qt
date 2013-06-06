@@ -45,9 +45,9 @@ void UserAgent::cancelUserInput()
     emit userInputCanceled();
 }
 
-void UserAgent::reportError(const QString &error)
+void UserAgent::reportError(const QString &servicePath, const QString &error)
 {
-    emit errorReported(error);
+    emit errorReported(servicePath, error);
 }
 
 void UserAgent::sendUserReply(const QVariantMap &input)
@@ -168,8 +168,7 @@ void AgentAdaptor::Release()
 
 void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QString &error)
 {
-    Q_UNUSED(service_path)
-    m_userAgent->reportError(error);
+    m_userAgent->reportError(service_path.path(), error);
 }
 
 void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)

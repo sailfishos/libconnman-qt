@@ -1,5 +1,5 @@
 TEMPLATE     = lib
-VERSION      = 1.0.9
+VERSION      = 1.0.10
 CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus

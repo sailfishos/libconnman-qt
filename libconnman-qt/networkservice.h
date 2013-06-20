@@ -110,6 +110,8 @@ public slots:
     void setDomainsConfig(const QStringList &domains);
     void setProxyConfig(const QVariantMap &proxy);
 
+    void resetCounters();
+
 private:
     NetConnmanServiceInterface *m_service;
     QString m_path;

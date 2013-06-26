@@ -184,6 +184,11 @@ bool NetworkService::roaming() const
 
 void NetworkService::requestConnect()
 {
+    // If the service is in the failure state clear the Error property so that we get notified of
+    // errors on subsequent connection attempts.
+    if (state() == QLatin1String("failure"))
+        m_service->ClearProperty(QLatin1String("Error"));
+
     // increase reply timeout when connecting
     int timeout = CONNECT_TIMEOUT_FAVORITE;
     int old_timeout = m_service->timeout();

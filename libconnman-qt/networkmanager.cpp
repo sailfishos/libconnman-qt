@@ -85,38 +85,25 @@ void NetworkManager::connectToConnman(QString)
     } else {
 
         QDBusPendingReply<QVariantMap> props_reply = m_manager->GetProperties();
+        props_reply.waitForFinished();
+        if (!props_reply.isError()) {
+            m_propertiesCache = props_reply.value();
 
-        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(props_reply, this);
-        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                this, SLOT(getPropertiesReply(QDBusPendingCallWatcher*)));
+            emit stateChanged(m_propertiesCache[State].toString());
 
+            connect(m_manager,
+                    SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
+                    this,
+                    SLOT(propertyChanged(const QString&, const QDBusVariant&)));
+        }
+        setupTechnologies();
+        setupServices();
+
+        if(!m_available)
+            emit availabilityChanged(m_available = true);
+
+        pr_dbg() << "Connected";
     }
-}
-
-void NetworkManager::getPropertiesReply(QDBusPendingCallWatcher *watch)
-{
-    QDBusPendingReply<QVariantMap> reply = *watch;
-    if(reply.isError()) {
-        pr_dbg() << Q_FUNC_INFO << reply.error().message();
-        return;
-    }
-    if (!reply.isError()) {
-        m_propertiesCache = reply.value();
-
-        emit stateChanged(m_propertiesCache[State].toString());
-
-        connect(m_manager,
-                SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
-                this,
-                SLOT(propertyChanged(const QString&, const QDBusVariant&)));
-    }
-    setupTechnologies();
-    setupServices();
-
-    if(!m_available)
-        emit availabilityChanged(m_available = true);
-
-    pr_dbg() << "Connected";
 }
 
 void NetworkManager::disconnectFromConnman(QString)
@@ -393,9 +380,6 @@ void NetworkManager::setOfflineMode(const bool &offlineMode)
     QDBusPendingReply<void> reply =
         m_manager->SetProperty(OfflineMode,
                                QDBusVariant(QVariant(offlineMode)));
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(setOfflineModeFinished(QDBusPendingCallWatcher*)));
 }
 
   // these shouldn't crash even if connman isn't available
@@ -485,13 +469,4 @@ QStringList NetworkManager::technologiesList()
         techList << tech->type();
     }
     return techList;
-}
-
-void NetworkManager::setOfflineModeFinished(QDBusPendingCallWatcher *watch)
-{
-    QDBusPendingReply<void> reply = *watch;
-    if(reply.isError()) {
-        pr_dbg() << Q_FUNC_INFO << reply.error().message();
-        return;
-    }
 }

@@ -124,8 +124,6 @@ private slots:
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
 
-    void getPropertiesReply(QDBusPendingCallWatcher *call);
-    void setOfflineModeFinished(QDBusPendingCallWatcher *call);
 
 private:
     Q_DISABLE_COPY(NetworkManager);

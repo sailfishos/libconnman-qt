@@ -252,6 +252,11 @@ void NetworkService::setProxyConfig(const QVariantMap &proxy)
     m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
 }
 
+void NetworkService::resetCounters()
+{
+    m_service->ResetCounters();
+}
+
 void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
 {
     Q_ASSERT(call);

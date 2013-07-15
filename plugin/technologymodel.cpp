@@ -17,6 +17,10 @@
         this, \
         SLOT(changedPower(bool))); \
     connect(tech, \
+        SIGNAL(connectedChanged(bool)), \
+        this, \
+        SLOT(changedConnected(bool))); \
+    connect(tech, \
             SIGNAL(scanFinished()), \
             this, \
             SLOT(finishedScan()));
@@ -91,6 +95,16 @@ bool TechnologyModel::isAvailable() const
     return m_manager->isAvailable();
 }
 
+bool TechnologyModel::isConnected() const
+{
+    if (m_tech) {
+        return m_tech->connected();
+    } else {
+        qWarning() << "Can't get: technology is NULL";
+        return false;
+    }
+}
+
 bool TechnologyModel::isPowered() const
 {
     if (m_tech) {
@@ -118,6 +132,7 @@ void TechnologyModel::setName(const QString &name)
     QStringList netTypes = m_manager->technologiesList();
 
     bool oldPowered(false);
+    bool oldConnected(false);
 
     if (!netTypes.contains(name)) {
         qDebug() << name <<  "is not a known technology name:" << netTypes;
@@ -126,6 +141,7 @@ void TechnologyModel::setName(const QString &name)
 
     if (m_tech) {
         oldPowered = m_tech->powered();
+        oldConnected = m_tech->connected();
         DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
     }
 
@@ -138,6 +154,9 @@ void TechnologyModel::setName(const QString &name)
         emit nameChanged(m_techname);
         if (oldPowered != m_tech->powered()) {
             emit poweredChanged(!oldPowered);
+        }
+        if (oldConnected != m_tech->connected()) {
+            emit connectedChanged(!oldConnected);
         }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
         updateServiceList();
@@ -225,6 +244,13 @@ void TechnologyModel::changedPower(bool b)
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
     if (tech->type() == m_tech->type())
         Q_EMIT poweredChanged(b);
+}
+
+void TechnologyModel::changedConnected(bool b)
+{
+    NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
+    if (tech->type() == m_tech->type())
+        Q_EMIT connectedChanged(b);
 }
 
 void TechnologyModel::finishedScan()

@@ -28,6 +28,7 @@ class TechnologyModel : public QAbstractListModel
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged)
 
 public:
@@ -43,6 +44,7 @@ public:
 
     const QString name() const;
     bool isAvailable() const;
+    bool isConnected() const;
     bool isPowered() const;
 
     void setName(const QString &name);
@@ -56,6 +58,7 @@ public slots:
 signals:
     void nameChanged(const QString &name);
     void availabilityChanged(const bool &available);
+    void connectedChanged(const bool &connected);
     void poweredChanged(const bool &powered);
     void technologiesChanged();
 
@@ -73,6 +76,7 @@ private slots:
     void updateServiceList();
     void managerAvailabilityChanged(bool available);
     void changedPower(bool);
+    void changedConnected(bool);
     void finishedScan();
 };
 

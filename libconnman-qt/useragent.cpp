@@ -24,7 +24,9 @@ UserAgent::UserAgent(QObject* parent) :
     setAgentPath(agentpath);
     connect(m_manager, SIGNAL(availabilityChanged(bool)),
             this, SLOT(updateMgrAvailability(bool)));
-
+    requestTimer = new QTimer(this);
+    requestTimer->setSingleShot(true);
+    connect(requestTimer,SIGNAL(timeout()),this,SLOT(requestTimeout()));
 }
 
 UserAgent::~UserAgent()
@@ -74,12 +76,18 @@ void UserAgent::sendUserReply(const QVariantMap &input)
 void UserAgent::requestTimeout()
 {
     setConnectionRequestType("Clear");
+    QDBusMessage &reply = requestMessage;
+    if (!QDBusConnection::systemBus().send(reply)) {
+        qDebug() << "Could not queue message";
+    }
 }
 
 void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)
 {
     setConnectionRequestType(replyMessage);
-    QTimer::singleShot(timeout * 1000, this,SLOT(requestTimeout()));
+
+    if (!requestTimer->isActive())
+        requestTimer->start(timeout * 1000);
 }
 
 void UserAgent::updateMgrAvailability(bool available)
@@ -117,6 +125,10 @@ QString UserAgent::connectionRequestType() const
 
 void UserAgent::requestConnect(const QDBusMessage &msg)
 {
+    QList<QVariant> arguments2;
+    arguments2 << QVariant("Clear");
+    requestMessage = msg.createReply(arguments2);
+
     QList<QVariant> arguments;
     arguments << QVariant(connectionRequestType());
     QDBusMessage error = msg.createReply(arguments);
@@ -141,13 +153,13 @@ QString UserAgent::path() const
 
 void UserAgent::setAgentPath(QString &path)
 {
-        new AgentAdaptor(this); // this object will be freed when UserAgent is freed
-        agentPath = path;
-        QDBusConnection::systemBus().registerObject(agentPath, this);
+    new AgentAdaptor(this); // this object will be freed when UserAgent is freed
+    agentPath = path;
+    QDBusConnection::systemBus().registerObject(agentPath, this);
 
-        if (m_manager->isAvailable()) {
-            m_manager->registerAgent(QString(agentPath));
-        }
+    if (m_manager->isAvailable()) {
+        m_manager->registerAgent(QString(agentPath));
+    }
 }
 
 ////////////////////
@@ -204,6 +216,7 @@ void AgentAdaptor::Cancel()
 
 void AgentAdaptor::RequestConnect(const QDBusMessage &message)
 {
+    message.setDelayedReply(true);
     m_userAgent->requestConnect(message);
 }
 

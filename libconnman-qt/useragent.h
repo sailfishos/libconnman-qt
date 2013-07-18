@@ -13,6 +13,7 @@
 #include <QDBusMessage>
 #include <QDBusObjectPath>
 #include <QDBusAbstractAdaptor>
+#include <QTimer>
 
 class NetworkManager;
 
@@ -75,6 +76,8 @@ private:
     QString agentPath;
 
     friend class AgentAdaptor;
+    QTimer *requestTimer;
+    QDBusMessage requestMessage;
 };
 
 class AgentAdaptor : public QDBusAbstractAdaptor

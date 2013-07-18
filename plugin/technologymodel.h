@@ -51,6 +51,8 @@ public:
 
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
 
+    Q_INVOKABLE NetworkService *get(int index) const;
+
 public slots:
     void setPowered(const bool &powered);
     void requestScan() const;

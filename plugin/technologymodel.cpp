@@ -197,6 +197,13 @@ void TechnologyModel::managerAvailabilityChanged(bool available)
     emit availabilityChanged(available);
 }
 
+NetworkService *TechnologyModel::get(int index) const
+{
+    if (index < 0 || index > m_services.count())
+        return 0;
+    return m_services.value(index);
+}
+
 int TechnologyModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);

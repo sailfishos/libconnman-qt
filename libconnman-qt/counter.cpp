@@ -168,11 +168,13 @@ void Counter::setRunning(bool on)
         if (m_manager->isAvailable()) {
             m_manager->registerCounter(QString(COUNTER_PATH),currentAccuracy,currentInterval);
             isRunning = true;
+            Q_EMIT runningChanged(isRunning);
         }
     } else {
         if (m_manager->isAvailable()) {
             m_manager->unregisterCounter(QString(COUNTER_PATH));
             isRunning = false;
+            Q_EMIT runningChanged(isRunning);
         }
     }
 }

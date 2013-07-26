@@ -94,6 +94,9 @@ void UserAgent::updateMgrAvailability(bool available)
 {
     if (available) {
         m_manager->registerAgent(QString(agentPath));
+    } else {
+        if (requestTimer->isActive())
+            requestTimer->stop();
     }
 }
 

@@ -55,7 +55,7 @@ void UserAgent::reportError(const QString &servicePath, const QString &error)
 void UserAgent::sendUserReply(const QVariantMap &input)
 {
     if (m_req_data == NULL) {
-        qWarning("Got reply for non-existing request");
+        pr_dbg() << "Got reply for non-existing request";
         return;
     }
 
@@ -75,15 +75,18 @@ void UserAgent::sendUserReply(const QVariantMap &input)
 
 void UserAgent::requestTimeout()
 {
+    if (!requestMessage.isDelayedReply()) //this isn't our reply
+        return;
     setConnectionRequestType("Clear");
     QDBusMessage &reply = requestMessage;
     if (!QDBusConnection::systemBus().send(reply)) {
-        qDebug() << "Could not queue message";
+        pr_dbg() << "Could not queue message";
     }
 }
 
 void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)
 {
+    pr_dbg() << Q_FUNC_INFO;
     setConnectionRequestType(replyMessage);
 
     if (!requestTimer->isActive())
@@ -128,6 +131,7 @@ QString UserAgent::connectionRequestType() const
 
 void UserAgent::requestConnect(const QDBusMessage &msg)
 {
+    pr_dbg() << Q_FUNC_INFO;
     QList<QVariant> arguments2;
     arguments2 << QVariant("Clear");
     requestMessage = msg.createReply(arguments2);
@@ -137,7 +141,7 @@ void UserAgent::requestConnect(const QDBusMessage &msg)
     QDBusMessage error = msg.createReply(arguments);
 
     if (!QDBusConnection::systemBus().send(error)) {
-        qDebug() << "Could not queue message";
+        pr_dbg() << "Could not queue message";
     }
 
     if (connectionRequestType() == "Suppress") {

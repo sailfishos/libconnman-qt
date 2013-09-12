@@ -184,6 +184,8 @@ bool NetworkService::roaming() const
 
 void NetworkService::requestConnect()
 {
+    qDebug() << Q_FUNC_INFO;
+
     // If the service is in the failure state clear the Error property so that we get notified of
     // errors on subsequent connection attempts.
     if (state() == QLatin1String("failure"))

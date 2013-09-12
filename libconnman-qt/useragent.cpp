@@ -75,13 +75,8 @@ void UserAgent::sendUserReply(const QVariantMap &input)
 
 void UserAgent::requestTimeout()
 {
-    if (!requestMessage.isDelayedReply()) //this isn't our reply
-        return;
+    qDebug() << Q_FUNC_INFO << requestMessage.arguments();
     setConnectionRequestType("Clear");
-    QDBusMessage &reply = requestMessage;
-    if (!QDBusConnection::systemBus().send(reply)) {
-        pr_dbg() << "Could not queue message";
-    }
 }
 
 void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)

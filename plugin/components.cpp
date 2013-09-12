@@ -13,6 +13,7 @@
 #include <clockmodel.h>
 #include "networkingmodel.h"
 #include "technologymodel.h"
+#include "savedservicemodel.h"
 #include "useragent.h"
 #include "networksession.h"
 #include "counter.h"
@@ -22,6 +23,7 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
     qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
+    qmlRegisterType<SavedServiceModel>(uri,0,2,"SavedServiceModel");
     qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");
     qmlRegisterType<ClockModel>(uri,0,2,"ClockModel");
     qmlRegisterType<NetworkSession>(uri,0,2,"NetworkSession");
@@ -29,7 +31,6 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<NetworkManagerFactory>(uri,0,2,"NetworkManagerFactory");
     qmlRegisterType<NetworkTechnology>(uri,0,2,"NetworkTechnology");
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
-
 }
 
 void Components::initializeEngine(QDeclarativeEngine *engine, const char *uri)

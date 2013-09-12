@@ -58,7 +58,7 @@ void NetworkTechnology::init(const QString &path)
 
     if (!m_technology->isValid()) {
         pr_dbg() << "Invalid technology: " << path;
-        throw -1; // FIXME
+        qFatal("Cannot init with invalid technology");
     }
 
     if (m_propertiesCache.isEmpty()) {

@@ -11,7 +11,7 @@ Description: |
     This is a library for working with connman using Qt
 
 Requires:
-    - connman >= 1.10
+    - connman >= 1.15
 PkgConfigBR:
     - Qt5Core
     - Qt5Qml

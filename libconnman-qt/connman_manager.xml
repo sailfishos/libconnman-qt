@@ -22,6 +22,11 @@
         <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="ConnmanObjectList"/>
     </method>
 
+    <method name="GetSavedServices" tp:name-for-bindings="Get_Saved_Services">
+        <arg name="services" type="a(oa{sv})" direction="out"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="ConnmanObjectList"/>
+    </method>
+
     <method name="RegisterAgent" tp:name-for-bindings="Register_Agent">
         <arg name="path" type="o"/>
     </method>
@@ -79,6 +84,11 @@
         <arg name="changed" type="a(oa{sv})"/>
         <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="ConnmanObjectList"/>
         <arg name="removed" type="ao"/>        
+    </signal>
+
+    <signal name="SavedServicesChanged" tp:name-for-bindings="SavedServices_Changed">
+        <arg name="changed" type="a(oa{sv})"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="ConnmanObjectList"/>
     </signal>
 
     <signal name="PropertyChanged" tp:name-for-bindings="Property_Changed">

@@ -51,6 +51,7 @@ public:
     Q_INVOKABLE NetworkTechnology* getTechnology(const QString &type) const;
     const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = "") const;
+    const QVector<NetworkService*> getSavedServices(const QString &tech = "") const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
     Q_INVOKABLE QStringList technologiesList();
@@ -82,6 +83,7 @@ signals:
     void offlineModeChanged(bool offlineMode);
     void technologiesChanged();
     void servicesChanged();
+    void savedServicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
     void sessionModeChanged(bool);
     void servicesListChanged(const QStringList &list);
@@ -100,6 +102,7 @@ private:
 
     /* This is for sorting purpose only, never delete an object from here */
     QVector<NetworkService *> m_servicesOrder;
+    QVector<NetworkService *> m_savedServicesOrder;
 
     /* This variable is used just to send signal if changed */
     NetworkService* m_defaultRoute;
@@ -120,6 +123,7 @@ private slots:
     void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
+    void updateSavedServices(const ConnmanObjectList &changed);
     void updateDefaultRoute(NetworkService* defaultRoute);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);

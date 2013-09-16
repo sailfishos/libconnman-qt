@@ -55,6 +55,7 @@ signals:
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
     void errorReported(const QString &servicePath, const QString &error);
+    void browserRequested(const QString &servicePath, const QString &url);
 
     void userConnectRequested(const QDBusMessage &message);
     void connectionRequest();
@@ -68,6 +69,7 @@ private:
     void cancelUserInput();
     void reportError(const QString &servicePath, const QString &error);
     void requestConnect(const QDBusMessage &msg);
+    void requestBrowser(const QString &servicePath, const QString &url);
 
     ServiceRequestData* m_req_data;
     NetworkManager* m_manager;

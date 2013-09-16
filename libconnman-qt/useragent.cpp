@@ -164,6 +164,11 @@ void UserAgent::setAgentPath(QString &path)
     }
 }
 
+void UserAgent::requestBrowser(const QString &servicePath, const QString &url)
+{
+    Q_EMIT browserRequested(servicePath, url);
+}
+
 ////////////////////
 
 AgentAdaptor::AgentAdaptor(UserAgent* parent)
@@ -187,7 +192,7 @@ void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QStrin
 
 void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
 {
-    pr_dbg() << "Service " << service_path.path() << " wants browser to open hotspot's url " << url;
+    m_userAgent->requestBrowser(service_path.path(), url);
 }
 
 void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,

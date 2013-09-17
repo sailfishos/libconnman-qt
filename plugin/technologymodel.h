@@ -30,6 +30,7 @@ class TechnologyModel : public QAbstractListModel
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged)
+    Q_PROPERTY(bool changesInhibited READ changesInhibited WRITE setChangesInhibited NOTIFY changesInhibitedChanged)
 
 public:
     enum ItemRoles {
@@ -46,8 +47,10 @@ public:
     bool isAvailable() const;
     bool isConnected() const;
     bool isPowered() const;
+    bool changesInhibited() const;
 
     void setName(const QString &name);
+    void setChangesInhibited(bool b);
 
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
 
@@ -62,6 +65,7 @@ signals:
     void availabilityChanged(const bool &available);
     void connectedChanged(const bool &connected);
     void poweredChanged(const bool &powered);
+    void changesInhibitedChanged(const bool &changesInhibited);
     void technologiesChanged();
 
     void scanRequestFinished();
@@ -71,6 +75,8 @@ private:
     NetworkManager* m_manager;
     NetworkTechnology* m_tech;
     QVector<NetworkService *> m_services;
+    bool m_changesInhibited;
+    bool m_uneffectedChanges;
     QHash<int, QByteArray> roleNames() const;
 
 private slots:

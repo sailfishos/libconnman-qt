@@ -36,7 +36,9 @@
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
-    m_tech(NULL)
+    m_tech(NULL),
+    m_changesInhibited(false),
+    m_uneffectedChanges(false)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
@@ -115,6 +117,11 @@ bool TechnologyModel::isPowered() const
     }
 }
 
+bool TechnologyModel::changesInhibited() const
+{
+    return m_changesInhibited;
+}
+
 void TechnologyModel::setPowered(const bool &powered)
 {
     if (m_tech) {
@@ -160,6 +167,19 @@ void TechnologyModel::setName(const QString &name)
         }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
         updateServiceList();
+    }
+}
+
+void TechnologyModel::setChangesInhibited(bool b)
+{
+    if (m_changesInhibited != b) {
+        m_changesInhibited = b;
+        emit changesInhibitedChanged(m_changesInhibited);
+
+        if (!m_changesInhibited && m_uneffectedChanges) {
+            m_uneffectedChanges = false;
+            updateServiceList();
+        }
     }
 }
 
@@ -218,6 +238,11 @@ int TechnologyModel::indexOf(const QString &dbusObjectPath) const
 
 void TechnologyModel::updateServiceList()
 {
+    if (m_changesInhibited) {
+        m_uneffectedChanges = true;
+        return;
+    }
+
     const QVector<NetworkService *> new_services = m_manager->getServices(m_techname);
     int num_new = new_services.count();
 

@@ -252,12 +252,14 @@ void NetworkManager::setupServices()
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
+
     ConnmanObject connmanobj;
     int order = -1;
     NetworkService *service = NULL;
-    bool removedSavedService = false;
+    bool savedServiceUpdated = false;
 
     // make sure we don't leak memory
+    QVector<NetworkService *> oldSavedServices = m_savedServicesOrder;
     m_servicesOrder.clear();
     QStringList serviceList;
     foreach (connmanobj, changed) {
@@ -274,15 +276,18 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         } else {
             service = m_servicesCache.value(svcPath);
         }
+        if (!oldSavedServices.contains(service))
+            savedServiceUpdated = true;
+
         m_servicesOrder.push_back(service);
         serviceList.push_back(service->path());
 
-        // If this is no longer a favorite network, remove it form the saved list
+        // If this is no longer a favorite network, remove it from the saved list
         if (!service->favorite()) {
             int savedIndex;
             if ((savedIndex = m_savedServicesOrder.indexOf(service)) != -1) {
                 m_savedServicesOrder.remove(savedIndex);
-                removedSavedService = true;
+                savedServiceUpdated = true;
             }
         }
 
@@ -304,7 +309,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 int savedIndex;
                 if ((savedIndex = m_savedServicesOrder.indexOf(service)) != -1) {
                     m_savedServicesOrder.remove(savedIndex);
-                    removedSavedService = true;
+                    savedServiceUpdated = true;
                 }
             }
         } else {
@@ -319,9 +324,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     emit servicesChanged();
     Q_EMIT servicesListChanged(serviceList);
 
-    if (removedSavedService) {
+    if (savedServiceUpdated) {
         emit savedServicesChanged();
     }
+    oldSavedServices.clear();
 }
 
 void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)

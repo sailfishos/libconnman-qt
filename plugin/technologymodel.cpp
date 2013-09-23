@@ -37,6 +37,7 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
     m_tech(NULL),
+    m_scanning(false),
     m_changesInhibited(false),
     m_uneffectedChanges(false)
 {
@@ -147,6 +148,11 @@ void TechnologyModel::setName(const QString &name)
     }
 
     if (m_tech) {
+        if (m_scanning) {
+            m_scanning = false;
+            Q_EMIT scanningChanged(m_scanning);
+        }
+
         oldPowered = m_tech->powered();
         oldConnected = m_tech->connected();
         DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
@@ -183,10 +189,12 @@ void TechnologyModel::setChangesInhibited(bool b)
     }
 }
 
-void TechnologyModel::requestScan() const
+void TechnologyModel::requestScan()
 {
     if (m_tech) {
         m_tech->scan();
+        m_scanning = true;
+        Q_EMIT scanningChanged(m_scanning);
     }
 }
 
@@ -200,6 +208,11 @@ void TechnologyModel::updateTechnologies()
             DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
             m_tech = NULL;
             Q_EMIT technologiesChanged();
+
+            if (m_scanning) {
+                m_scanning = false;
+                Q_EMIT scanningChanged(m_scanning);
+            }
         }
     } else {
         if ((test = m_manager->getTechnology(m_techname)) != NULL) {
@@ -215,6 +228,11 @@ void TechnologyModel::updateTechnologies()
 void TechnologyModel::managerAvailabilityChanged(bool available)
 {
     emit availabilityChanged(available);
+
+    if (!available && m_scanning) {
+        m_scanning = false;
+        Q_EMIT scanningChanged(m_scanning);
+    }
 }
 
 NetworkService *TechnologyModel::get(int index) const
@@ -274,8 +292,15 @@ void TechnologyModel::updateServiceList()
 void TechnologyModel::changedPower(bool b)
 {
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
-    if (tech->type() == m_tech->type())
-        Q_EMIT poweredChanged(b);
+    if (tech->type() != m_tech->type())
+        return;
+
+    Q_EMIT poweredChanged(b);
+
+    if (!b && m_scanning) {
+        m_scanning = false;
+        Q_EMIT scanningChanged(m_scanning);
+    }
 }
 
 void TechnologyModel::changedConnected(bool b)
@@ -288,7 +313,14 @@ void TechnologyModel::changedConnected(bool b)
 void TechnologyModel::finishedScan()
 {
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
-    if (tech->type() == m_tech->type())
-        Q_EMIT scanRequestFinished();
+    if (tech->type() != m_tech->type())
+        return;
+
+    Q_EMIT scanRequestFinished();
+
+    if (m_scanning) {
+        m_scanning = false;
+        Q_EMIT scanningChanged(m_scanning);
+    }
 }
 

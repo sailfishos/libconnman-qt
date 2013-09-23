@@ -30,6 +30,7 @@ class TechnologyModel : public QAbstractListModel
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged)
+    Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(bool changesInhibited READ changesInhibited WRITE setChangesInhibited NOTIFY changesInhibitedChanged)
 
 public:
@@ -47,6 +48,7 @@ public:
     bool isAvailable() const;
     bool isConnected() const;
     bool isPowered() const;
+    bool isScanning() const;
     bool changesInhibited() const;
 
     void setName(const QString &name);
@@ -58,13 +60,14 @@ public:
 
 public slots:
     void setPowered(const bool &powered);
-    void requestScan() const;
+    void requestScan();
 
 signals:
     void nameChanged(const QString &name);
     void availabilityChanged(const bool &available);
     void connectedChanged(const bool &connected);
     void poweredChanged(const bool &powered);
+    void scanningChanged(const bool &scanning);
     void changesInhibitedChanged(const bool &changesInhibited);
     void technologiesChanged();
 
@@ -75,6 +78,7 @@ private:
     NetworkManager* m_manager;
     NetworkTechnology* m_tech;
     QVector<NetworkService *> m_services;
+    bool m_scanning;
     bool m_changesInhibited;
     bool m_uneffectedChanges;
     QHash<int, QByteArray> roleNames() const;

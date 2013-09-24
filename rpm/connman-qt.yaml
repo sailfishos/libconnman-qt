@@ -1,6 +1,6 @@
 Name: connman-qt
 Summary: Qt bindings for connman
-Version: 1.0.2
+Version: 1.0.26
 Release: 1
 Group: System/GUI/Other
 License: Apache License
@@ -25,7 +25,7 @@ Builder: qmake
 Files:
     - "%{_libdir}/libconnman-qt4.so.*"
 SubPackages:
- - N5ame: tests
+ - Name: tests
    Summary: Tests for connman-qt
    Group: Development/Libraries
    Description: |

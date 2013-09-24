@@ -118,6 +118,11 @@ bool TechnologyModel::isPowered() const
     }
 }
 
+bool TechnologyModel::isScanning() const
+{
+    return m_scanning;
+}
+
 bool TechnologyModel::changesInhibited() const
 {
     return m_changesInhibited;

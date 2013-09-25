@@ -73,6 +73,7 @@ public:
     bool roaming() const;
 
     void setPath(const QString &path);
+    void updateProperties(const QVariantMap &properties);
 
 signals:
     void nameChanged(const QString &name);

@@ -252,15 +252,13 @@ void NetworkManager::setupServices()
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
-
     ConnmanObject connmanobj;
     int order = -1;
     NetworkService *service = NULL;
-    bool savedServiceUpdated = false;
 
     // make sure we don't leak memory
-    QVector<NetworkService *> oldSavedServices = m_savedServicesOrder;
     m_servicesOrder.clear();
+
     QStringList serviceList;
     foreach (connmanobj, changed) {
         order++;
@@ -275,9 +273,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             addedService = true;
         } else {
             service = m_servicesCache.value(svcPath);
+            service->updateProperties(connmanobj.properties);
         }
-        if (!oldSavedServices.contains(service))
-            savedServiceUpdated = true;
 
         m_servicesOrder.push_back(service);
         serviceList.push_back(service->path());
@@ -287,7 +284,6 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             int savedIndex;
             if ((savedIndex = m_savedServicesOrder.indexOf(service)) != -1) {
                 m_savedServicesOrder.remove(savedIndex);
-                savedServiceUpdated = true;
             }
         }
 
@@ -302,14 +298,16 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         const QString svcPath(obj.path());
         if (m_servicesCache.contains(svcPath)) {
             if (NetworkService *service = m_servicesCache.value(svcPath)) {
-                service->deleteLater();
-                m_servicesCache.remove(svcPath);
-                Q_EMIT serviceRemoved(svcPath);
-
-                int savedIndex;
-                if ((savedIndex = m_savedServicesOrder.indexOf(service)) != -1) {
-                    m_savedServicesOrder.remove(savedIndex);
-                    savedServiceUpdated = true;
+                if (m_savedServicesOrder.contains(service)) {
+                    // Don't remove this service from the cache, since the saved model needs it
+                    // Update the strength value to zero, so we know it isn't visible
+                    QVariantMap properties;
+                    properties.insert(QString::fromLatin1("Strength"), QVariant(static_cast<quint32>(0)));
+                    service->updateProperties(properties);
+                } else {
+                    service->deleteLater();
+                    m_servicesCache.remove(svcPath);
+                    Q_EMIT serviceRemoved(svcPath);
                 }
             }
         } else {
@@ -324,10 +322,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     emit servicesChanged();
     Q_EMIT servicesListChanged(serviceList);
 
-    if (savedServiceUpdated) {
-        emit savedServicesChanged();
-    }
-    oldSavedServices.clear();
+    emit savedServicesChanged();
 }
 
 void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
@@ -338,17 +333,20 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
 
     // make sure we don't leak memory
     m_savedServicesOrder.clear();
-    QStringList serviceList;
+
     foreach (connmanobj, changed) {
         order++;
 
         const QString svcPath(connmanobj.objpath.path());
 
         QHash<QString, NetworkService *>::iterator it = m_servicesCache.find(svcPath);
-        if (it != m_servicesCache.end()) {
-            service = *it;
+        if (it == m_servicesCache.end()) {
+            service = new NetworkService(svcPath,
+                                         connmanobj.properties, this);
+            m_servicesCache.insert(svcPath, service);
         } else {
-            qWarning("saved service not found in cache! '%s'", qPrintable(svcPath));
+            service = *it;
+            service->updateProperties(connmanobj.properties);
         }
 
         m_savedServicesOrder.push_back(service);
@@ -477,7 +475,7 @@ const QVector<NetworkService*> NetworkManager::getSavedServices(const QString &t
 
     // this foreach is based on the m_servicesOrder to keep connman's sort
     // of services.
-    foreach (NetworkService *service, m_servicesOrder) {
+    foreach (NetworkService *service, m_savedServicesOrder) {
         // A previously-saved network which is then removed, remains saved with favorite == false
         if ((tech.isEmpty() || service->type() == tech) && service->favorite())
             services.push_back(service);

@@ -63,7 +63,7 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     qRegisterMetaType<NetworkService *>();
 
     Q_ASSERT(!path.isEmpty());
-    m_propertiesCache = properties;
+    updateProperties(properties);
     setPath(path);
 }
 
@@ -323,6 +323,14 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         Q_EMIT typeChanged(tmp.toString());
     } else if (name == Roaming) {
         emit roamingChanged(tmp.toBool());
+    }
+}
+
+void NetworkService::updateProperties(const QVariantMap &properties)
+{
+    QVariantMap::const_iterator it = properties.constBegin(), end = properties.constEnd();
+    for ( ; it != end; ++it) {
+        m_propertiesCache.insert(it.key(), it.value());
     }
 }
 

@@ -298,8 +298,13 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         const QString svcPath(obj.path());
         if (m_servicesCache.contains(svcPath)) {
             if (NetworkService *service = m_servicesCache.value(svcPath)) {
-                if (!m_savedServicesOrder.contains(service)) {
+                if (m_savedServicesOrder.contains(service)) {
                     // Don't remove this service from the cache, since the saved model needs it
+                    // Update the strength value to zero, so we know it isn't visible
+                    QVariantMap properties;
+                    properties.insert(QString::fromLatin1("Strength"), QVariant(static_cast<quint32>(0)));
+                    service->updateProperties(properties);
+                } else {
                     service->deleteLater();
                     m_servicesCache.remove(svcPath);
                     Q_EMIT serviceRemoved(svcPath);

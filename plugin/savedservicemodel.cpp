@@ -114,6 +114,9 @@ void SavedServiceModel::updateServiceList()
             m_services.remove(j);
             m_services.insert(i, service);
             endMoveRows();
+        } else {
+            QModelIndex changedIndex(this->index(j, 0, QModelIndex()));
+            emit dataChanged(changedIndex, changedIndex);
         }
     }
 

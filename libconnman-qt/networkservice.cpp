@@ -354,7 +354,7 @@ void NetworkService::setPath(const QString &path)
             return;
         }
 
-        if (m_propertiesCache.isEmpty()) {
+        if (m_propertiesCache.isEmpty() && path.count() > 2) {
             QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
             reply.waitForFinished();
             if (reply.isError()) {

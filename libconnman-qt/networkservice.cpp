@@ -291,6 +291,10 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         emit errorChanged(tmp.toString());
     } else if (name == State) {
         emit stateChanged(tmp.toString());
+        if (isConnected != connected()) {
+            isConnected = connected();
+            emit connectedChanged(isConnected);
+        }
     } else if (name == Security) {
         emit securityChanged(tmp.toStringList());
     } else if (name == Strength) {
@@ -369,4 +373,12 @@ void NetworkService::setPath(const QString &path)
         connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
                 this, SLOT(updateProperty(QString,QDBusVariant)));
     }
+}
+
+bool NetworkService::connected()
+{
+    QString state = m_propertiesCache.value(State).toString();
+    if (state == "online" || state == "ready")
+        return true;
+    return false;
 }

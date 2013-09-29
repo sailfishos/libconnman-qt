@@ -99,6 +99,10 @@ signals:
     void typeChanged(const QString &type);
     void roamingChanged(bool roaming);
 
+    void serviceConnectionStarted();
+    void serviceDisconnectionStarted();
+
+
 public slots:
     void requestConnect();
     void requestDisconnect();

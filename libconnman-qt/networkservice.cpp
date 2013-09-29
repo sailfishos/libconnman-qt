@@ -185,6 +185,7 @@ bool NetworkService::roaming() const
 void NetworkService::requestConnect()
 {
     qDebug() << Q_FUNC_INFO;
+    Q_EMIT serviceConnectionStarted();
 
     // If the service is in the failure state clear the Error property so that we get notified of
     // errors on subsequent connection attempts.
@@ -210,6 +211,7 @@ void NetworkService::requestConnect()
 
 void NetworkService::requestDisconnect()
 {
+    Q_EMIT serviceDisconnectionStarted();
     m_service->Disconnect();
 }
 

@@ -185,6 +185,7 @@ bool NetworkService::roaming() const
 void NetworkService::requestConnect()
 {
     qDebug() << Q_FUNC_INFO;
+    Q_EMIT serviceConnectionStarted();
 
     // If the service is in the failure state clear the Error property so that we get notified of
     // errors on subsequent connection attempts.
@@ -210,6 +211,7 @@ void NetworkService::requestConnect()
 
 void NetworkService::requestDisconnect()
 {
+    Q_EMIT serviceDisconnectionStarted();
     m_service->Disconnect();
 }
 
@@ -289,6 +291,10 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
         emit errorChanged(tmp.toString());
     } else if (name == State) {
         emit stateChanged(tmp.toString());
+        if (isConnected != connected()) {
+            isConnected = connected();
+            emit connectedChanged(isConnected);
+        }
     } else if (name == Security) {
         emit securityChanged(tmp.toStringList());
     } else if (name == Strength) {
@@ -354,7 +360,7 @@ void NetworkService::setPath(const QString &path)
             return;
         }
 
-        if (m_propertiesCache.isEmpty()) {
+        if (m_propertiesCache.isEmpty() && path.count() > 2) {
             QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
             reply.waitForFinished();
             if (reply.isError()) {
@@ -367,4 +373,12 @@ void NetworkService::setPath(const QString &path)
         connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
                 this, SLOT(updateProperty(QString,QDBusVariant)));
     }
+}
+
+bool NetworkService::connected()
+{
+    QString state = m_propertiesCache.value(State).toString();
+    if (state == "online" || state == "ready")
+        return true;
+    return false;
 }

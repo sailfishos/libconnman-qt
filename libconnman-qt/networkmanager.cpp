@@ -357,7 +357,7 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
 
 void NetworkManager::updateDefaultRoute(NetworkService* defaultRoute)
 {
-    if (defaultRoute->state() != "online") {
+    if (defaultRoute && defaultRoute->state() != "online") {
         NetworkService *tempSer;
         tempSer = new NetworkService("/",QVariantMap(),this);
         m_defaultRoute = tempSer;

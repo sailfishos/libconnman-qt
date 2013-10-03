@@ -307,8 +307,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 } else {
                     service->deleteLater();
                     m_servicesCache.remove(svcPath);
-                    Q_EMIT serviceRemoved(svcPath);
                 }
+                Q_EMIT serviceRemoved(svcPath);
             }
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init

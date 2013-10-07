@@ -14,6 +14,7 @@ Requires:
     - connman >= 1.15
 PkgConfigBR:
     - Qt5Core
+    - Qt5Network
     - Qt5Qml
     - Qt5DBus
     - dbus-1

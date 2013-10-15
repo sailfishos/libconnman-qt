@@ -17,6 +17,7 @@ PkgBR:
     - qt-devel-tools
 PkgConfigBR:
     - QtCore >= 4.6.0
+    - QtNetwork
     - QtDBus
     - QtGui
     - dbus-1

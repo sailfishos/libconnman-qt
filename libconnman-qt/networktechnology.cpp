@@ -10,7 +10,6 @@
 
 #include "networktechnology.h"
 #include "connman_technology_interface.h"
-#include "debug.h"
 
 const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
@@ -57,7 +56,7 @@ void NetworkTechnology::init(const QString &path)
         QDBusConnection::systemBus(), this);
 
     if (!m_technology->isValid()) {
-        pr_dbg() << "Invalid technology: " << path;
+        qWarning() << "Invalid technology: " << path;
         qFatal("Cannot init with invalid technology");
     }
 

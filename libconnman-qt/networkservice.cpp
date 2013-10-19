@@ -10,7 +10,6 @@
 
 #include "networkservice.h"
 #include "connman_service_interface.h"
-#include "debug.h"
 
 /*
  * JS returns arrays as QVariantList or a(v) in terms of D-Bus,
@@ -317,10 +316,10 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     QDBusPendingReply<> reply = *call;
 
     if (!reply.isFinished()) {
-       pr_dbg() << "connect() not finished yet";
+       qDebug() << "connect() not finished yet";
     }
     if (reply.isError()) {
-        pr_dbg() << "Reply from service.connect(): " << reply.error().message();
+        qDebug() << "Reply from service.connect(): " << reply.error().message();
         emit connectRequestFailed(reply.error().message());
     }
 
@@ -406,7 +405,7 @@ void NetworkService::setPath(const QString &path)
             QDBusConnection::systemBus(), this);
 
         if (!m_service->isValid()) {
-            pr_dbg() << "Invalid service: " << m_path;
+            qWarning() << "Invalid service: " << m_path;
             return;
         }
 

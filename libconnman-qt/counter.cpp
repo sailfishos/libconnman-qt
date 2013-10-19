@@ -12,7 +12,6 @@
 #include "counter.h"
 #include "networkmanager.h"
 
-static const char COUNTER_PATH[] = "/ConnectivityCounter";
 
 Counter::Counter(QObject *parent) :
     QObject(parent),
@@ -29,11 +28,17 @@ Counter::Counter(QObject *parent) :
     isRunning(0)
 {
     new CounterAdaptor(this);
-    QDBusConnection::systemBus().registerObject(COUNTER_PATH, this);
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+    int randomValue = qrand();
+    //this needs to be unique so we can use more than one at a time with different processes
+    counterPath = "/ConnectivityCounter" + QString::number(randomValue);
+    QDBusConnection::systemBus().registerObject(counterPath, this);
 }
 
 Counter::~Counter()
 {
+    m_manager->unregisterAgent(QString(counterPath));
 }
 
 void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming)
@@ -157,8 +162,8 @@ quint32 Counter::interval() const
 void Counter::reRegister()
 {
     if (m_manager->isAvailable()) {
-        m_manager->unregisterCounter(QString(COUNTER_PATH));
-        m_manager->registerCounter(QString(COUNTER_PATH),currentAccuracy,currentInterval);
+        m_manager->unregisterCounter(QString(counterPath));
+        m_manager->registerCounter(QString(counterPath),currentAccuracy,currentInterval);
     }
 }
 
@@ -166,13 +171,13 @@ void Counter::setRunning(bool on)
 {
     if (on) {
         if (m_manager->isAvailable()) {
-            m_manager->registerCounter(QString(COUNTER_PATH),currentAccuracy,currentInterval);
+            m_manager->registerCounter(QString(counterPath),currentAccuracy,currentInterval);
             isRunning = true;
             Q_EMIT runningChanged(isRunning);
         }
     } else {
         if (m_manager->isAvailable()) {
-            m_manager->unregisterCounter(QString(COUNTER_PATH));
+            m_manager->unregisterCounter(QString(counterPath));
             isRunning = false;
             Q_EMIT runningChanged(isRunning);
         }

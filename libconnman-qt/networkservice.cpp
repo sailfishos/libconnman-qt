@@ -10,7 +10,6 @@
 
 #include "networkservice.h"
 #include "connman_service_interface.h"
-#include "debug.h"
 
 /*
  * JS returns arrays as QVariantList or a(v) in terms of D-Bus,
@@ -79,42 +78,58 @@ NetworkService::~NetworkService() {}
 
 const QString NetworkService::name() const
 {
-    return m_propertiesCache.value(Name).toString();
+    if (m_propertiesCache.contains(Name))
+        return m_propertiesCache.value(Name).toString();
+    return QString();
 }
 
 const QString NetworkService::state() const
 {
-    return m_propertiesCache.value(State).toString();
+    if (m_propertiesCache.contains(State))
+        return m_propertiesCache.value(State).toString();
+    return QString();
 }
 
 const QString NetworkService::error() const
 {
-    return m_propertiesCache.value(Error).toString();
+    if (m_propertiesCache.contains(Error))
+        return m_propertiesCache.value(Error).toString();
+    return QString();
 }
 
 const QString NetworkService::type() const
 {
-    return m_propertiesCache.value(Type).toString();
+    if (m_propertiesCache.contains(Type))
+        return m_propertiesCache.value(Type).toString();
+    return QString();
 }
 
 const QStringList NetworkService::security() const
 {
-    return m_propertiesCache.value(Security).toStringList();
+    if (m_propertiesCache.contains(Security))
+        return m_propertiesCache.value(Security).toStringList();
+    return QStringList();
 }
 
 uint NetworkService::strength() const
 {
-    return m_propertiesCache.value(Strength).toUInt();
+    if (m_propertiesCache.contains(Strength))
+        return m_propertiesCache.value(Strength).toUInt();
+    return 0;
 }
 
 bool NetworkService::favorite() const
 {
-    return m_propertiesCache.value(Favorite).toBool();
+    if (m_propertiesCache.contains(Favorite))
+        return m_propertiesCache.value(Favorite).toBool();
+    return false;
 }
 
 bool NetworkService::autoConnect() const
 {
-    return m_propertiesCache.value(AutoConnect).toBool();
+    if (m_propertiesCache.contains(AutoConnect))
+        return m_propertiesCache.value(AutoConnect).toBool();
+    return false;
 }
 
 const QString NetworkService::path() const
@@ -124,62 +139,86 @@ const QString NetworkService::path() const
 
 const QVariantMap NetworkService::ipv4() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
+    if (m_propertiesCache.contains(IPv4))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
+    return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv4Config() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
+    if (m_propertiesCache.contains(IPv4Config))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
+    return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv6() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
+    if (m_propertiesCache.contains(IPv6))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
+    return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv6Config() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
+    if (m_propertiesCache.contains(IPv6Config))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
+    return QVariantMap();
 }
 
 const QStringList NetworkService::nameservers() const
 {
-    return m_propertiesCache.value(Nameservers).toStringList();
+    if (m_propertiesCache.contains(Nameservers))
+        return m_propertiesCache.value(Nameservers).toStringList();
+    return QStringList();
 }
 
 const QStringList NetworkService::nameserversConfig() const
 {
-    return m_propertiesCache.value(NameserversConfig).toStringList();
+    if (m_propertiesCache.contains(NameserversConfig))
+        return m_propertiesCache.value(NameserversConfig).toStringList();
+    return QStringList();
 }
 
 const QStringList NetworkService::domains() const
 {
-    return m_propertiesCache.value(Domains).toStringList();
+    if (m_propertiesCache.contains(Domains))
+        return m_propertiesCache.value(Domains).toStringList();
+    return QStringList();
 }
 
 const QStringList NetworkService::domainsConfig() const
 {
-    return m_propertiesCache.value(DomainsConfig).toStringList();
+    if (m_propertiesCache.contains(DomainsConfig))
+        return m_propertiesCache.value(DomainsConfig).toStringList();
+    return QStringList();
 }
 
 const QVariantMap NetworkService::proxy() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
+    if (m_propertiesCache.contains(Proxy))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
+    return QVariantMap();
 }
 
 const QVariantMap NetworkService::proxyConfig() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
+    if (m_propertiesCache.contains(ProxyConfig))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
+    return QVariantMap();
 }
 
 const QVariantMap NetworkService::ethernet() const
 {
-    return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
+    if (m_propertiesCache.contains(Ethernet))
+        return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
+    return QVariantMap();
 }
 
 bool NetworkService::roaming() const
 {
-    return m_propertiesCache.value(Roaming).toBool();
+    if (m_propertiesCache.contains(Roaming))
+        return m_propertiesCache.value(Roaming).toBool();
+    return false;
 }
 
 void NetworkService::requestConnect()
@@ -211,54 +250,64 @@ void NetworkService::requestConnect()
 
 void NetworkService::requestDisconnect()
 {
-    Q_EMIT serviceDisconnectionStarted();
-    m_service->Disconnect();
+    if (m_service) {
+        Q_EMIT serviceDisconnectionStarted();
+        m_service->Disconnect();
+    }
 }
 
 void NetworkService::remove()
 {
-    m_service->Remove();
+    if (m_service)
+        m_service->Remove();
 }
 
 void NetworkService::setAutoConnect(const bool autoconnect)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoconnect)));
+    if (m_service)
+        m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoconnect)));
 }
 
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(IPv4Config, QDBusVariant(QVariant(ipv4)));
+    if (m_service)
+        m_service->SetProperty(IPv4Config, QDBusVariant(QVariant(ipv4)));
 }
 
 void NetworkService::setIpv6Config(const QVariantMap &ipv6)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(IPv6Config, QDBusVariant(QVariant(ipv6)));
+    if (m_service)
+        m_service->SetProperty(IPv6Config, QDBusVariant(QVariant(ipv6)));
 }
 
 void NetworkService::setNameserversConfig(const QStringList &nameservers)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(NameserversConfig, QDBusVariant(QVariant(nameservers)));
+    if (m_service)
+        m_service->SetProperty(NameserversConfig, QDBusVariant(QVariant(nameservers)));
 }
 
 void NetworkService::setDomainsConfig(const QStringList &domains)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(DomainsConfig, QDBusVariant(QVariant(domains)));
+    if (m_service)
+        m_service->SetProperty(DomainsConfig, QDBusVariant(QVariant(domains)));
 }
 
 void NetworkService::setProxyConfig(const QVariantMap &proxy)
 {
     // QDBusPendingReply<void> reply =
-    m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
+    if (m_service)
+        m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
 }
 
 void NetworkService::resetCounters()
 {
-    m_service->ResetCounters();
+    if (m_service)
+        m_service->ResetCounters();
 }
 
 void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
@@ -267,10 +316,10 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     QDBusPendingReply<> reply = *call;
 
     if (!reply.isFinished()) {
-       pr_dbg() << "connect() not finished yet";
+       qDebug() << "connect() not finished yet";
     }
     if (reply.isError()) {
-        pr_dbg() << "Reply from service.connect(): " << reply.error().message();
+        qDebug() << "Reply from service.connect(): " << reply.error().message();
         emit connectRequestFailed(reply.error().message());
     }
 
@@ -356,7 +405,7 @@ void NetworkService::setPath(const QString &path)
             QDBusConnection::systemBus(), this);
 
         if (!m_service->isValid()) {
-            pr_dbg() << "Invalid service: " << m_path;
+            qWarning() << "Invalid service: " << m_path;
             return;
         }
 
@@ -377,8 +426,10 @@ void NetworkService::setPath(const QString &path)
 
 bool NetworkService::connected()
 {
-    QString state = m_propertiesCache.value(State).toString();
-    if (state == "online" || state == "ready")
-        return true;
+    if (m_propertiesCache.contains(State)) {
+        QString state = m_propertiesCache.value(State).toString();
+        if (state == "online" || state == "ready")
+            return true;
+    }
     return false;
 }

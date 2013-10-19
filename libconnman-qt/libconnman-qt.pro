@@ -1,5 +1,5 @@
 TEMPLATE     = lib
-VERSION      = 1.0.29
+VERSION      = 1.0.30
 CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus network
@@ -36,7 +36,6 @@ HEADERS += \
     commondbustypes.h \
     connmannetworkproxyfactory.h \
     clockmodel.h \
-    debug.h \
     useragent.h \
     sessionagent.h \
     networksession.h \
@@ -49,7 +48,6 @@ SOURCES += \
     clockmodel.cpp \
     commondbustypes.cpp \
     connmannetworkproxyfactory.cpp \
-    debug.cpp \
     useragent.cpp \
     sessionagent.cpp \
     networksession.cpp \

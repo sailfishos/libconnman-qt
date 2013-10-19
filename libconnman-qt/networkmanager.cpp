@@ -15,8 +15,6 @@
 #include "connman_manager_interface.cpp" // not bug
 #include "moc_connman_manager_interface.cpp" // not bug
 
-#include "debug.h"
-
 static NetworkManager* staticInstance = NULL;
 
 NetworkManager* NetworkManagerFactory::createInstance()
@@ -102,7 +100,7 @@ void NetworkManager::connectToConnman(QString)
         if(!m_available)
             emit availabilityChanged(m_available = true);
 
-        pr_dbg() << "Connected";
+        qDebug() << "Connected";
     }
 }
 
@@ -307,12 +305,12 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 } else {
                     service->deleteLater();
                     m_servicesCache.remove(svcPath);
-                    Q_EMIT serviceRemoved(svcPath);
                 }
+                Q_EMIT serviceRemoved(svcPath);
             }
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init
-            pr_dbg() << "attempted to remove non-existing service";
+            qDebug() << "attempted to remove non-existing service";
         }
     }
 
@@ -357,7 +355,7 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
 
 void NetworkManager::updateDefaultRoute(NetworkService* defaultRoute)
 {
-    if (defaultRoute && defaultRoute->state() != "online") {
+    if (!defaultRoute || defaultRoute->state() != "online") {
         NetworkService *tempSer;
         tempSer = new NetworkService("/",QVariantMap(),this);
         m_defaultRoute = tempSer;
@@ -404,7 +402,7 @@ void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
     foreach (net, m_technologiesCache) {
         if (net->objPath() == technology.path()) {
 
-            pr_dbg() << "Removing " << net->objPath();
+            qDebug() << "Removing " << net->objPath();
             m_technologiesCache.remove(net->type());
             net->deleteLater();
 
@@ -447,7 +445,7 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
     if (m_technologiesCache.contains(type))
         return m_technologiesCache.value(type);
     else {
-        pr_dbg() << "Technology " << type << " doesn't exist";
+        qDebug() << "Technology " << type << " doesn't exist";
         return NULL;
     }
 }

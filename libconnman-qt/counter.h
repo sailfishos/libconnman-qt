@@ -20,6 +20,8 @@ class NetworkManager;
 /*
  * Proxy class for interface net.connman.Counter
  */
+//  static const char counterPath[] = "/ConnectivityCounter";
+
 class Counter : public QObject
 {
     Q_OBJECT
@@ -34,7 +36,8 @@ class Counter : public QObject
 
     Q_DISABLE_COPY(Counter)
 public:
-    explicit Counter(QObject *parent = 0);
+      explicit Counter(QObject *parent = 0);
+
     virtual ~Counter();
 
     quint32 bytesReceived() const;
@@ -53,7 +56,7 @@ public:
     void setRunning(bool on);
 
 signals:
-    void counterChanged(const QString servicePath, const QVariantMap &counters, bool roaming);
+    void counterChanged(const QString &servicePath, const QVariantMap &counters, bool roaming);
     void bytesReceivedChanged(quint32 bytesRx);
     void bytesTransmittedChanged(quint32 bytesTx);
     void secondsOnlineChanged(quint32 seconds);
@@ -84,6 +87,9 @@ private:
        bool isRunning;
 
        void reRegister();
+       QString counterPath;
+
+private slots:
 };
 
 class CounterAdaptor : public QDBusAbstractAdaptor

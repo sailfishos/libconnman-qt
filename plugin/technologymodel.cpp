@@ -139,7 +139,7 @@ void TechnologyModel::setPowered(const bool &powered)
 
 void TechnologyModel::setName(const QString &name)
 {
-    if (m_techname == name) {
+    if (m_techname == name || name.isEmpty()) {
         return;
     }
     QStringList netTypes = m_manager->technologiesList();
@@ -265,6 +265,9 @@ void TechnologyModel::updateServiceList()
         m_uneffectedChanges = true;
         return;
     }
+
+    if (m_techname.isEmpty())
+        return;
 
     const QVector<NetworkService *> new_services = m_manager->getServices(m_techname);
     int num_new = new_services.count();

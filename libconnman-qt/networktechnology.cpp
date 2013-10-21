@@ -174,7 +174,7 @@ QString NetworkTechnology::path() const
 
 void NetworkTechnology::setPath(const QString &path)
 {
-    if (path != m_path) {
+    if (path != m_path && !path.isEmpty()) {
         init(path);
     }
 }

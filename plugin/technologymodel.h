@@ -90,6 +90,7 @@ private slots:
     void changedPower(bool);
     void changedConnected(bool);
     void finishedScan();
+    void refresh();
 };
 
 #endif // TECHNOLOGYMODEL_H

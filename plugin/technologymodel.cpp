@@ -137,19 +137,17 @@ void TechnologyModel::setPowered(const bool &powered)
     }
 }
 
-void TechnologyModel::setName(const QString &name)
+void TechnologyModel::refresh()
 {
-    if (m_techname == name || name.isEmpty()) {
-        return;
-    }
     QStringList netTypes = m_manager->technologiesList();
 
     bool oldPowered(false);
     bool oldConnected(false);
 
-    if (!netTypes.contains(name)) {
-        qDebug() << name <<  "is not a known technology name:" << netTypes;
-        return;
+    bool badName = false;
+    if (!netTypes.contains(m_techname)) {
+        qDebug() << m_techname <<  "is not a known technology name:" << netTypes;
+        badName = true;
     }
 
     if (m_tech) {
@@ -161,14 +159,16 @@ void TechnologyModel::setName(const QString &name)
         oldPowered = m_tech->powered();
         oldConnected = m_tech->connected();
         DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
+        m_tech = 0;
     }
+    if (badName)
+        return;
 
-    m_tech = m_manager->getTechnology(name);
+    m_tech = m_manager->getTechnology(m_techname);
 
     if (!m_tech) {
         return;
     } else {
-        m_techname = name;
         emit nameChanged(m_techname);
         if (oldPowered != m_tech->powered()) {
             emit poweredChanged(!oldPowered);
@@ -178,6 +178,17 @@ void TechnologyModel::setName(const QString &name)
         }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
         updateServiceList();
+    }
+}
+
+void TechnologyModel::setName(const QString &name)
+{
+    if (m_techname == name || name.isEmpty()) {
+        return;
+    }
+    m_techname = name;
+    if (m_manager->isAvailable()) {
+        refresh();
     }
 }
 
@@ -237,6 +248,9 @@ void TechnologyModel::managerAvailabilityChanged(bool available)
     if (!available && m_scanning) {
         m_scanning = false;
         Q_EMIT scanningChanged(m_scanning);
+    }
+    if (available) {
+        refresh();
     }
 }
 

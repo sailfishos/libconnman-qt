@@ -27,6 +27,10 @@
         <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="ConnmanObjectList"/>
     </method>
 
+    <method name="RemoveSavedService" tp:name-for-bindings="Remove_Saved_Services">
+        <arg name="identifier" type="s" direction="in"/>
+    </method>
+
     <method name="RegisterAgent" tp:name-for-bindings="Register_Agent">
         <arg name="path" type="o"/>
     </method>

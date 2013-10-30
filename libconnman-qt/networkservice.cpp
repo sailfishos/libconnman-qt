@@ -9,6 +9,8 @@
  */
 
 #include "networkservice.h"
+#include "commondbustypes.h"
+#include "connman_manager_interface.h"
 #include "connman_service_interface.h"
 
 /*
@@ -258,8 +260,13 @@ void NetworkService::requestDisconnect()
 
 void NetworkService::remove()
 {
-    if (m_service)
-        m_service->Remove();
+    if (!m_service)
+        return;
+
+    QDBusPendingReply<> reply = m_service->Remove();
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, m_service);
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
 }
 
 void NetworkService::setAutoConnect(const bool autoconnect)
@@ -324,6 +331,20 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     }
 
     call->deleteLater();
+}
+
+void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<> reply = *watcher;
+
+    if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
+        // Service is probably out of range trying RemoveSavedService.
+        NetConnmanManagerInterface manager(QStringLiteral("net.connman"), QStringLiteral("/"),
+                                           QDBusConnection::systemBus());
+
+        // Remove /net/connman/service/ from front of string.
+        manager.RemoveSavedService(m_path.mid(21));
+    }
 }
 
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)

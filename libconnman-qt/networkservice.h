@@ -150,6 +150,7 @@ private:
 private slots:
     void updateProperty(const QString &name, const QDBusVariant &value);
     void handleConnectReply(QDBusPendingCallWatcher *call);
+    void handleRemoveReply(QDBusPendingCallWatcher *watcher);
 
 private:
     Q_DISABLE_COPY(NetworkService);

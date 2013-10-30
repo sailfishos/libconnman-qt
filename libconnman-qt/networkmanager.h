@@ -52,6 +52,7 @@ public:
     const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = "") const;
     const QVector<NetworkService*> getSavedServices(const QString &tech = "") const;
+    void removeSavedService(const QString &identifier) const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
     Q_INVOKABLE QStringList technologiesList();

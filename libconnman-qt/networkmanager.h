@@ -108,6 +108,9 @@ private:
     /* This variable is used just to send signal if changed */
     NetworkService* m_defaultRoute;
 
+    /* Invalid default route service for use when there is no default route */
+    NetworkService *m_invalidDefaultRoute;
+
     QDBusServiceWatcher *watcher;
 
     static const QString State;

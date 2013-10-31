@@ -40,6 +40,7 @@ NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
     m_manager(NULL),
     m_defaultRoute(NULL),
+    m_invalidDefaultRoute(NULL),
     watcher(NULL),
     m_available(false)
 {
@@ -356,9 +357,10 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
 void NetworkManager::updateDefaultRoute(NetworkService* defaultRoute)
 {
     if (!defaultRoute || defaultRoute->state() != "online") {
-        NetworkService *tempSer;
-        tempSer = new NetworkService("/",QVariantMap(),this);
-        m_defaultRoute = tempSer;
+        if (!m_invalidDefaultRoute)
+            m_invalidDefaultRoute = new NetworkService("/", QVariantMap(), this);
+
+        m_defaultRoute = m_invalidDefaultRoute;
         emit defaultRouteChanged(m_defaultRoute);
         return;
     }

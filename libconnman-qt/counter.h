@@ -88,8 +88,10 @@ private:
 
        void reRegister();
        QString counterPath;
+       bool shouldBeRunning;
 
 private slots:
+       void updateMgrAvailability(bool);
 };
 
 class CounterAdaptor : public QDBusAbstractAdaptor

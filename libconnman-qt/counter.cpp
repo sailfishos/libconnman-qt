@@ -22,18 +22,22 @@ Counter::Counter(QObject *parent) :
     bytesInRoaming(0),
     bytesOutRoaming(0),
     secondsOnlineRoaming(0),
-    roamingEnabled(0),
+    roamingEnabled(false),
     currentInterval(1),
     currentAccuracy(1024),
-    isRunning(0)
+    isRunning(false),
+    shouldBeRunning(false)
 {
-    new CounterAdaptor(this);
     QTime time = QTime::currentTime();
     qsrand((uint)time.msec());
     int randomValue = qrand();
     //this needs to be unique so we can use more than one at a time with different processes
     counterPath = "/ConnectivityCounter" + QString::number(randomValue);
-    QDBusConnection::systemBus().registerObject(counterPath, this);
+
+    connect(m_manager, SIGNAL(availabilityChanged(bool)),
+            this, SLOT(updateMgrAvailability(bool)));
+    if (QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman"))
+        updateMgrAvailability(true);
 }
 
 Counter::~Counter()
@@ -169,6 +173,7 @@ void Counter::reRegister()
 
 void Counter::setRunning(bool on)
 {
+    shouldBeRunning = on;
     if (on) {
         if (m_manager->isAvailable()) {
             m_manager->registerCounter(QString(counterPath),currentAccuracy,currentInterval);
@@ -189,6 +194,17 @@ bool Counter::running() const
     return isRunning;
 }
 
+void Counter::updateMgrAvailability(bool available)
+{
+    if (available) {
+        new CounterAdaptor(this);
+        if (!QDBusConnection::systemBus().registerObject(counterPath, this)) {
+            qDebug() << "could not register" << counterPath;
+        } else {
+            setRunning(shouldBeRunning);
+        }
+    }
+}
 
 /*
  *This is the dbus adaptor to the connman interface

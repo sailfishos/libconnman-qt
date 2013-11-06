@@ -119,6 +119,8 @@ private:
 
     bool m_available;
 
+    void updateDefaultRoute();
+
 private slots:
     void connectToConnman(QString = "");
     void disconnectFromConnman(QString = "");
@@ -128,7 +130,6 @@ private slots:
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
     void updateSavedServices(const ConnmanObjectList &changed);
-    void updateDefaultRoute(NetworkService* defaultRoute);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
 

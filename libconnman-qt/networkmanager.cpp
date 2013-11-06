@@ -285,9 +285,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 m_savedServicesOrder.remove(savedIndex);
             }
         }
-
         if (order == 0)
-            updateDefaultRoute(service);
+            updateDefaultRoute();
+
         if (addedService) { //emit this after m_servicesOrder is updated
             Q_EMIT serviceAdded(svcPath);
         }
@@ -316,8 +316,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     }
 
     if (order == -1)
-        updateDefaultRoute(NULL);
-
+        updateDefaultRoute();
     emit servicesChanged();
     Q_EMIT servicesListChanged(serviceList);
 
@@ -354,36 +353,59 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
     emit savedServicesChanged();
 }
 
-void NetworkManager::updateDefaultRoute(NetworkService* defaultRoute)
-{
-    if (!defaultRoute || defaultRoute->state() != "online") {
-        if (!m_invalidDefaultRoute)
-            m_invalidDefaultRoute = new NetworkService("/", QVariantMap(), this);
-
-        m_defaultRoute = m_invalidDefaultRoute;
-        emit defaultRouteChanged(m_defaultRoute);
-        return;
-    }
-
-    if (m_defaultRoute != defaultRoute) {
-        m_defaultRoute = defaultRoute;
-        emit defaultRouteChanged(m_defaultRoute);
-    }
-}
-
 void NetworkManager::propertyChanged(const QString &name,
-        const QDBusVariant &value)
+                                     const QDBusVariant &value)
 {
     QVariant tmp = value.variant();
 
     m_propertiesCache[name] = tmp;
     if (name == State) {
-        emit stateChanged(tmp.toString());
+        QString stateString = tmp.toString();
+        emit stateChanged(stateString);
+        if (stateString == "ready" || stateString == "online") {
+            updateDefaultRoute();
+        }
     } else if (name == OfflineMode) {
         emit offlineModeChanged(tmp.toBool());
     } else if (name == SessionMode) {
        emit sessionModeChanged(tmp.toBool());
    }
+}
+
+void NetworkManager::updateDefaultRoute()
+{
+    QString defaultNetDev;
+    QFile routeFile("/proc/net/route");
+    bool ok = false;
+    if (routeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&routeFile);
+        QString line = in.readLine();
+        while (!line.isNull()) {
+            QStringList lineList = line.split('\t');
+            if (lineList.at(1) == "00000000" && lineList.at(3) == "0003") {
+                defaultNetDev = lineList.at(0);
+                break;
+            }
+            line = in.readLine();
+        }
+        routeFile.close();
+    }
+
+    Q_FOREACH(NetworkService *service, getServices("")) {
+        if (service->state() == "online" || service->state() == "ready") {
+            if (defaultNetDev == service->ethernet().value("Interface"))
+                if (m_defaultRoute != service) {
+                    m_defaultRoute = service;
+                    emit defaultRouteChanged(m_defaultRoute);
+                }
+            return;
+        }
+    }
+    if (!m_invalidDefaultRoute)
+        m_invalidDefaultRoute = new NetworkService("/", QVariantMap(), this);
+
+    m_defaultRoute = m_invalidDefaultRoute;
+    emit defaultRouteChanged(m_defaultRoute);
 }
 
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,

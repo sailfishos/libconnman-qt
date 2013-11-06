@@ -197,12 +197,12 @@ void NetworkManager::setupServices()
         // by connman's documentation, first service is always
         // the default route's one
         if (order == 0)
-            updateDefaultRoute(service);
+            updateDefaultRoute();
     }
 
     // if no service was replied
     if (order == -1)
-        updateDefaultRoute(NULL);
+        updateDefaultRoute();
 
     emit servicesChanged();
 
@@ -393,12 +393,13 @@ void NetworkManager::updateDefaultRoute()
 
     Q_FOREACH(NetworkService *service, getServices("")) {
         if (service->state() == "online" || service->state() == "ready") {
-            if (defaultNetDev == service->ethernet().value("Interface"))
+            if (defaultNetDev == service->ethernet().value("Interface")) {
                 if (m_defaultRoute != service) {
                     m_defaultRoute = service;
                     emit defaultRouteChanged(m_defaultRoute);
                 }
-            return;
+                return;
+            }
         }
     }
     if (!m_invalidDefaultRoute)

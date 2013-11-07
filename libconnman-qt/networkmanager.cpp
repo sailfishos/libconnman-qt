@@ -100,8 +100,6 @@ void NetworkManager::connectToConnman(QString)
 
         if(!m_available)
             emit availabilityChanged(m_available = true);
-
-        qDebug() << "Connected";
     }
 }
 
@@ -427,11 +425,8 @@ void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
     // but since this function will be triggered rarely that's fine
     foreach (net, m_technologiesCache) {
         if (net->objPath() == technology.path()) {
-
-            qDebug() << "Removing " << net->objPath();
             m_technologiesCache.remove(net->type());
             net->deleteLater();
-
             break;
         }
     }

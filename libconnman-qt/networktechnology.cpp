@@ -43,7 +43,6 @@ NetworkTechnology::~NetworkTechnology()
 
 void NetworkTechnology::init(const QString &path)
 {
-    qDebug() << path;
     m_path = path;
 
     if (m_technology) {
@@ -55,7 +54,6 @@ void NetworkTechnology::init(const QString &path)
     }
     m_technology = new NetConnmanTechnologyInterface("net.connman", path,
         QDBusConnection::systemBus(), this);
-    qDebug() << m_technology->isValid();
     if (!m_technology->isValid()) {
         qWarning() << "Invalid technology: " << path;
         qFatal("Cannot init with invalid technology");
@@ -70,7 +68,6 @@ void NetworkTechnology::init(const QString &path)
         else
             m_propertiesCache = reply.value();
     }
-    qDebug() << "powered" << powered() << "connected" << connected();
 
     emit poweredChanged(powered());
     emit connectedChanged(connected());
@@ -147,7 +144,6 @@ void NetworkTechnology::scan()
 
 void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-    qDebug() << name << value.variant();
     QVariant tmp = value.variant();
 
     Q_ASSERT(m_technology);

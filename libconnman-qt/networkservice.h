@@ -20,7 +20,7 @@ class NetConnmanServiceInterface;
 
 class NetworkService : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)

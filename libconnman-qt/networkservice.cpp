@@ -226,6 +226,11 @@ bool NetworkService::roaming() const
 void NetworkService::requestConnect()
 {
     qDebug() << Q_FUNC_INFO;
+    if (!m_service) {
+        qWarning() << Q_FUNC_INFO << "called with not service";
+        return;
+    }
+
     Q_EMIT serviceConnectionStarted();
 
     // If the service is in the failure state clear the Error property so that we get notified of

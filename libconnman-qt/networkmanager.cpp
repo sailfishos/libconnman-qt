@@ -302,6 +302,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                     // Update the strength value to zero, so we know it isn't visible
                     QVariantMap properties;
                     properties.insert(QString::fromLatin1("Strength"), QVariant(static_cast<quint32>(0)));
+                    properties.insert(QStringLiteral("State"), QStringLiteral("idle"));
                     service->updateProperties(properties);
                 } else {
                     service->deleteLater();

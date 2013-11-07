@@ -9,7 +9,7 @@ Name:       connman-qt
 # << macros
 
 Summary:    Qt bindings for connman
-Version:    1.0.36
+Version:    1.0.37
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License
@@ -76,7 +76,7 @@ qmake install_prefix=/usr
 
 %qmake 
 
-make %{?jobs:-j%jobs}
+make %{?_smp_mflags}
 
 # >> build post
 # << build post

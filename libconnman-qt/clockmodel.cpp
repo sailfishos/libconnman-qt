@@ -68,22 +68,22 @@ void ClockModel::getPropertiesFinished(QDBusPendingCallWatcher *call)
         Q_ASSERT(properties.contains("Timezone"));
         Q_ASSERT(properties.value("Timezone").type() == QVariant::String);
         mTimezone = properties.value("Timezone").toString();
-        emit timezoneChanged();
+        Q_EMIT timezoneChanged();
 
         Q_ASSERT(properties.contains("TimezoneUpdates"));
         Q_ASSERT(properties.value("TimezoneUpdates").type() == QVariant::String);
         mTimezoneUpdates = properties.value("TimezoneUpdates").toString();
-        emit timezoneUpdatesChanged();
+        Q_EMIT timezoneUpdatesChanged();
 
         Q_ASSERT(properties.contains("TimeUpdates"));
         Q_ASSERT(properties.value("TimeUpdates").type() == QVariant::String);
         mTimeUpdates = properties.value("TimeUpdates").toString();
-        emit timeUpdatesChanged();
+        Q_EMIT timeUpdatesChanged();
 
         Q_ASSERT(properties.contains("Timeservers"));
         Q_ASSERT(properties.value("Timeservers").type() == QVariant::StringList);
         mTimeservers = properties.value("Timeservers").toStringList();
-        emit timeserversChanged();
+        Q_EMIT timeserversChanged();
     }
     call->deleteLater();
 }
@@ -102,19 +102,19 @@ void ClockModel::propertyChanged(const QString &name, const QDBusVariant &value)
     if (name == "Timezone") {
         Q_ASSERT(value.variant().type() == QVariant::String);
         mTimezone = value.variant().toString();
-        emit timezoneChanged();
+        Q_EMIT timezoneChanged();
     } else if (name == "TimezoneUpdates") {
         Q_ASSERT(value.variant().type() == QVariant::String);
         mTimezoneUpdates = value.variant().toString();
-        emit timezoneUpdatesChanged();
+        Q_EMIT timezoneUpdatesChanged();
     } else if (name == "TimeUpdates") {
         Q_ASSERT(value.variant().type() == QVariant::String);
         mTimeUpdates = value.variant().toString();
-        emit timeUpdatesChanged();
+        Q_EMIT timeUpdatesChanged();
     } else if (name == "Timeservers") {
         Q_ASSERT(value.variant().type() == QVariant::StringList);
         mTimeservers = value.variant().toStringList();
-        emit timeserversChanged();
+        Q_EMIT timeserversChanged();
     }
 }
 

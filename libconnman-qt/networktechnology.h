@@ -57,12 +57,12 @@ public:
     void setTetheringPassphrase(const QString &pass);
 
 
-public slots:
+public Q_SLOTS:
     void setPowered(const bool &powered);
     void scan();
     void setPath(const QString &path);
 
-signals:
+Q_SIGNALS:
     void poweredChanged(const bool &powered);
     void connectedChanged(const bool &connected);
     void scanFinished();
@@ -88,7 +88,7 @@ private:
     void init(const QString &path);
 
 
-private slots:
+private Q_SLOTS:
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void scanReply(QDBusPendingCallWatcher *call);
 

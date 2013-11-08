@@ -256,7 +256,7 @@ void UtSession::testPropertiesAfterSetPath()
 QObject *UtSession::findSessionNotificationAdaptor() const
 {
     QObject *sessionNotificationAdaptor = 0;
-    foreach (QObject *const object, m_session->m_sessionAgent->findChildren<QObject *>()) {
+    Q_FOREACH (QObject *const object, m_session->m_sessionAgent->findChildren<QObject *>()) {
         if (object->inherits("SessionNotificationAdaptor")) {
             sessionNotificationAdaptor = object;
             break;
@@ -291,7 +291,7 @@ void UtSession::ManagerMock::SetProperty(const QString &name, const QVariant &va
 {
     if (name == "SessionMode") {
         m_sessionMode = value.toBool();
-        emit PropertyChanged(name, value);
+        Q_EMIT PropertyChanged(name, value);
     } else {
         const QString err = QString("Property '%1' not handled").arg(name);
         qWarning("%s: %s", Q_FUNC_INFO, qPrintable(err));

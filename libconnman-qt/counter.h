@@ -55,7 +55,7 @@ public:
     bool running() const;
     void setRunning(bool on);
 
-signals:
+Q_SIGNALS:
     void counterChanged(const QString &servicePath, const QVariantMap &counters, bool roaming);
     void bytesReceivedChanged(quint32 bytesRx);
     void bytesTransmittedChanged(quint32 bytesTx);
@@ -90,7 +90,7 @@ private:
        QString counterPath;
        bool shouldBeRunning;
 
-private slots:
+private Q_SLOTS:
        void updateMgrAvailability(bool);
 };
 
@@ -103,7 +103,7 @@ public:
     explicit CounterAdaptor(Counter *parent);
     virtual ~CounterAdaptor();
 
-public slots:
+public Q_SLOTS:
     void Release();
     void Usage(const QDBusObjectPath &service_path,
                                 const QVariantMap &home,

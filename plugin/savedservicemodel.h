@@ -45,7 +45,7 @@ public:
 
     Q_INVOKABLE NetworkService *get(int index) const;
 
-signals:
+Q_SIGNALS:
     void nameChanged(const QString &name);
 
 private:
@@ -54,7 +54,7 @@ private:
     QVector<NetworkService *> m_services;
     QHash<int, QByteArray> roleNames() const;
 
-private slots:
+private Q_SLOTS:
     void updateServiceList();
 };
 

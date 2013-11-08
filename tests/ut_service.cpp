@@ -334,7 +334,7 @@ void UtService::ServiceMock::SetProperty(const QString &name, const QDBusVariant
 
     m_properties[name] = value.variant();
 
-    emit PropertyChanged(name, value);
+    Q_EMIT PropertyChanged(name, value);
 }
 
 void UtService::ServiceMock::Connect(const QDBusMessage &message)
@@ -342,18 +342,18 @@ void UtService::ServiceMock::Connect(const QDBusMessage &message)
     if (m_connectShouldFail) {
         bus().send(message.createErrorReply(QDBusError::Failed, "Failed to connect"));
         m_properties["State"] = "failure";
-        emit PropertyChanged("State", QDBusVariant("failure"));
+        Q_EMIT PropertyChanged("State", QDBusVariant("failure"));
         return;
     }
 
     m_properties["State"] = "online";
-    emit PropertyChanged("State", QDBusVariant("online"));
+    Q_EMIT PropertyChanged("State", QDBusVariant("online"));
 }
 
 void UtService::ServiceMock::Disconnect()
 {
     m_properties["State"] = "disconnect";
-    emit PropertyChanged("State", QDBusVariant("disconnect"));
+    Q_EMIT PropertyChanged("State", QDBusVariant("disconnect"));
 }
 
 void UtService::ServiceMock::Remove()
@@ -382,7 +382,7 @@ void UtService::ServiceMock::mock_setProperty(const QString &name, const QDBusVa
     }
 
     m_properties[name] = value.variant();
-    emit PropertyChanged(name, value);
+    Q_EMIT PropertyChanged(name, value);
 }
 
 TEST_MAIN_WITH_MOCK(UtService, UtService::ManagerMock)

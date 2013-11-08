@@ -37,7 +37,7 @@ class ClockModel : public QObject {
 public:
     ClockModel();
 
-public slots:
+public Q_SLOTS:
     QString timezone() const;
     void setTimezone(const QString &val);
     QString timezoneUpdates() const;
@@ -53,13 +53,13 @@ public slots:
     // helper function for Timepicker
     QTime time(QString h, QString m) { return QTime(h.toInt(), m.toInt()); }
 
-signals:
+Q_SIGNALS:
     void timezoneChanged();
     void timezoneUpdatesChanged();
     void timeUpdatesChanged();
     void timeserversChanged();
 
-private slots:
+private Q_SLOTS:
     void connectToConnman();
     void getPropertiesFinished(QDBusPendingCallWatcher*);
     void setPropertyFinished(QDBusPendingCallWatcher*);

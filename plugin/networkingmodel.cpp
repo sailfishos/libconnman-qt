@@ -69,7 +69,7 @@ QList<QObject*> NetworkingModel::networks() const
     QList<QObject*> networks;
     // FIXME: how to get rid of this douple looping since we
     // must return a QList<QObject*>?
-    foreach (NetworkService* network, m_manager->getServices("wifi")) {
+    Q_FOREACH (NetworkService* network, m_manager->getServices("wifi")) {
       networks.append(network);
     }
     return networks;
@@ -121,7 +121,7 @@ void NetworkingModel::updateTechnologies()
         }
     }
 
-    emit technologiesChanged();
+    Q_EMIT technologiesChanged();
 }
 
 void NetworkingModel::managerAvailabilityChanged(bool available)
@@ -129,17 +129,17 @@ void NetworkingModel::managerAvailabilityChanged(bool available)
     if(available)
         m_manager->registerAgent(QString(AGENT_PATH));
 
-    emit availabilityChanged(available);
+    Q_EMIT availabilityChanged(available);
 }
 
 void NetworkingModel::requestUserInput(ServiceReqData* data)
 {
     m_req_data = data;
-    emit userInputRequested(data->fields);
+    Q_EMIT userInputRequested(data->fields);
 }
 
 void NetworkingModel::reportError(const QString &error) {
-    emit errorReported(error);
+    Q_EMIT errorReported(error);
 }
 
 void NetworkingModel::sendUserReply(const QVariantMap &input) {
@@ -190,7 +190,7 @@ void UserInputAgent::RequestInput(const QDBusObjectPath &service_path,
     qDebug() << "Service " << service_path.path() << " wants user input";
 
     QVariantMap json;
-    foreach (const QString &key, fields.keys()){
+    Q_FOREACH (const QString &key, fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
         json.insert(key, payload);
     }

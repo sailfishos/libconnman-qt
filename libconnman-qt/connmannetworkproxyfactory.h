@@ -26,7 +26,7 @@ public:
     // From QNetworkProxyFactory
     QList<QNetworkProxy> queryProxy(const QNetworkProxyQuery & query);
 
-private slots:
+private Q_SLOTS:
     void onDefaultRouteChanged(NetworkService *defaultRoute);
     void onProxyChanged(const QVariantMap &proxy);
 

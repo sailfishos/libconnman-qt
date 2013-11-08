@@ -156,7 +156,7 @@ void UtClock::testSetDateTime(bool setDate)
     QCOMPARE(spy.at(0).at(1).value<QDBusVariant>().variant(),
             otherSpy.at(0).at(1).value<QDBusVariant>().variant());
 
-    const quint64 emittedSecsSinceEpoch =
+    const quint64 Q_EMITtedSecsSinceEpoch =
         spy.at(0).at(1).value<QDBusVariant>().variant().toULongLong();
 
     QDBusPendingReply<QVariantMap> reply = m_clock->mClockProxy->GetProperties();
@@ -169,7 +169,7 @@ void UtClock::testSetDateTime(bool setDate)
     bool ok;
     QVERIFY((secsSinceEpoch = properties.value("Time").toULongLong(&ok), ok));
 
-    QCOMPARE(emittedSecsSinceEpoch, secsSinceEpoch);
+    QCOMPARE(Q_EMITtedSecsSinceEpoch, secsSinceEpoch);
     QVERIFY(diff(secsSinceEpoch, newSecsSinceEpoch) < SHORT_WHILE_TO_PROCESS_TIME_CHANGE);
 }
 
@@ -207,7 +207,7 @@ void UtClock::ClockMock::SetProperty(const QString &name, const QDBusVariant &va
 
     m_properties[name] = value.variant();
 
-    emit PropertyChanged(name, value);
+    Q_EMIT PropertyChanged(name, value);
 }
 
 TEST_MAIN_WITH_MOCK(UtClock, UtClock::ClockMock)

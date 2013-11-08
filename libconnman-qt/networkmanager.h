@@ -66,7 +66,7 @@ public:
 
     bool sessionMode() const;
 
-public slots:
+public Q_SLOTS:
     void setOfflineMode(const bool &offlineMode);
     void registerAgent(const QString &path);
     void unregisterAgent(const QString &path);
@@ -77,7 +77,7 @@ public slots:
 
     void setSessionMode(const bool &sessionMode);
 
-signals:
+Q_SIGNALS:
     void availabilityChanged(bool available);
 
     void stateChanged(const QString &state);
@@ -121,7 +121,7 @@ private:
 
     void updateDefaultRoute();
 
-private slots:
+private Q_SLOTS:
     void connectToConnman(QString = "");
     void disconnectFromConnman(QString = "");
     void connmanUnregistered(QString = "");

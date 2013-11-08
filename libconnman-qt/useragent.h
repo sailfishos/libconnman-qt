@@ -41,7 +41,7 @@ enum ConnectionRequestType {
     TYPE_CLEAR
 };
 
-public slots:
+public Q_SLOTS:
     void sendUserReply(const QVariantMap &input);
 
     void sendConnectReply(const QString &replyMessage, int timeout = 120);
@@ -51,7 +51,7 @@ public slots:
     QString path() const;
     void setAgentPath(QString &path);
 
-signals:
+Q_SIGNALS:
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
     void errorReported(const QString &servicePath, const QString &error);
@@ -60,7 +60,7 @@ signals:
     void userConnectRequested(const QDBusMessage &message);
     void connectionRequest();
 
-private slots:
+private Q_SLOTS:
     void updateMgrAvailability(bool);
     void requestTimeout();
 
@@ -91,7 +91,7 @@ public:
     explicit AgentAdaptor(UserAgent* parent);
     virtual ~AgentAdaptor();
 
-public slots:
+public Q_SLOTS:
     void Release();
     void ReportError(const QDBusObjectPath &service_path, const QString &error);
     void RequestBrowser(const QDBusObjectPath &service_path, const QString &url);

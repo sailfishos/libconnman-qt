@@ -49,7 +49,7 @@ void NetworkTechnology::init(const QString &path)
         delete m_technology;
         m_technology = 0;
         // TODO: After resetting the path iterate through old properties, compare their values
-        //       with new ones and emit corresponding signals if changed.
+        //       with new ones and Q_EMIT corresponding signals if changed.
         m_propertiesCache.clear();
     }
     m_technology = new NetConnmanTechnologyInterface("net.connman", path,
@@ -69,8 +69,8 @@ void NetworkTechnology::init(const QString &path)
             m_propertiesCache = reply.value();
     }
 
-    emit poweredChanged(powered());
-    emit connectedChanged(connected());
+    Q_EMIT poweredChanged(powered());
+    Q_EMIT connectedChanged(connected());
 
     connect(m_technology,
             SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
@@ -150,23 +150,23 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 
     m_propertiesCache[name] = tmp;
     if (name == Powered) {
-        emit poweredChanged(tmp.toBool());
+        Q_EMIT poweredChanged(tmp.toBool());
     } else if (name == Connected) {
-        emit connectedChanged(tmp.toBool());
+        Q_EMIT connectedChanged(tmp.toBool());
     } else if (name == IdleTimeout) {
-      emit idleTimeoutChanged(tmp.toUInt());
+      Q_EMIT idleTimeoutChanged(tmp.toUInt());
     } else if (name == Tethering) {
-      emit tetheringChanged(tmp.toBool());
+      Q_EMIT tetheringChanged(tmp.toBool());
     } else if (name == TetheringIdentifier) {
-      emit tetheringIdChanged(tmp.toString());
+      Q_EMIT tetheringIdChanged(tmp.toString());
     } else if (name == TetheringPassphrase) {
-      emit tetheringPassphraseChanged(tmp.toString());
+      Q_EMIT tetheringPassphraseChanged(tmp.toString());
     }
 }
 
 void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
 {
-    emit scanFinished();
+    Q_EMIT scanFinished();
 
     call->deleteLater();
 }

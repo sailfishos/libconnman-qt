@@ -400,7 +400,7 @@ void UtManager::ManagerMock::SetProperty(const QString &name, const QDBusVariant
 
     m_properties[name] = value.variant();
 
-    emit PropertyChanged(name, value);
+    Q_EMIT PropertyChanged(name, value);
 }
 
 ConnmanObjectList UtManager::ManagerMock::GetTechnologies() const
@@ -468,7 +468,7 @@ void UtManager::ManagerMock::UnregisterCounter(const QDBusObjectPath &path,
 void UtManager::ManagerMock::mock_setState(const QString &state)
 {
     m_properties["State"] = state;
-    emit PropertyChanged("State", QDBusVariant(state));
+    Q_EMIT PropertyChanged("State", QDBusVariant(state));
 }
 
 void UtManager::ManagerMock::mock_temporarilyUnregister()
@@ -508,7 +508,7 @@ void UtManager::ManagerMock::mock_addService(const QString &path, const QVariant
         service->properties(),
     };
 
-    emit ServicesChanged(ConnmanObjectList() << object, QList<QDBusObjectPath>());
+    Q_EMIT ServicesChanged(ConnmanObjectList() << object, QList<QDBusObjectPath>());
 }
 
 void UtManager::ManagerMock::mock_removeService(const QString &path, const QDBusMessage &message)
@@ -526,7 +526,7 @@ void UtManager::ManagerMock::mock_removeService(const QString &path, const QDBus
 
     delete service;
 
-    emit ServicesChanged(ConnmanObjectList(), QList<QDBusObjectPath>() << QDBusObjectPath(path));
+    Q_EMIT ServicesChanged(ConnmanObjectList(), QList<QDBusObjectPath>() << QDBusObjectPath(path));
 }
 
 void UtManager::ManagerMock::mock_addTechnology(const QString &path, const QVariantMap &properties,
@@ -551,7 +551,7 @@ void UtManager::ManagerMock::mock_addTechnology(const QString &path, const QVari
 
     m_technologies[path] = technology;
 
-    emit TechnologyAdded(QDBusObjectPath(path), technology->properties());
+    Q_EMIT TechnologyAdded(QDBusObjectPath(path), technology->properties());
 }
 
 void UtManager::ManagerMock::mock_removeTechnology(const QString &path, const QDBusMessage &message)
@@ -569,7 +569,7 @@ void UtManager::ManagerMock::mock_removeTechnology(const QString &path, const QD
 
     delete technology;
 
-    emit TechnologyRemoved(QDBusObjectPath(path));
+    Q_EMIT TechnologyRemoved(QDBusObjectPath(path));
 }
 
 quint32 UtManager::ManagerMock::mock_counterAccuracy(const QString &path,

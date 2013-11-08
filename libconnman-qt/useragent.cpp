@@ -36,19 +36,19 @@ UserAgent::~UserAgent()
 void UserAgent::requestUserInput(ServiceRequestData* data)
 {
     m_req_data = data;
-    emit userInputRequested(data->objectPath, data->fields);
+    Q_EMIT userInputRequested(data->objectPath, data->fields);
 }
 
 void UserAgent::cancelUserInput()
 {
     delete m_req_data;
     m_req_data = NULL;
-    emit userInputCanceled();
+    Q_EMIT userInputCanceled();
 }
 
 void UserAgent::reportError(const QString &servicePath, const QString &error)
 {
-    emit errorReported(servicePath, error);
+    Q_EMIT errorReported(servicePath, error);
 }
 
 void UserAgent::sendUserReply(const QVariantMap &input)
@@ -197,7 +197,7 @@ void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
                                        const QDBusMessage &message)
 {
     QVariantMap json;
-    foreach (const QString &key, fields.keys()){
+    Q_FOREACH (const QString &key, fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
         json.insert(key, payload);
     }

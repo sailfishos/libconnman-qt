@@ -56,7 +56,7 @@ public:
     void setAllowedBearers(const QStringList &bearers);
     void setConnectionType(const QString &type);
 
-signals:
+Q_SIGNALS:
 
     void allowedBearersChanged(const QStringList &bearers);
     void connectionTypeChanged(const QString &type);
@@ -69,7 +69,7 @@ signals:
     void ipv4Changed(const QVariantMap&settings);
     void ipv6Changed(const QVariantMap&settings);
 
-public slots:
+public Q_SLOTS:
     void requestDestroy();
     void requestConnect();
     void requestDisconnect();

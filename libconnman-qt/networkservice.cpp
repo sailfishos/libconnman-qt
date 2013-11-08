@@ -343,7 +343,7 @@ void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
 
     if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
         // Service is probably out of range trying RemoveSavedService.
-        NetConnmanManagerInterface manager(QStringLiteral("net.connman"), QStringLiteral("/"),
+        NetConnmanManagerInterface manager(QLatin1String("net.connman"), QLatin1String("/"),
                                            QDBusConnection::systemBus());
 
         // Remove /net/connman/service/ from front of string.

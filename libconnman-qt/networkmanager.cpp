@@ -8,7 +8,6 @@
  *
  */
 
-#include <QStringLiteral>
 #include "networkmanager.h"
 
 #include "commondbustypes.h"

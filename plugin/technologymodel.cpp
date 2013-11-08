@@ -169,12 +169,12 @@ void TechnologyModel::refresh()
     if (!m_tech) {
         return;
     } else {
-        emit nameChanged(m_techname);
+        Q_EMIT nameChanged(m_techname);
         if (oldPowered != m_tech->powered()) {
-            emit poweredChanged(!oldPowered);
+            Q_EMIT poweredChanged(!oldPowered);
         }
         if (oldConnected != m_tech->connected()) {
-            emit connectedChanged(!oldConnected);
+            Q_EMIT connectedChanged(!oldConnected);
         }
         CONNECT_TECHNOLOGY_SIGNALS(m_tech);
         updateServiceList();
@@ -196,7 +196,7 @@ void TechnologyModel::setChangesInhibited(bool b)
 {
     if (m_changesInhibited != b) {
         m_changesInhibited = b;
-        emit changesInhibitedChanged(m_changesInhibited);
+        Q_EMIT changesInhibitedChanged(m_changesInhibited);
 
         if (!m_changesInhibited && m_uneffectedChanges) {
             m_uneffectedChanges = false;
@@ -236,14 +236,14 @@ void TechnologyModel::updateTechnologies()
             // that wifi was added
             m_tech = test;
             CONNECT_TECHNOLOGY_SIGNALS(m_tech);
-            emit technologiesChanged();
+            Q_EMIT technologiesChanged();
         }
     }
 }
 
 void TechnologyModel::managerAvailabilityChanged(bool available)
 {
-    emit availabilityChanged(available);
+    Q_EMIT availabilityChanged(available);
 
     if (!available && m_scanning) {
         m_scanning = false;
@@ -265,7 +265,7 @@ int TechnologyModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);
 
-    foreach (NetworkService *service, m_services) {
+    Q_FOREACH (NetworkService *service, m_services) {
         idx++;
         if (service->path() == dbusObjectPath) return idx;
     }

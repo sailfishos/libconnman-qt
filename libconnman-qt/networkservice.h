@@ -77,7 +77,7 @@ public:
     void updateProperties(const QVariantMap &properties);
     bool connected();
 
-signals:
+Q_SIGNALS:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
     void errorChanged(const QString &error);
@@ -106,7 +106,7 @@ signals:
     void connectedChanged(bool connected);
 
 
-public slots:
+public Q_SLOTS:
     void requestConnect();
     void requestDisconnect();
     void remove();
@@ -147,7 +147,7 @@ private:
     static const QString Roaming;
     bool isConnected;
 
-private slots:
+private Q_SLOTS:
     void updateProperty(const QString &name, const QDBusVariant &value);
     void handleConnectReply(QDBusPendingCallWatcher *call);
     void handleRemoveReply(QDBusPendingCallWatcher *watcher);

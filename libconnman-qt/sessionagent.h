@@ -28,7 +28,7 @@ public:
     void requestDisconnect();
     void requestDestroy();
 
-public slots:
+public Q_SLOTS:
     void release();
     void update(const QVariantMap &settings);
     void createSession();
@@ -37,7 +37,7 @@ Q_SIGNALS:
     void settingsUpdated(const QVariantMap &settings);
     void released();
 
-private slots:
+private Q_SLOTS:
     void onConnectFinished(QDBusPendingCallWatcher *watcher);
 
 private:
@@ -58,7 +58,7 @@ public:
     explicit SessionNotificationAdaptor(SessionAgent* parent);
     virtual ~SessionNotificationAdaptor();
 
-public slots:
+public Q_SLOTS:
     void Release();
     void Update(const QVariantMap &settings);
 private:

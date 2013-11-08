@@ -58,11 +58,11 @@ public:
 
     Q_INVOKABLE NetworkService *get(int index) const;
 
-public slots:
+public Q_SLOTS:
     void setPowered(const bool &powered);
     void requestScan();
 
-signals:
+Q_SIGNALS:
     void nameChanged(const QString &name);
     void availabilityChanged(const bool &available);
     void connectedChanged(const bool &connected);
@@ -83,7 +83,7 @@ private:
     bool m_uneffectedChanges;
     QHash<int, QByteArray> roleNames() const;
 
-private slots:
+private Q_SLOTS:
     void updateTechnologies();
     void updateServiceList();
     void managerAvailabilityChanged(bool available);

@@ -87,7 +87,7 @@ int SavedServiceModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);
 
-    foreach (NetworkService *service, m_services) {
+    Q_FOREACH (NetworkService *service, m_services) {
         idx++;
         if (service->path() == dbusObjectPath) return idx;
     }
@@ -116,7 +116,7 @@ void SavedServiceModel::updateServiceList()
             endMoveRows();
         } else {
             QModelIndex changedIndex(this->index(j, 0, QModelIndex()));
-            emit dataChanged(changedIndex, changedIndex);
+            Q_EMIT dataChanged(changedIndex, changedIndex);
         }
     }
 

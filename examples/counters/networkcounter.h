@@ -28,9 +28,9 @@ class NetworkCounter : public QObject
 public:
     explicit NetworkCounter(QObject *parent = 0);
 
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
     void counterChanged(const QString servicePath, const QVariantMap &counters,  bool roaming);
 
     void bytesReceivedChanged(quint32 bytesRx);

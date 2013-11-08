@@ -46,12 +46,12 @@ public:
     void requestUserInput(ServiceReqData* data);
     void reportError(const QString &error);
 
-public slots:
+public Q_SLOTS:
     void setWifiPowered(const bool &wifiPowered);
     void requestScan() const;
     void sendUserReply(const QVariantMap &input);
 
-signals:
+Q_SIGNALS:
     void availabilityChanged(bool available);
     void wifiPoweredChanged(const bool &wifiPowered);
     void networksChanged();
@@ -65,7 +65,7 @@ private:
     NetworkTechnology* m_wifi;
     ServiceReqData* m_req_data;
 
-private slots:
+private Q_SLOTS:
     void updateTechnologies();
     void managerAvailabilityChanged(bool available);
 
@@ -82,7 +82,7 @@ public:
     UserInputAgent(NetworkingModel* parent);
     virtual ~UserInputAgent();
 
-public slots:
+public Q_SLOTS:
     void Release();
     void ReportError(const QDBusObjectPath &service_path, const QString &error);
     void RequestBrowser(const QDBusObjectPath &service_path, const QString &url);

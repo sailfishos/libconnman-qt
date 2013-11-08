@@ -113,7 +113,7 @@ inline bool TestBase::waitForSignals(const SignalSpyList &signalSpies)
     {
         static bool allReceived(const SignalSpyList &signalSpies)
         {
-            foreach (SignalSpy *signalSpy, signalSpies) {
+            Q_FOREACH (SignalSpy *signalSpy, signalSpies) {
                 if (signalSpy->count() == 0) {
                     return false;
                 }
@@ -127,7 +127,7 @@ inline bool TestBase::waitForSignals(const SignalSpyList &signalSpies)
     timeoutTimer.setSingleShot(true);
 
     connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
-    foreach (SignalSpy *signalSpy, signalSpies) {
+    Q_FOREACH (SignalSpy *signalSpy, signalSpies) {
         connect(signalSpy->object(), signalSpy->signal().prepend(QSIGNAL_CODE),
                 &loop, SLOT(quit()));
     }

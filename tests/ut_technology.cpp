@@ -201,7 +201,7 @@ void UtTechnology::TechnologyMock::SetProperty(const QString &name, const QDBusV
 
     m_properties[name] = value.variant();
 
-    emit PropertyChanged(name, value);
+    Q_EMIT PropertyChanged(name, value);
 }
 
 void UtTechnology::TechnologyMock::Scan()

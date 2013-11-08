@@ -21,10 +21,10 @@
 QVariantMap adaptToConnmanProperties(const QVariantMap &map)
 {
     QVariantMap buffer;
-    foreach (const QString &key, map.keys()) {
+    Q_FOREACH (const QString &key, map.keys()) {
         if (map.value(key).type() == QVariant::List) {
             QStringList strList;
-            foreach (const QVariant &value, map.value(key).toList()) {
+            Q_FOREACH (const QVariant &value, map.value(key).toList()) {
                 strList.append(value.toString());
             }
             buffer.insert(key, strList);
@@ -331,7 +331,7 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     }
     if (reply.isError()) {
         qDebug() << "Reply from service.connect(): " << reply.error().message();
-        emit connectRequestFailed(reply.error().message());
+        Q_EMIT connectRequestFailed(reply.error().message());
     }
 
     call->deleteLater();
@@ -360,49 +360,49 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
     m_propertiesCache[name] = tmp;
 
     if (name == Name) {
-        emit nameChanged(tmp.toString());
+        Q_EMIT nameChanged(tmp.toString());
     } else if (name == Error) {
-        emit errorChanged(tmp.toString());
+        Q_EMIT errorChanged(tmp.toString());
     } else if (name == State) {
-        emit stateChanged(tmp.toString());
+        Q_EMIT stateChanged(tmp.toString());
         if (isConnected != connected()) {
             isConnected = connected();
-            emit connectedChanged(isConnected);
+            Q_EMIT connectedChanged(isConnected);
         }
     } else if (name == Security) {
-        emit securityChanged(tmp.toStringList());
+        Q_EMIT securityChanged(tmp.toStringList());
     } else if (name == Strength) {
-        emit strengthChanged(tmp.toUInt());
+        Q_EMIT strengthChanged(tmp.toUInt());
     } else if (name == Favorite) {
-        emit favoriteChanged(tmp.toBool());
+        Q_EMIT favoriteChanged(tmp.toBool());
     } else if (name == AutoConnect) {
-        emit autoConnectChanged(tmp.toBool());
+        Q_EMIT autoConnectChanged(tmp.toBool());
     } else if (name == IPv4) {
-        emit ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
+        Q_EMIT ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == IPv4Config) {
-        emit ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
+        Q_EMIT ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
     } else if (name == IPv6) {
-        emit ipv6Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6)));
+        Q_EMIT ipv6Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6)));
     } else if (name == IPv6Config) {
-        emit ipv6ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config)));
+        Q_EMIT ipv6ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config)));
     } else if (name == Nameservers) {
-        emit nameserversChanged(tmp.toStringList());
+        Q_EMIT nameserversChanged(tmp.toStringList());
     } else if (name == NameserversConfig) {
-        emit nameserversConfigChanged(tmp.toStringList());
+        Q_EMIT nameserversConfigChanged(tmp.toStringList());
     } else if (name == Domains) {
-        emit domainsChanged(tmp.toStringList());
+        Q_EMIT domainsChanged(tmp.toStringList());
     } else if (name == DomainsConfig) {
-        emit domainsConfigChanged(tmp.toStringList());
+        Q_EMIT domainsConfigChanged(tmp.toStringList());
     } else if (name == Proxy) {
-        emit proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
+        Q_EMIT proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     } else if (name == ProxyConfig) {
-        emit proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
+        Q_EMIT proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
     } else if (name == Ethernet) {
-        emit ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
+        Q_EMIT ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
     } else if (name == QLatin1String("Type")) {
         Q_EMIT typeChanged(tmp.toString());
     } else if (name == Roaming) {
-        emit roamingChanged(tmp.toBool());
+        Q_EMIT roamingChanged(tmp.toBool());
     }
 }
 
@@ -423,7 +423,7 @@ void NetworkService::setPath(const QString &path)
             delete m_service;
             m_service = 0;
             // TODO: After resetting the path iterate through old properties, compare their values
-            //       with new ones and emit corresponding signals if changed.
+            //       with new ones and Q_EMIT corresponding signals if changed.
             m_propertiesCache.clear();
         }
         m_service = new NetConnmanServiceInterface("net.connman", m_path,

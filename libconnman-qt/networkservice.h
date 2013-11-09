@@ -149,6 +149,8 @@ private:
 
 private Q_SLOTS:
     void updateProperty(const QString &name, const QDBusVariant &value);
+    void emitPropertyChange(const QString &name, const QVariant &value);
+
     void handleConnectReply(QDBusPendingCallWatcher *call);
     void handleRemoveReply(QDBusPendingCallWatcher *watcher);
 

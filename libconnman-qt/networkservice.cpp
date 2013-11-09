@@ -351,32 +351,26 @@ void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
     }
 }
 
-void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
+void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
-    QVariant tmp = value.variant();
-
-    Q_ASSERT(m_service);
-
-    m_propertiesCache[name] = tmp;
-
     if (name == Name) {
-        Q_EMIT nameChanged(tmp.toString());
+        Q_EMIT nameChanged(value.toString());
     } else if (name == Error) {
-        Q_EMIT errorChanged(tmp.toString());
+        Q_EMIT errorChanged(value.toString());
     } else if (name == State) {
-        Q_EMIT stateChanged(tmp.toString());
+        Q_EMIT stateChanged(value.toString());
         if (isConnected != connected()) {
             isConnected = connected();
             Q_EMIT connectedChanged(isConnected);
         }
     } else if (name == Security) {
-        Q_EMIT securityChanged(tmp.toStringList());
+        Q_EMIT securityChanged(value.toStringList());
     } else if (name == Strength) {
-        Q_EMIT strengthChanged(tmp.toUInt());
+        Q_EMIT strengthChanged(value.toUInt());
     } else if (name == Favorite) {
-        Q_EMIT favoriteChanged(tmp.toBool());
+        Q_EMIT favoriteChanged(value.toBool());
     } else if (name == AutoConnect) {
-        Q_EMIT autoConnectChanged(tmp.toBool());
+        Q_EMIT autoConnectChanged(value.toBool());
     } else if (name == IPv4) {
         Q_EMIT ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
     } else if (name == IPv4Config) {
@@ -386,13 +380,13 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
     } else if (name == IPv6Config) {
         Q_EMIT ipv6ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config)));
     } else if (name == Nameservers) {
-        Q_EMIT nameserversChanged(tmp.toStringList());
+        Q_EMIT nameserversChanged(value.toStringList());
     } else if (name == NameserversConfig) {
-        Q_EMIT nameserversConfigChanged(tmp.toStringList());
+        Q_EMIT nameserversConfigChanged(value.toStringList());
     } else if (name == Domains) {
-        Q_EMIT domainsChanged(tmp.toStringList());
+        Q_EMIT domainsChanged(value.toStringList());
     } else if (name == DomainsConfig) {
-        Q_EMIT domainsConfigChanged(tmp.toStringList());
+        Q_EMIT domainsConfigChanged(value.toStringList());
     } else if (name == Proxy) {
         Q_EMIT proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
     } else if (name == ProxyConfig) {
@@ -400,10 +394,20 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
     } else if (name == Ethernet) {
         Q_EMIT ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
     } else if (name == QLatin1String("Type")) {
-        Q_EMIT typeChanged(tmp.toString());
+        Q_EMIT typeChanged(value.toString());
     } else if (name == Roaming) {
-        Q_EMIT roamingChanged(tmp.toBool());
+        Q_EMIT roamingChanged(value.toBool());
     }
+}
+
+void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
+{
+    QVariant tmp = value.variant();
+
+    Q_ASSERT(m_service);
+
+    m_propertiesCache[name] = tmp;
+    emitPropertyChange(name,tmp);
 }
 
 void NetworkService::updateProperties(const QVariantMap &properties)
@@ -422,8 +426,6 @@ void NetworkService::setPath(const QString &path)
         if (m_service) {
             delete m_service;
             m_service = 0;
-            // TODO: After resetting the path iterate through old properties, compare their values
-            //       with new ones and Q_EMIT corresponding signals if changed.
             m_propertiesCache.clear();
         }
         m_service = new NetConnmanServiceInterface("net.connman", m_path,
@@ -441,6 +443,10 @@ void NetworkService::setPath(const QString &path)
                 qDebug() << Q_FUNC_INFO << reply.error().message();
             } else {
                 m_propertiesCache = reply.value();
+
+                Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
+                    emitPropertyChange(name,m_propertiesCache[name]);
+                }
             }
         }
 

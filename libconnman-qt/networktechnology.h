@@ -90,6 +90,8 @@ private:
 
 private Q_SLOTS:
     void propertyChanged(const QString &name, const QDBusVariant &value);
+    void emitPropertyChange(const QString &name, const QVariant &value);
+
     void scanReply(QDBusPendingCallWatcher *call);
 
 private:

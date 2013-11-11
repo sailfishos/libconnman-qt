@@ -48,8 +48,6 @@ void NetworkTechnology::init(const QString &path)
     if (m_technology) {
         delete m_technology;
         m_technology = 0;
-        // TODO: After resetting the path iterate through old properties, compare their values
-        //       with new ones and Q_EMIT corresponding signals if changed.
         m_propertiesCache.clear();
     }
     m_technology = new NetConnmanTechnologyInterface("net.connman", path,
@@ -63,10 +61,14 @@ void NetworkTechnology::init(const QString &path)
         QDBusPendingReply<QVariantMap> reply;
         reply = m_technology->GetProperties();
         reply.waitForFinished();
-        if (reply.isError())
+        if (reply.isError()) {
             qDebug() << reply.error().message();
-        else
+        } else {
             m_propertiesCache = reply.value();
+            Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
+                emitPropertyChange(name,m_propertiesCache[name]);
+            }
+        }
     }
 
     Q_EMIT poweredChanged(powered());
@@ -141,6 +143,22 @@ void NetworkTechnology::scan()
 }
 
 // Private
+void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &value)
+{
+    if (name == Powered) {
+        Q_EMIT poweredChanged(value.toBool());
+    } else if (name == Connected) {
+        Q_EMIT connectedChanged(value.toBool());
+    } else if (name == IdleTimeout) {
+      Q_EMIT idleTimeoutChanged(value.toUInt());
+    } else if (name == Tethering) {
+      Q_EMIT tetheringChanged(value.toBool());
+    } else if (name == TetheringIdentifier) {
+      Q_EMIT tetheringIdChanged(value.toString());
+    } else if (name == TetheringPassphrase) {
+      Q_EMIT tetheringPassphraseChanged(value.toString());
+    }
+}
 
 void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant &value)
 {
@@ -149,19 +167,7 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
     Q_ASSERT(m_technology);
 
     m_propertiesCache[name] = tmp;
-    if (name == Powered) {
-        Q_EMIT poweredChanged(tmp.toBool());
-    } else if (name == Connected) {
-        Q_EMIT connectedChanged(tmp.toBool());
-    } else if (name == IdleTimeout) {
-      Q_EMIT idleTimeoutChanged(tmp.toUInt());
-    } else if (name == Tethering) {
-      Q_EMIT tetheringChanged(tmp.toBool());
-    } else if (name == TetheringIdentifier) {
-      Q_EMIT tetheringIdChanged(tmp.toString());
-    } else if (name == TetheringPassphrase) {
-      Q_EMIT tetheringPassphraseChanged(tmp.toString());
-    }
+    emitPropertyChange(name,tmp);
 }
 
 void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)

@@ -66,6 +66,8 @@ public:
 
     bool sessionMode() const;
 
+    Q_INVOKABLE void resetCountersForType(const QString &type);
+
 public Q_SLOTS:
     void setOfflineMode(const bool &offlineMode);
     void registerAgent(const QString &path);

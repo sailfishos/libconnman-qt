@@ -573,6 +573,11 @@ bool NetworkManager::sessionMode() const
     return m_propertiesCache[SessionMode].toBool();
 }
 
+void NetworkManager::resetCountersForType(const QString &type)
+{
+    m_manager->ResetCounters(type);
+}
+
 QStringList NetworkManager::servicesList(const QString &tech)
 {
     QStringList services;

@@ -49,6 +49,10 @@
         <arg name="path" type="o"/>
     </method>
 
+    <method name="ResetCounters" tp:name-for-bindings="Reset_Counters">
+        <arg name="type" type="s"/>
+    </method>
+
     <method name="CreateSession" tp:name-for-bindings="Create_Session">
         <arg name="settings" type="a{sv}"/>
         <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>

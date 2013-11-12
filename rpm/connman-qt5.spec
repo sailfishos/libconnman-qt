@@ -9,14 +9,14 @@ Name:       connman-qt5
 # << macros
 
 Summary:    Qt bindings for connman
-Version:    1.0.40
+Version:    1.0.41
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License
 URL:        https://github.com/nemomobile/libconnman-qt.git
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  connman-qt5.yaml
-Requires:   connman >= 1.15
+Requires:   connman >= 1.15+git21
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)

@@ -84,7 +84,7 @@ Q_SIGNALS:
     void securityChanged(const QStringList &security);
     void strengthChanged(const uint strength);
     void favoriteChanged(const bool &favorite);
-    void autoConnectChanged(const bool autoconnect);
+    void autoConnectChanged(bool autoconnect);
     void pathChanged(const QString &path);
     void ipv4Changed(const QVariantMap &ipv4);
     void ipv4ConfigChanged(const QVariantMap &ipv4);

@@ -65,25 +65,22 @@ void ClockModel::getPropertiesFinished(QDBusPendingCallWatcher *call)
     } else {
         QVariantMap properties = reply.value();
 
-        Q_ASSERT(properties.contains("Timezone"));
-        Q_ASSERT(properties.value("Timezone").type() == QVariant::String);
-        mTimezone = properties.value("Timezone").toString();
-        Q_EMIT timezoneChanged();
-
-        Q_ASSERT(properties.contains("TimezoneUpdates"));
-        Q_ASSERT(properties.value("TimezoneUpdates").type() == QVariant::String);
-        mTimezoneUpdates = properties.value("TimezoneUpdates").toString();
-        Q_EMIT timezoneUpdatesChanged();
-
-        Q_ASSERT(properties.contains("TimeUpdates"));
-        Q_ASSERT(properties.value("TimeUpdates").type() == QVariant::String);
-        mTimeUpdates = properties.value("TimeUpdates").toString();
-        Q_EMIT timeUpdatesChanged();
-
-        Q_ASSERT(properties.contains("Timeservers"));
-        Q_ASSERT(properties.value("Timeservers").type() == QVariant::StringList);
-        mTimeservers = properties.value("Timeservers").toStringList();
-        Q_EMIT timeserversChanged();
+        if (properties.contains(QLatin1String("Timezone"))) {
+            mTimezone = properties.value("Timezone").toString();
+            Q_EMIT timezoneChanged();
+        }
+        if (properties.contains(QLatin1String("TimezoneUpdates"))) {
+            mTimezoneUpdates = properties.value("TimezoneUpdates").toString();
+            Q_EMIT timezoneUpdatesChanged();
+        }
+        if (properties.contains(QLatin1String("TimeUpdates"))) {
+            mTimeUpdates = properties.value("TimeUpdates").toString();
+            Q_EMIT timeUpdatesChanged();
+        }
+        if (properties.contains(QLatin1String("Timeservers"))) {
+            mTimeservers = properties.value("Timeservers").toStringList();
+            Q_EMIT timeserversChanged();
+        }
     }
     call->deleteLater();
 }
@@ -100,19 +97,15 @@ void ClockModel::setPropertyFinished(QDBusPendingCallWatcher *call)
 void ClockModel::propertyChanged(const QString &name, const QDBusVariant &value)
 {
     if (name == "Timezone") {
-        Q_ASSERT(value.variant().type() == QVariant::String);
         mTimezone = value.variant().toString();
         Q_EMIT timezoneChanged();
     } else if (name == "TimezoneUpdates") {
-        Q_ASSERT(value.variant().type() == QVariant::String);
         mTimezoneUpdates = value.variant().toString();
         Q_EMIT timezoneUpdatesChanged();
     } else if (name == "TimeUpdates") {
-        Q_ASSERT(value.variant().type() == QVariant::String);
         mTimeUpdates = value.variant().toString();
         Q_EMIT timeUpdatesChanged();
     } else if (name == "Timeservers") {
-        Q_ASSERT(value.variant().type() == QVariant::StringList);
         mTimeservers = value.variant().toStringList();
         Q_EMIT timeserversChanged();
     }

@@ -64,7 +64,6 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     qRegisterMetaType<NetworkService *>();
 
     Q_ASSERT(!path.isEmpty());
-    updateProperties(properties);
     setPath(path);
 }
 
@@ -273,11 +272,16 @@ void NetworkService::remove()
             this, SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
 }
 
-void NetworkService::setAutoConnect(const bool autoconnect)
+void NetworkService::setAutoConnect(bool autoConnected)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoconnect)));
+    if (m_service) {
+         QDBusPendingReply<void> reply = m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoConnected)));
+         reply.waitForFinished();
+         if (reply.isError())
+             qDebug() << reply.error().message();
+         else
+             emitPropertyChange(AutoConnect, autoConnected);
+    }
 }
 
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)
@@ -353,6 +357,8 @@ void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
 
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
+    m_propertiesCache[name] = value;
+
     if (name == Name) {
         Q_EMIT nameChanged(value.toString());
     } else if (name == Error) {
@@ -405,8 +411,6 @@ void NetworkService::updateProperty(const QString &name, const QDBusVariant &val
     QVariant tmp = value.variant();
 
     Q_ASSERT(m_service);
-
-    m_propertiesCache[name] = tmp;
     emitPropertyChange(name,tmp);
 }
 
@@ -414,7 +418,7 @@ void NetworkService::updateProperties(const QVariantMap &properties)
 {
     QVariantMap::const_iterator it = properties.constBegin(), end = properties.constEnd();
     for ( ; it != end; ++it) {
-        m_propertiesCache.insert(it.key(), it.value());
+        emitPropertyChange(it.key(), it.value());
     }
 }
 
@@ -443,10 +447,7 @@ void NetworkService::setPath(const QString &path)
                 qDebug() << Q_FUNC_INFO << reply.error().message();
             } else {
                 m_propertiesCache = reply.value();
-
-                Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
-                    emitPropertyChange(name,m_propertiesCache[name]);
-                }
+                updateProperties(reply.value());
             }
         }
 

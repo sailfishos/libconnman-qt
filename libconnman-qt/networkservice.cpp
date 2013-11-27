@@ -432,6 +432,10 @@ void NetworkService::setPath(const QString &path)
             m_service = 0;
             m_propertiesCache.clear();
         }
+
+        if (m_path.isEmpty())
+            return;
+
         m_service = new NetConnmanServiceInterface("net.connman", m_path,
             QDBusConnection::systemBus(), this);
 

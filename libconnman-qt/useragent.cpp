@@ -152,6 +152,9 @@ QString UserAgent::path() const
 
 void UserAgent::setAgentPath(QString &path)
 {
+    if (path.isEmpty())
+        return;
+
     new AgentAdaptor(this); // this object will be freed when UserAgent is freed
     agentPath = path;
     QDBusConnection::systemBus().registerObject(agentPath, this);

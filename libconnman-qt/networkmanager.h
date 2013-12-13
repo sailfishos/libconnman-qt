@@ -42,6 +42,9 @@ class NetworkManager : public QObject
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
 
+    Q_PROPERTY(bool servicesEnabled READ servicesEnabled WRITE setServicesEnabled NOTIFY servicesEnabledChanged)
+    Q_PROPERTY(bool technologiesEnabled READ technologiesEnabled WRITE setTechnologiesEnabled NOTIFY technologiesEnabledChanged)
+
 public:
     NetworkManager(QObject* parent=0);
     virtual ~NetworkManager();
@@ -65,6 +68,12 @@ public:
     NetworkService* defaultRoute() const;
 
     bool sessionMode() const;
+
+    bool servicesEnabled() const;
+    void setServicesEnabled(bool enabled);
+
+    bool technologiesEnabled() const;
+    void setTechnologiesEnabled(bool enabled);
 
     Q_INVOKABLE void resetCountersForType(const QString &type);
 
@@ -92,6 +101,9 @@ Q_SIGNALS:
     void servicesListChanged(const QStringList &list);
     void serviceAdded(const QString &servicePath);
     void serviceRemoved(const QString &servicePath);
+
+    void servicesEnabledChanged();
+    void technologiesEnabledChanged();
 
 private:
     NetConnmanManagerInterface *m_manager;
@@ -121,13 +133,18 @@ private:
 
     bool m_available;
 
+    bool m_servicesEnabled;
+    bool m_technologiesEnabled;
+
     void updateDefaultRoute();
 
 private Q_SLOTS:
     void connectToConnman(QString = "");
     void disconnectFromConnman(QString = "");
     void connmanUnregistered(QString = "");
+    void disconnectTechnologies();
     void setupTechnologies();
+    void disconnectServices();
     void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);

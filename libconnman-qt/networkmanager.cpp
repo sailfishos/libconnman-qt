@@ -42,7 +42,9 @@ NetworkManager::NetworkManager(QObject* parent)
     m_defaultRoute(NULL),
     m_invalidDefaultRoute(NULL),
     watcher(NULL),
-    m_available(false)
+    m_available(false),
+    m_servicesEnabled(true),
+    m_technologiesEnabled(true)
 {
     registerCommonDataTypes();
 
@@ -95,8 +97,11 @@ void NetworkManager::connectToConnman(QString)
                     this,
                     SLOT(propertyChanged(const QString&, const QDBusVariant&)));
         }
-        setupTechnologies();
-        setupServices();
+
+        if (m_technologiesEnabled)
+            setupTechnologies();
+        if (m_servicesEnabled)
+            setupServices();
 
         if(!m_available)
             Q_EMIT availabilityChanged(m_available = true);
@@ -105,28 +110,60 @@ void NetworkManager::connectToConnman(QString)
 
 void NetworkManager::disconnectFromConnman(QString)
 {
-    if (m_manager) {
-        delete m_manager;
-        m_manager = NULL;
-    }
+    delete m_manager;
+    m_manager = NULL;
 
-    Q_FOREACH (QString skey, m_servicesCache.keys()) {
-        m_servicesCache.value(skey)->deleteLater();
-        m_servicesCache.remove(skey);
-    }
-    m_servicesOrder.clear();
-    Q_EMIT servicesChanged();
-
-    m_savedServicesOrder.clear();
-    Q_EMIT savedServicesChanged();
-
-    Q_FOREACH (QString tkey, m_technologiesCache.keys()) {
-        m_technologiesCache.value(tkey)->deleteLater();
-        m_technologiesCache.remove(tkey);
-    }
-    Q_EMIT technologiesChanged();
+    disconnectTechnologies();
+    disconnectServices();
 }
 
+void NetworkManager::disconnectTechnologies()
+{
+    if (m_manager) {
+        disconnect(m_manager, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
+                   this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
+        disconnect(m_manager, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
+                   this, SLOT(technologyRemoved(QDBusObjectPath)));
+    }
+
+    Q_FOREACH (NetworkTechnology *tech, m_technologiesCache)
+        tech->deleteLater();
+
+    if (!m_technologiesCache.isEmpty()) {
+        m_technologiesCache.clear();
+        Q_EMIT technologiesChanged();
+    }
+}
+
+void NetworkManager::disconnectServices()
+{
+    if (m_manager) {
+        disconnect(m_manager, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
+                   this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+        disconnect(m_manager, SIGNAL(SavedServicesChanged(ConnmanObjectList)),
+                   this, SLOT(updateSavedServices(ConnmanObjectList)));
+    }
+
+    Q_FOREACH (NetworkService *service, m_servicesCache)
+        service->deleteLater();
+
+    m_servicesCache.clear();
+
+    if (m_defaultRoute != m_invalidDefaultRoute) {
+        m_defaultRoute = m_invalidDefaultRoute;
+        Q_EMIT defaultRouteChanged(m_defaultRoute);
+    }
+
+    if (!m_servicesOrder.isEmpty()) {
+        m_servicesOrder.clear();
+        Q_EMIT servicesChanged();
+    }
+
+    if (!m_savedServicesOrder.isEmpty()) {
+        m_savedServicesOrder.clear();
+        Q_EMIT savedServicesChanged();
+    }
+}
 
 void NetworkManager::connmanUnregistered(QString)
 {
@@ -571,6 +608,46 @@ void NetworkManager::setSessionMode(const bool &sessionMode)
 bool NetworkManager::sessionMode() const
 {
     return m_propertiesCache[SessionMode].toBool();
+}
+
+bool NetworkManager::servicesEnabled() const
+{
+    return m_servicesEnabled;
+}
+
+void NetworkManager::setServicesEnabled(bool enabled)
+{
+    if (m_servicesEnabled == enabled)
+        return;
+
+    m_servicesEnabled = enabled;
+
+    if (m_servicesEnabled)
+        setupServices();
+    else
+        disconnectServices();
+
+    Q_EMIT servicesEnabledChanged();
+}
+
+bool NetworkManager::technologiesEnabled() const
+{
+    return m_technologiesEnabled;
+}
+
+void NetworkManager::setTechnologiesEnabled(bool enabled)
+{
+    if (m_technologiesEnabled == enabled)
+        return;
+
+    m_technologiesEnabled = enabled;
+
+    if (m_technologiesEnabled)
+        setupTechnologies();
+    else
+        disconnectTechnologies();
+
+    Q_EMIT technologiesEnabledChanged();
 }
 
 void NetworkManager::resetCountersForType(const QString &type)

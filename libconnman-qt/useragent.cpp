@@ -175,6 +175,7 @@ AgentAdaptor::AgentAdaptor(UserAgent* parent)
   : QDBusAbstractAdaptor(parent),
     m_userAgent(parent)
 {
+    browserRequestTimer.invalidate();
 }
 
 AgentAdaptor::~AgentAdaptor()
@@ -192,7 +193,13 @@ void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QStrin
 
 void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
 {
-    m_userAgent->requestBrowser(service_path.path(), url);
+    if (!browserRequestTimer.isValid()) {
+        browserRequestTimer.start();
+        m_userAgent->requestBrowser(service_path.path(), url);
+    }
+    if (browserRequestTimer.hasExpired(5 * 60 * 1000)) {
+        browserRequestTimer.invalidate();
+    }
 }
 
 void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,

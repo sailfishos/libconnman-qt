@@ -448,7 +448,10 @@ void NetworkService::setPath(const QString &path)
             QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
             reply.waitForFinished();
             if (reply.isError()) {
-                qDebug() << Q_FUNC_INFO << reply.error().message();
+                // apparently a qtdbus interface with a path that doesn't exist
+                // is valid, so we need to clear this path
+                m_path.clear();
+                return;
             } else {
                 m_propertiesCache = reply.value();
                 updateProperties(reply.value());

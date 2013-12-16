@@ -81,7 +81,6 @@ private:
     friend class AgentAdaptor;
     QTimer *requestTimer;
     QDBusMessage requestMessage;
-    QString lastBrowserRequestService;
 };
 
 class AgentAdaptor : public QDBusAbstractAdaptor
@@ -107,6 +106,7 @@ public Q_SLOTS:
 private:
     UserAgent* m_userAgent;
     QElapsedTimer browserRequestTimer;
+    QString lastBrowserRequestService;
 };
 
 #endif // USERAGENT_H

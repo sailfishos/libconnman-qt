@@ -193,7 +193,11 @@ void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QStrin
 
 void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
 {
+    if (lastBrowserRequestService != service_path)
+        browserRequestTimer.invalidate();
+
     if (!browserRequestTimer.isValid()) {
+        lastBrowserRequestService = service_path;
         browserRequestTimer.start();
         m_userAgent->requestBrowser(service_path.path(), url);
     }

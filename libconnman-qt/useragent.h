@@ -81,6 +81,7 @@ private:
     friend class AgentAdaptor;
     QTimer *requestTimer;
     QDBusMessage requestMessage;
+    QString lastBrowserRequestService;
 };
 
 class AgentAdaptor : public QDBusAbstractAdaptor

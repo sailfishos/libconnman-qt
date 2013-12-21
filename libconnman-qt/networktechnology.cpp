@@ -50,6 +50,8 @@ void NetworkTechnology::init(const QString &path)
         m_technology = 0;
         m_propertiesCache.clear();
     }
+    if (m_path.isEmpty())
+        return;
     m_technology = new NetConnmanTechnologyInterface("net.connman", path,
         QDBusConnection::systemBus(), this);
     if (!m_technology->isValid()) {

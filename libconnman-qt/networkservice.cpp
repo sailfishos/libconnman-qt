@@ -432,6 +432,10 @@ void NetworkService::setPath(const QString &path)
             m_service = 0;
             m_propertiesCache.clear();
         }
+
+        if (m_path.isEmpty())
+            return;
+
         m_service = new NetConnmanServiceInterface("net.connman", m_path,
             QDBusConnection::systemBus(), this);
 
@@ -443,9 +447,7 @@ void NetworkService::setPath(const QString &path)
         if (m_propertiesCache.isEmpty() && path.count() > 2) {
             QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
             reply.waitForFinished();
-            if (reply.isError()) {
-                qDebug() << Q_FUNC_INFO << reply.error().message();
-            } else {
+            if (!reply.isError()) {
                 m_propertiesCache = reply.value();
                 updateProperties(reply.value());
             }

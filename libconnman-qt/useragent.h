@@ -14,6 +14,7 @@
 #include <QDBusObjectPath>
 #include <QDBusAbstractAdaptor>
 #include <QTimer>
+#include <QElapsedTimer>
 
 class NetworkManager;
 
@@ -104,6 +105,8 @@ public Q_SLOTS:
 
 private:
     UserAgent* m_userAgent;
+    QElapsedTimer browserRequestTimer;
+    QString lastBrowserRequestService;
 };
 
 #endif // USERAGENT_H

@@ -152,6 +152,9 @@ QString UserAgent::path() const
 
 void UserAgent::setAgentPath(QString &path)
 {
+    if (path.isEmpty())
+        return;
+
     new AgentAdaptor(this); // this object will be freed when UserAgent is freed
     agentPath = path;
     QDBusConnection::systemBus().registerObject(agentPath, this);
@@ -172,6 +175,7 @@ AgentAdaptor::AgentAdaptor(UserAgent* parent)
   : QDBusAbstractAdaptor(parent),
     m_userAgent(parent)
 {
+    browserRequestTimer.invalidate();
 }
 
 AgentAdaptor::~AgentAdaptor()
@@ -189,7 +193,17 @@ void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QStrin
 
 void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
 {
-    m_userAgent->requestBrowser(service_path.path(), url);
+    if (lastBrowserRequestService != service_path.path())
+        browserRequestTimer.invalidate();
+
+    if (!browserRequestTimer.isValid()) {
+        lastBrowserRequestService = service_path.path();
+        browserRequestTimer.start();
+        m_userAgent->requestBrowser(service_path.path(), url);
+    }
+    if (browserRequestTimer.hasExpired(5 * 60 * 1000)) {
+        browserRequestTimer.invalidate();
+    }
 }
 
 void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,

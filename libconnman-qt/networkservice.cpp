@@ -225,7 +225,6 @@ bool NetworkService::roaming() const
 void NetworkService::requestConnect()
 {
     if (!m_service) {
-        qWarning() << Q_FUNC_INFO << "called with not service";
         return;
     }
 
@@ -440,7 +439,6 @@ void NetworkService::setPath(const QString &path)
             QDBusConnection::systemBus(), this);
 
         if (!m_service->isValid()) {
-            qWarning() << "Invalid service: " << m_path;
             return;
         }
 

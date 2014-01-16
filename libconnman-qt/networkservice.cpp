@@ -245,7 +245,7 @@ void NetworkService::requestConnect()
     QDBusPendingReply<> conn_reply = m_service->Connect();
     m_service->setTimeout(old_timeout);
 
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(conn_reply, m_service);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(conn_reply, this);
     connect(watcher,
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             this,
@@ -266,7 +266,7 @@ void NetworkService::remove()
         return;
 
     QDBusPendingReply<> reply = m_service->Remove();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, m_service);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
             this, SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
 }

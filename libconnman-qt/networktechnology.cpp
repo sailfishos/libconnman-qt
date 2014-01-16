@@ -139,7 +139,7 @@ void NetworkTechnology::scan()
     Q_ASSERT(m_technology);
 
     QDBusPendingReply<> reply = m_technology->Scan();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, m_technology);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
             this, SLOT(scanReply(QDBusPendingCallWatcher*)));
 }

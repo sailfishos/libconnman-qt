@@ -43,43 +43,46 @@ NetworkTechnology::~NetworkTechnology()
 
 void NetworkTechnology::init(const QString &path)
 {
-    m_path = path;
+    if (path != m_path) {
+        m_path = path;
 
-    if (m_technology) {
-        delete m_technology;
-        m_technology = 0;
-        m_propertiesCache.clear();
-    }
-    if (m_path.isEmpty())
-        return;
-    m_technology = new NetConnmanTechnologyInterface("net.connman", path,
-        QDBusConnection::systemBus(), this);
-    if (!m_technology->isValid()) {
-        qWarning() << "Invalid technology: " << path;
-        qFatal("Cannot init with invalid technology");
-    }
+        if (m_technology) {
+            delete m_technology;
+            m_technology = 0;
+            m_propertiesCache.clear();
+        }
+        Q_EMIT pathChanged(m_path);
+        if (m_path.isEmpty())
+            return;
+        m_technology = new NetConnmanTechnologyInterface("net.connman", path,
+                                                         QDBusConnection::systemBus(), this);
+        if (!m_technology->isValid()) {
+            qWarning() << "Invalid technology: " << path;
+            qFatal("Cannot init with invalid technology");
+        }
 
-    if (m_propertiesCache.isEmpty()) {
-        QDBusPendingReply<QVariantMap> reply;
-        reply = m_technology->GetProperties();
-        reply.waitForFinished();
-        if (reply.isError()) {
-            qDebug() << reply.error().message();
-        } else {
-            m_propertiesCache = reply.value();
-            Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
-                emitPropertyChange(name,m_propertiesCache[name]);
+        if (m_propertiesCache.isEmpty()) {
+            QDBusPendingReply<QVariantMap> reply;
+            reply = m_technology->GetProperties();
+            reply.waitForFinished();
+            if (reply.isError()) {
+                qDebug() << reply.error().message();
+            } else {
+                m_propertiesCache = reply.value();
+                Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
+                    emitPropertyChange(name,m_propertiesCache[name]);
+                }
             }
         }
+
+        Q_EMIT poweredChanged(powered());
+        Q_EMIT connectedChanged(connected());
+
+        connect(m_technology,
+                SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
+                this,
+                SLOT(propertyChanged(const QString&, const QDBusVariant&)));
     }
-
-    Q_EMIT poweredChanged(powered());
-    Q_EMIT connectedChanged(connected());
-
-    connect(m_technology,
-            SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
-            this,
-            SLOT(propertyChanged(const QString&, const QDBusVariant&)));
 
 }
 

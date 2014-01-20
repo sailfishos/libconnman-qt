@@ -23,7 +23,7 @@ class NetworkTechnology : public QObject
     Q_PROPERTY(QString type READ type)
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
-    Q_PROPERTY(QString path READ path WRITE setPath)
+    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(quint32 idleTimeout READ idleTimeout WRITE setIdleTimeout NOTIFY idleTimeoutChanged)
 
     Q_PROPERTY(bool tethering READ tethering WRITE setTethering NOTIFY tetheringChanged)
@@ -70,6 +70,7 @@ Q_SIGNALS:
     void tetheringChanged(bool tetheringEnabled);
     void tetheringIdChanged(const QString &tetheringId);
     void tetheringPassphraseChanged(const QString &passphrase);
+    void pathChanged(const QString &path);
 
 private:
     NetConnmanTechnologyInterface *m_technology;

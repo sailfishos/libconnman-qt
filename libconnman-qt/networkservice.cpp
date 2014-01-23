@@ -59,7 +59,8 @@ const QString NetworkService::Roaming("Roaming");
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
     m_service(NULL),
-    m_path(QString())
+    m_path(QString()),
+    isConnected(false)
 {
     qRegisterMetaType<NetworkService *>();
 
@@ -70,7 +71,8 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 NetworkService::NetworkService(QObject* parent)
     : QObject(parent),
       m_service(NULL),
-      m_path(QString())
+      m_path(QString()),
+      isConnected(false)
 {
     qRegisterMetaType<NetworkService *>();
 }

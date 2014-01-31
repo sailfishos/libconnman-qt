@@ -267,9 +267,11 @@ void NetworkManager::setupServices()
         QHash<QString, NetworkService *>::iterator it = m_servicesCache.find(svcPath);
         if (it != m_servicesCache.end()) {
             service = *it;
+            service->updateProperties(obj.properties);
         } else {
             service = new NetworkService(svcPath,
                                          obj.properties, this);
+            service->updateProperties(obj.properties);
             m_servicesCache.insert(svcPath, service);
         }
 

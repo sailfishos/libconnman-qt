@@ -358,6 +358,9 @@ void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
 
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
+    if (m_propertiesCache.value(name) == value)
+        return;
+
     m_propertiesCache[name] = value;
 
     if (name == Name) {

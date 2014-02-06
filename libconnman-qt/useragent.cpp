@@ -164,8 +164,10 @@ void UserAgent::setAgentPath(QString &path)
     }
 }
 
-void UserAgent::requestBrowser(const QString &servicePath, const QString &url)
+void UserAgent::requestBrowser(const QString &servicePath, const QString &url,
+                               const QDBusMessage &message)
 {
+    qDebug() << message.arguments();
     Q_EMIT browserRequested(servicePath, url);
 }
 
@@ -191,19 +193,11 @@ void AgentAdaptor::ReportError(const QDBusObjectPath &service_path, const QStrin
     m_userAgent->reportError(service_path.path(), error);
 }
 
-void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url)
+void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QString &url,
+                                  const QDBusMessage &message)
 {
-    if (lastBrowserRequestService != service_path.path())
-        browserRequestTimer.invalidate();
-
-    if (!browserRequestTimer.isValid()) {
-        lastBrowserRequestService = service_path.path();
-        browserRequestTimer.start();
-        m_userAgent->requestBrowser(service_path.path(), url);
-    }
-    if (browserRequestTimer.hasExpired(5 * 60 * 1000)) {
-        browserRequestTimer.invalidate();
-    }
+    message.setDelayedReply(true);
+    m_userAgent->requestBrowser(service_path.path(), url, message);
 }
 
 void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,

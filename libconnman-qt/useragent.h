@@ -70,7 +70,8 @@ private:
     void cancelUserInput();
     void reportError(const QString &servicePath, const QString &error);
     void requestConnect(const QDBusMessage &msg);
-    void requestBrowser(const QString &servicePath, const QString &url);
+    void requestBrowser(const QString &servicePath, const QString &url,
+                        const QDBusMessage &message);
 
     ServiceRequestData* m_req_data;
     NetworkManager* m_manager;
@@ -95,7 +96,8 @@ public:
 public Q_SLOTS:
     void Release();
     void ReportError(const QDBusObjectPath &service_path, const QString &error);
-    void RequestBrowser(const QDBusObjectPath &service_path, const QString &url);
+    Q_NOREPLY void RequestBrowser(const QDBusObjectPath &service_path, const QString &url,
+                        const QDBusMessage &message);
     void RequestConnect(const QDBusMessage &message);
 
     Q_NOREPLY void RequestInput(const QDBusObjectPath &service_path,
@@ -106,7 +108,6 @@ public Q_SLOTS:
 private:
     UserAgent* m_userAgent;
     QElapsedTimer browserRequestTimer;
-    QString lastBrowserRequestService;
 };
 
 #endif // USERAGENT_H

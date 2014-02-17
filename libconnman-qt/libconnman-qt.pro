@@ -9,18 +9,13 @@ isEmpty(PREFIX) {
   PREFIX=/usr
 }
 
-equals(QT_MAJOR_VERSION, 4): {
-    TARGET = $$qtLibraryTarget(connman-qt4)
-    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
-    pkgconfig.files = connman-qt4.pc
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-equals(QT_MAJOR_VERSION, 5): {
-    TARGET = $$qtLibraryTarget(connman-qt5)
-    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt5
-    pkgconfig.files = connman-qt5.pc
-}
-
+TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
+headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
+pkgconfig.files = connman-$$TARGET_SUFFIX.pc
 
 DBUS_INTERFACES = \
     connman_clock.xml \

@@ -3,18 +3,18 @@ QT += core dbus
 
 TARGET = counters
 CONFIG += console
+CONFIG += link_pkgconfig
 CONFIG -= app_bundle
 
 TEMPLATE = app
 
-equals(QT_MAJOR_VERSION, 5): {
-    LIBS += -lconnman-qt5
-    INCLUDEPATH += /usr/include/connman-qt5
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
+PKGCONFIG += connman-$$TARGET_SUFFIX
+
 equals(QT_MAJOR_VERSION, 4): {
     QT -= gui
-    LIBS += -lconnman-qt4
-    INCLUDEPATH += /usr/include/connman-qt
 }
 SOURCES += main.cpp \
     networkcounter.cpp

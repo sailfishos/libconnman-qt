@@ -40,7 +40,7 @@ NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
     m_manager(NULL),
     m_defaultRoute(NULL),
-    m_invalidDefaultRoute(NULL),
+    m_invalidDefaultRoute(new NetworkService("/", QVariantMap(), this)),
     watcher(NULL),
     m_available(false),
     m_servicesEnabled(true),
@@ -438,8 +438,6 @@ void NetworkManager::updateDefaultRoute()
             }
         }
     }
-    if (!m_invalidDefaultRoute)
-        m_invalidDefaultRoute = new NetworkService("/", QVariantMap(), this);
 
     m_defaultRoute = m_invalidDefaultRoute;
     Q_EMIT defaultRouteChanged(m_defaultRoute);

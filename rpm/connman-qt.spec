@@ -117,7 +117,6 @@ export INSTALL_ROOT=%{buildroot}
 %defattr(-,root,root,-)
 %{_usr}/include/connman-qt4
 %{_usr}/lib/pkgconfig/connman-qt4.pc
-%{_usr}/lib/connman-qt4.pc
 %{_usr}/lib/libconnman-qt4.prl
 %{_usr}/lib/libconnman-qt4.so
 # >> files devel

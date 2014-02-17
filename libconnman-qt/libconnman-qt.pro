@@ -15,7 +15,6 @@ isEmpty(TARGET_SUFFIX) {
 
 TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
-pkgconfig.files = connman-$$TARGET_SUFFIX.pc
 
 DBUS_INTERFACES = \
     connman_clock.xml \
@@ -53,11 +52,10 @@ target.path = $$INSTALL_ROOT$$PREFIX/lib
 headers.files = $$HEADERS
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library
+QMAKE_PKGCONFIG_DESTDIR = pkgconfig
 QMAKE_PKGCONFIG_INCDIR = $$headers.path
 
-pkgconfig.path = $$INSTALL_ROOT$$PREFIX/lib/pkgconfig
-
-INSTALLS += target headers pkgconfig
+INSTALLS += target headers
 
 OTHER_FILES = connman_service.xml \
     connman_technology.xml \

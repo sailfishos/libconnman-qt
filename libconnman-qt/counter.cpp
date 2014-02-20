@@ -104,7 +104,6 @@ quint32 Counter::bytesReceived() const
     } else {
         return bytesInHome;
     }
-    return 0;
 }
 
 quint32 Counter::bytesTransmitted() const
@@ -114,7 +113,6 @@ quint32 Counter::bytesTransmitted() const
     } else {
         return bytesOutHome;
     }
-    return 0;
 }
 
 quint32 Counter::secondsOnline() const
@@ -124,7 +122,6 @@ quint32 Counter::secondsOnline() const
     } else {
         return secondsOnlineHome;
     }
-    return 0;
 }
 
 /*

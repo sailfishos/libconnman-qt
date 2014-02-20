@@ -50,20 +50,13 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
     Q_EMIT counterChanged(servicePath, counters, roaming);
 
     if (roaming != roamingEnabled) {
-        Q_EMIT roamingChanged(roaming);
         roamingEnabled = roaming;
+        Q_EMIT roamingChanged(roaming);
     }
 
     quint32 rxbytes = counters["RX.Bytes"].toUInt();
     quint32 txbytes = counters["TX.Bytes"].toUInt();
     quint32 time = counters["Time"].toUInt();
-
-    if (rxbytes != 0)
-        Q_EMIT bytesReceivedChanged(rxbytes);
-    if ( txbytes!= 0)
-        Q_EMIT bytesTransmittedChanged(txbytes);
-    if (time!= 0)
-        Q_EMIT secondsOnlineChanged(time);
 
     if (roaming) {
         if (rxbytes != 0) {
@@ -86,6 +79,13 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
             secondsOnlineHome = time;
         }
     }
+
+    if (rxbytes != 0)
+        Q_EMIT bytesReceivedChanged(rxbytes);
+    if (txbytes != 0)
+        Q_EMIT bytesTransmittedChanged(txbytes);
+    if (time != 0)
+        Q_EMIT secondsOnlineChanged(time);
 }
 
 void Counter::release()

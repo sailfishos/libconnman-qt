@@ -54,8 +54,8 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
         Q_EMIT roamingChanged(roaming);
     }
 
-    quint32 rxbytes = counters["RX.Bytes"].toUInt();
-    quint32 txbytes = counters["TX.Bytes"].toUInt();
+    quint64 rxbytes = counters["RX.Bytes"].toULongLong();
+    quint64 txbytes = counters["TX.Bytes"].toULongLong();
     quint32 time = counters["Time"].toUInt();
 
     if (roaming) {
@@ -97,7 +97,7 @@ bool Counter::roaming() const
     return roamingEnabled;
 }
 
-quint32 Counter::bytesReceived() const
+quint64 Counter::bytesReceived() const
 {
     if (roamingEnabled) {
         return bytesInRoaming;
@@ -106,7 +106,7 @@ quint32 Counter::bytesReceived() const
     }
 }
 
-quint32 Counter::bytesTransmitted() const
+quint64 Counter::bytesTransmitted() const
 {
     if (roamingEnabled) {
         return bytesOutRoaming;

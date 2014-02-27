@@ -84,19 +84,13 @@ void NetworkManager::connectToConnman(QString)
         if(m_available)
             Q_EMIT availabilityChanged(m_available = false);
     } else {
+        connect(m_manager, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+                this, SLOT(propertyChanged(QString,QDBusVariant)));
 
         QDBusPendingReply<QVariantMap> props_reply = m_manager->GetProperties();
-        props_reply.waitForFinished();
-        if (!props_reply.isError()) {
-            m_propertiesCache = props_reply.value();
-
-            Q_EMIT stateChanged(m_propertiesCache[State].toString());
-
-            connect(m_manager,
-                    SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
-                    this,
-                    SLOT(propertyChanged(const QString&, const QDBusVariant&)));
-        }
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(props_reply, this);
+        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 
         if (m_technologiesEnabled)
             setupTechnologies();
@@ -175,115 +169,33 @@ void NetworkManager::connmanUnregistered(QString)
 
 void NetworkManager::setupTechnologies()
 {
+    connect(m_manager, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
+            this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
+    connect(m_manager, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
+            this, SLOT(technologyRemoved(QDBusObjectPath)));
+
     QDBusPendingReply<ConnmanObjectList> reply = m_manager->GetTechnologies();
-    reply.waitForFinished();
-    if (!reply.isError()) {
-        ConnmanObjectList lst = reply.value();
-        ConnmanObject obj;
-        Q_FOREACH (obj, lst) { // TODO: consider optimizations
-
-            NetworkTechnology *tech = new NetworkTechnology(obj.objpath.path(),
-                                                            obj.properties, this);
-
-            m_technologiesCache.insert(tech->type(), tech);
-        }
-
-        connect(m_manager,
-                SIGNAL(TechnologyAdded(const QDBusObjectPath &, const QVariantMap &)),
-                this,
-                SLOT(technologyAdded(const QDBusObjectPath &, const QVariantMap &)));
-
-        connect(m_manager,
-                SIGNAL(TechnologyRemoved(const QDBusObjectPath &)),
-                this,
-                SLOT(technologyRemoved(const QDBusObjectPath &)));
-
-        Q_EMIT technologiesChanged();
-    }
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
 }
 
 void NetworkManager::setupServices()
 {
+    connect(m_manager, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
+            this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+    connect(m_manager, SIGNAL(SavedServicesChanged(ConnmanObjectList)),
+            this, SLOT(updateSavedServices(ConnmanObjectList)));
+
     QDBusPendingReply<ConnmanObjectList> reply = m_manager->GetServices();
-    reply.waitForFinished();
-    if (reply.isError()) {
-        return;
-    }
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
 
-    ConnmanObjectList lst = reply.value();
-    ConnmanObject obj;
-    int order = -1;
-    NetworkService *service = NULL;
-
-    // make sure we don't leak memory
-    m_servicesOrder.clear();
-
-    Q_FOREACH (obj, lst) { // TODO: consider optimizations
-        order++;
-
-        const QString svcPath(obj.objpath.path());
-
-        service = new NetworkService(svcPath,
-                                     obj.properties, this);
-
-        m_servicesCache.insert(svcPath, service);
-        m_servicesOrder.push_back(service);
-
-        // by connman's documentation, first service is always
-        // the default route's one
-        if (order == 0)
-            updateDefaultRoute();
-    }
-
-    // if no service was replied
-    if (order == -1)
-        updateDefaultRoute();
-
-    Q_EMIT servicesChanged();
-
-    connect(m_manager,
-            SIGNAL(ServicesChanged(ConnmanObjectList, QList<QDBusObjectPath>)),
-            this,
-            SLOT(updateServices(ConnmanObjectList, QList<QDBusObjectPath>)));
-
-    // Find the saved services
     reply = m_manager->GetSavedServices();
-    reply.waitForFinished();
-    if (reply.isError()) {
-        return;
-    }
-
-    lst = reply.value();
-    order = -1;
-    service = NULL;
-
-    m_savedServicesOrder.clear();
-
-    Q_FOREACH (obj, lst) {
-        order++;
-
-        const QString svcPath(obj.objpath.path());
-
-        QHash<QString, NetworkService *>::iterator it = m_servicesCache.find(svcPath);
-        if (it != m_servicesCache.end()) {
-            service = *it;
-            service->updateProperties(obj.properties);
-        } else {
-            service = new NetworkService(svcPath,
-                                         obj.properties, this);
-            service->updateProperties(obj.properties);
-            m_servicesCache.insert(svcPath, service);
-        }
-
-        m_savedServicesOrder.push_back(service);
-    }
-
-    Q_EMIT savedServicesChanged();
-
-    connect(m_manager,
-            SIGNAL(SavedServicesChanged(ConnmanObjectList)),
-            this,
-            SLOT(updateSavedServices(ConnmanObjectList)));
+    watcher = new QDBusPendingCallWatcher(reply, this);
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(getSavedServicesFinished(QDBusPendingCallWatcher*)));
 }
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
@@ -391,28 +303,15 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
     Q_EMIT savedServicesChanged();
 }
 
-void NetworkManager::propertyChanged(const QString &name,
-                                     const QDBusVariant &value)
+void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-    QVariant tmp = value.variant();
-
-    m_propertiesCache[name] = tmp;
-    if (name == State) {
-        QString stateString = tmp.toString();
-        Q_EMIT stateChanged(stateString);
-        updateDefaultRoute();
-    } else if (name == OfflineMode) {
-        Q_EMIT offlineModeChanged(tmp.toBool());
-    } else if (name == SessionMode) {
-       Q_EMIT sessionModeChanged(tmp.toBool());
-   }
+    propertyChanged(name, value.variant());
 }
 
 void NetworkManager::updateDefaultRoute()
 {
     QString defaultNetDev;
     QFile routeFile("/proc/net/route");
-    bool ok = false;
     if (routeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&routeFile);
         QString line = in.readLine();
@@ -427,7 +326,7 @@ void NetworkManager::updateDefaultRoute()
         routeFile.close();
     }
 
-    Q_FOREACH(NetworkService *service, getServices("")) {
+    Q_FOREACH (NetworkService *service, m_servicesCache) {
         if (service->state() == "online" || service->state() == "ready") {
             if (defaultNetDev == service->ethernet().value("Interface")) {
                 if (m_defaultRoute != service) {
@@ -467,6 +366,95 @@ void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
     }
 
     Q_EMIT technologiesChanged();
+}
+
+void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<QVariantMap> reply = *watcher;
+    if (!reply.isError()) {
+        QVariantMap props = reply.value();
+
+        for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
+            propertyChanged(i.key(), i.value());
+    }
+
+    watcher->deleteLater();
+}
+
+void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+    if (!reply.isError()) {
+        Q_FOREACH (const ConnmanObject &object, reply.value()) {
+            NetworkTechnology *tech = new NetworkTechnology(object.objpath.path(),
+                                                            object.properties, this);
+            m_technologiesCache.insert(tech->type(), tech);
+        }
+
+        Q_EMIT technologiesChanged();
+    }
+
+    watcher->deleteLater();
+}
+
+void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+    if (!reply.isError()) {
+        m_servicesOrder.clear();
+
+        Q_FOREACH (const ConnmanObject &object, reply.value()) {
+            const QString servicePath = object.objpath.path();
+
+            NetworkService *service;
+
+            QHash<QString, NetworkService *>::ConstIterator it = m_servicesCache.find(servicePath);
+            if (it != m_servicesCache.constEnd()) {
+                service = *it;
+                service->updateProperties(object.properties);
+            } else {
+                service = new NetworkService(servicePath, object.properties, this);
+                m_servicesCache.insert(servicePath, service);
+            }
+
+            m_servicesOrder.append(service);
+        }
+
+        Q_EMIT servicesChanged();
+
+        updateDefaultRoute();
+    }
+
+    watcher->deleteLater();
+}
+
+void NetworkManager::getSavedServicesFinished(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+    if (!reply.isError()) {
+        m_savedServicesOrder.clear();
+
+        Q_FOREACH (const ConnmanObject &object, reply.value()) {
+            const QString servicePath = object.objpath.path();
+
+            NetworkService *service;
+
+            QHash<QString, NetworkService *>::ConstIterator it = m_servicesCache.find(servicePath);
+            if (it != m_servicesCache.constEnd()) {
+                service = *it;
+                service->updateProperties(object.properties);
+            } else {
+                service = new NetworkService(servicePath, object.properties, this);
+                m_servicesCache.insert(servicePath, service);
+            }
+
+            m_savedServicesOrder.append(service);
+        }
+
+        Q_EMIT savedServicesChanged();
+    }
+
+    watcher->deleteLater();
 }
 
 
@@ -603,6 +591,23 @@ void NetworkManager::setSessionMode(const bool &sessionMode)
 {
     if(m_manager)
         m_manager->SetProperty(SessionMode, QDBusVariant(sessionMode));
+}
+
+void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
+{
+    if (m_propertiesCache.value(name) == value)
+        return;
+
+    m_propertiesCache[name] = value;
+
+    if (name == State) {
+        Q_EMIT stateChanged(value.toString());
+        updateDefaultRoute();
+    } else if (name == OfflineMode) {
+        Q_EMIT offlineModeChanged(value.toBool());
+    } else if (name == SessionMode) {
+        Q_EMIT sessionModeChanged(value.toBool());
+    }
 }
 
 bool NetworkManager::sessionMode() const

@@ -32,6 +32,7 @@ class TechnologyModel : public QAbstractListModel
     Q_PROPERTY(bool powered READ isPowered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(bool changesInhibited READ changesInhibited WRITE setChangesInhibited NOTIFY changesInhibitedChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum ItemRoles {
@@ -43,6 +44,8 @@ public:
 
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+
+    int count() const;
 
     const QString name() const;
     bool isAvailable() const;
@@ -70,6 +73,7 @@ Q_SIGNALS:
     void scanningChanged(const bool &scanning);
     void changesInhibitedChanged(const bool &changesInhibited);
     void technologiesChanged();
+    void countChanged();
 
     void scanRequestFinished();
 

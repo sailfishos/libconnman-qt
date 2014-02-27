@@ -96,7 +96,6 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_usr}/include/connman-qt5
 %{_usr}/lib/pkgconfig/connman-qt5.pc
-%{_usr}/lib/connman-qt5.pc
 %{_usr}/lib/libconnman-qt5.prl
 %{_usr}/lib/libconnman-qt5.so
 # >> files devel

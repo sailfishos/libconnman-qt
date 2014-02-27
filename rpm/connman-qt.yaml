@@ -52,8 +52,7 @@ SubPackages:
     This package contains the files necessary to develop
     applications using libconnman-qt
    Files:
-    - "%{_usr}/include/connman-qt"
+    - "%{_usr}/include/connman-qt4"
     - "%{_usr}/lib/pkgconfig/connman-qt4.pc"
-    - "%{_usr}/lib/connman-qt4.pc"
     - "%{_usr}/lib/libconnman-qt4.prl"
     - "%{_usr}/lib/libconnman-qt4.so"

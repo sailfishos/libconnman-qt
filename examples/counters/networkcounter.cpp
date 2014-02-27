@@ -17,8 +17,8 @@
 ****************************************************************************/
 
 #include "networkcounter.h"
-#include <connman-qt5/counter.h>
-#include <connman-qt5/networkservice.h>
+#include <counter.h>
+#include <networkservice.h>
 #include <QtCore>
 
 NetworkCounter::NetworkCounter(QObject *parent) :

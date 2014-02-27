@@ -9,18 +9,12 @@ isEmpty(PREFIX) {
   PREFIX=/usr
 }
 
-equals(QT_MAJOR_VERSION, 4): {
-    TARGET = $$qtLibraryTarget(connman-qt4)
-    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt
-    pkgconfig.files = connman-qt4.pc
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-equals(QT_MAJOR_VERSION, 5): {
-    TARGET = $$qtLibraryTarget(connman-qt5)
-    headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-qt5
-    pkgconfig.files = connman-qt5.pc
-}
-
+TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
+headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
 DBUS_INTERFACES = \
     connman_clock.xml \
@@ -58,11 +52,10 @@ target.path = $$INSTALL_ROOT$$PREFIX/lib
 headers.files = $$HEADERS
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library
+QMAKE_PKGCONFIG_DESTDIR = pkgconfig
 QMAKE_PKGCONFIG_INCDIR = $$headers.path
 
-pkgconfig.path = $$INSTALL_ROOT$$PREFIX/lib/pkgconfig
-
-INSTALLS += target headers pkgconfig
+INSTALLS += target headers
 
 OTHER_FILES = connman_service.xml \
     connman_technology.xml \

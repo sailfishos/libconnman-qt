@@ -20,7 +20,7 @@
 #define NETWORKCOUNTER_H
 
 #include <QObject>
-#include <connman-qt5/counter.h>
+#include <counter.h>
 
 class NetworkCounter : public QObject
 {

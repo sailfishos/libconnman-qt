@@ -88,6 +88,11 @@ int TechnologyModel::rowCount(const QModelIndex &parent) const
     return m_services.count();
 }
 
+int TechnologyModel::count() const
+{
+    return rowCount();
+}
+
 const QString TechnologyModel::name() const
 {
     return m_techname;
@@ -309,6 +314,9 @@ void TechnologyModel::updateServiceList()
         m_services.remove(num_new, num_old - num_new);
         endRemoveRows();
     }
+
+    if (num_new != num_old)
+        Q_EMIT countChanged();
 }
 
 void TechnologyModel::changedPower(bool b)

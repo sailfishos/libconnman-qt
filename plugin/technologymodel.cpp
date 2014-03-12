@@ -288,6 +288,8 @@ void TechnologyModel::updateServiceList()
     if (m_techname.isEmpty())
         return;
 
+    int num_old = m_services.count();
+
     const QVector<NetworkService *> new_services = m_manager->getServices(m_techname);
     int num_new = new_services.count();
 
@@ -308,7 +310,6 @@ void TechnologyModel::updateServiceList()
         }
     }
 
-    int num_old = m_services.count();
     if (num_old > num_new) {
         beginRemoveRows(QModelIndex(), num_new, num_old - 1);
         m_services.remove(num_new, num_old - num_new);

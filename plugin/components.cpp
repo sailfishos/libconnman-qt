@@ -20,6 +20,8 @@
 
 void Components::registerTypes(const char *uri)
 {
+    // @uri MeeGo.Connman
+
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
     qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");

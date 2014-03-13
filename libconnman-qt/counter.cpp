@@ -50,20 +50,13 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
     Q_EMIT counterChanged(servicePath, counters, roaming);
 
     if (roaming != roamingEnabled) {
-        Q_EMIT roamingChanged(roaming);
         roamingEnabled = roaming;
+        Q_EMIT roamingChanged(roaming);
     }
 
-    quint32 rxbytes = counters["RX.Bytes"].toUInt();
-    quint32 txbytes = counters["TX.Bytes"].toUInt();
+    quint64 rxbytes = counters["RX.Bytes"].toULongLong();
+    quint64 txbytes = counters["TX.Bytes"].toULongLong();
     quint32 time = counters["Time"].toUInt();
-
-    if (rxbytes != 0)
-        Q_EMIT bytesReceivedChanged(rxbytes);
-    if ( txbytes!= 0)
-        Q_EMIT bytesTransmittedChanged(txbytes);
-    if (time!= 0)
-        Q_EMIT secondsOnlineChanged(time);
 
     if (roaming) {
         if (rxbytes != 0) {
@@ -86,6 +79,13 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
             secondsOnlineHome = time;
         }
     }
+
+    if (rxbytes != 0)
+        Q_EMIT bytesReceivedChanged(rxbytes);
+    if (txbytes != 0)
+        Q_EMIT bytesTransmittedChanged(txbytes);
+    if (time != 0)
+        Q_EMIT secondsOnlineChanged(time);
 }
 
 void Counter::release()
@@ -97,24 +97,22 @@ bool Counter::roaming() const
     return roamingEnabled;
 }
 
-quint32 Counter::bytesReceived() const
+quint64 Counter::bytesReceived() const
 {
     if (roamingEnabled) {
         return bytesInRoaming;
     } else {
         return bytesInHome;
     }
-    return 0;
 }
 
-quint32 Counter::bytesTransmitted() const
+quint64 Counter::bytesTransmitted() const
 {
     if (roamingEnabled) {
         return bytesOutRoaming;
     } else {
         return bytesOutHome;
     }
-    return 0;
 }
 
 quint32 Counter::secondsOnline() const
@@ -124,7 +122,6 @@ quint32 Counter::secondsOnline() const
     } else {
         return secondsOnlineHome;
     }
-    return 0;
 }
 
 /*

@@ -25,8 +25,9 @@ class NetworkManager;
 class Counter : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(quint32 bytesReceived READ bytesReceived NOTIFY bytesReceivedChanged)
-    Q_PROPERTY(quint32 bytesTransmitted READ bytesTransmitted NOTIFY bytesTransmittedChanged)
+
+    Q_PROPERTY(quint64 bytesReceived READ bytesReceived NOTIFY bytesReceivedChanged)
+    Q_PROPERTY(quint64 bytesTransmitted READ bytesTransmitted NOTIFY bytesTransmittedChanged)
     Q_PROPERTY(quint32 secondsOnline READ secondsOnline NOTIFY secondsOnlineChanged)
     Q_PROPERTY(bool roaming READ roaming NOTIFY roamingChanged)
     Q_PROPERTY(quint32 accuracy READ accuracy WRITE setAccuracy NOTIFY accuracyChanged)
@@ -40,8 +41,8 @@ public:
 
     virtual ~Counter();
 
-    quint32 bytesReceived() const;
-    quint32 bytesTransmitted() const;
+    quint64 bytesReceived() const;
+    quint64 bytesTransmitted() const;
     quint32 secondsOnline() const;
 
     bool roaming() const;
@@ -57,8 +58,8 @@ public:
 
 Q_SIGNALS:
     void counterChanged(const QString &servicePath, const QVariantMap &counters, bool roaming);
-    void bytesReceivedChanged(quint32 bytesRx);
-    void bytesTransmittedChanged(quint32 bytesTx);
+    void bytesReceivedChanged(quint64 bytesRx);
+    void bytesTransmittedChanged(quint64 bytesTx);
     void secondsOnlineChanged(quint32 seconds);
     void roamingChanged(bool roaming);
     void accuracyChanged(quint32 accuracy);
@@ -73,12 +74,12 @@ private:
        void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
        void release();
 
-       quint32 bytesInHome;
-       quint32 bytesOutHome;
+       quint64 bytesInHome;
+       quint64 bytesOutHome;
        quint32 secondsOnlineHome;
 
-       quint32 bytesInRoaming;
-       quint32 bytesOutRoaming;
+       quint64 bytesInRoaming;
+       quint64 bytesOutRoaming;
        quint32 secondsOnlineRoaming;
 
        bool roamingEnabled;

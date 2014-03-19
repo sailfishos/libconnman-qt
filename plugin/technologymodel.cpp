@@ -29,6 +29,8 @@
 #define DISCONNECT_TECHNOLOGY_SIGNALS(tech) \
     disconnect(tech, SIGNAL(poweredChanged(bool)), \
                this, SLOT(changedPower(bool))); \
+    disconnect(tech, SIGNAL(connectedChanged(bool)), \
+               this, SLOT(changedConnected(bool))); \
     disconnect(tech, SIGNAL(scanFinished()), \
                this, SLOT(finishedScan()))
 

@@ -95,6 +95,7 @@ private Q_SLOTS:
     void changedConnected(bool);
     void finishedScan();
     void refresh();
+    void networkServiceDestroyed(QObject *);
 };
 
 #endif // TECHNOLOGYMODEL_H

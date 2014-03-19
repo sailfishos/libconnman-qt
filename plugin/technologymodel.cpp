@@ -290,8 +290,20 @@ void TechnologyModel::updateServiceList()
 
     int num_old = m_services.count();
 
+    foreach(const NetworkService *s, m_services) {
+        disconnect(s, SIGNAL(destroyed(QObject*)),
+                   this, SLOT(networkServiceDestroyed(QObject*)));
+    }
+
     const QVector<NetworkService *> new_services = m_manager->getServices(m_techname);
     int num_new = new_services.count();
+
+    // Since m_changesInhibited can also inhibit updates
+    // about removed/deleted services, connect destroyed.
+    foreach(const NetworkService *s, new_services) {
+        connect(s, SIGNAL(destroyed(QObject*)),
+                this, SLOT(networkServiceDestroyed(QObject*)));
+    }
 
     for (int i = 0; i < num_new; i++) {
         int j = m_services.indexOf(new_services.value(i));
@@ -355,3 +367,15 @@ void TechnologyModel::finishedScan()
     }
 }
 
+void TechnologyModel::networkServiceDestroyed(QObject *service)
+{
+    // Should this trigger an assert so that m_services is only changed
+    // via updateServiceList ?
+    int ind = m_services.indexOf(static_cast<NetworkService*>(service));
+    if (ind>=0) {
+        qWarning() << "out-of-band removal of network service" << service;
+        beginRemoveRows(QModelIndex(), ind, ind);
+        m_services.remove(ind);
+        endRemoveRows();
+    }
+}

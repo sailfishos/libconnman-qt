@@ -321,10 +321,13 @@ void TechnologyModel::updateServiceList()
             endMoveRows();
         }
     }
+    // After loop:
+    // m_services contains [new_services, old_services \ new_services]
 
-    if (num_old > num_new) {
-        beginRemoveRows(QModelIndex(), num_new, num_old - 1);
-        m_services.remove(num_new, num_old - num_new);
+    int num_union = m_services.count();
+    if (num_union > num_new) {
+        beginRemoveRows(QModelIndex(), num_new, num_union - 1);
+        m_services.remove(num_new, num_union - num_new);
         endRemoveRows();
     }
 

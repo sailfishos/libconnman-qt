@@ -33,11 +33,11 @@ Q_SIGNALS:
 public Q_SLOTS:
     void counterChanged(const QString servicePath, const QVariantMap &counters,  bool roaming);
 
-    void bytesReceivedChanged(quint32 bytesRx);
+    void bytesReceivedChanged(quint64 bytesRx);
 
-    void bytesTransmittedChanged(quint32 bytesTx);
+    void bytesTransmittedChanged(quint64 bytesTx);
 
-    void secondsOnlineChanged(quint32 seconds);
+    void secondsOnlineChanged(quint64 seconds);
 
     void roamingChanged(bool roaming);
 private:

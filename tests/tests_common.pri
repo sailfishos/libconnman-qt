@@ -1,10 +1,7 @@
-
-equals(QT_MAJOR_VERSION, 4):  {
-    INSTALL_TESTDIR = /opt/tests/connman-qt
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-equals(QT_MAJOR_VERSION, 5):  {
-    INSTALL_TESTDIR = /opt/tests/connman-qt5
-}
+INSTALL_TESTDIR = /opt/tests/connman-$$TARGET_SUFFIX
 
 INSTALL_TESTDATADIR = $${INSTALL_TESTDIR}/data

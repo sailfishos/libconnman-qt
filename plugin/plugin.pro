@@ -8,14 +8,18 @@ INCLUDEPATH += ../libconnman-qt
 LIBS += -L../libconnman-qt
 QT -= gui
 
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
+}
+
+LIBS += -l$$qtLibraryTarget(connman-$$TARGET_SUFFIX)
+
 equals(QT_MAJOR_VERSION, 4): {
     QT += declarative
-    LIBS += -lconnman-qt4
 }
 
 equals(QT_MAJOR_VERSION, 5): {
     QT += qml
-    LIBS += -lconnman-qt5
     OTHER_FILES += plugin.json qmldirs
 }
 

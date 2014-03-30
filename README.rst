@@ -24,12 +24,11 @@ path property to that of an appropriate dbus path, will re-initialize the object
 
 QMake CONFIG flags
 -----------
-* notest: doesn't compile test program
 * notests: doesn't compile tests
 * noplugin: doesn't compile qml plugin
 
 Example:
-``qmake CONFIG+=notest``
+``qmake CONFIG+=notests``
 
 The requestConnect signal in UserAgent requires a patch to connman.
 http://gitweb.merproject.org/gitweb?p=mer-core/connman.git;a=blob_plain;f=0003-connman-request-connect-notify.patch;hb=HEAD

@@ -6,13 +6,11 @@ pro_file_basename = $$replace(pro_file_basename, '.pro', '')
 TEMPLATE = app
 QT += dbus testlib
 
-equals(QT_MAJOR_VERSION, 4): {
-    LIBS += -l$$qtLibraryTarget(connman-qt4) -L$${OUT_PWD}/../libconnman-qt
+isEmpty(TARGET_SUFFIX) {
+    TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-equals(QT_MAJOR_VERSION, 5):  {
-    LIBS += -l$$qtLibraryTarget(connman-qt5) -L$${OUT_PWD}/../libconnman-qt5
-}
+LIBS += -l$$qtLibraryTarget(connman-$$TARGET_SUFFIX) -L$${OUT_PWD}/../libconnman-qt
 
 TARGET = $${pro_file_basename}.bin
 

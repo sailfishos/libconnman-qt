@@ -25,7 +25,6 @@ NetworkCounter::NetworkCounter(QObject *parent) :
     QObject(parent)
 {
     counter = new Counter(this);
-    counter->setCounterPath(QLatin1String("/counterexample"));
 
     connect(counter,SIGNAL(counterChanged(QString,QVariantMap,bool)),this,SLOT(counterChanged(QString,QVariantMap,bool)));
     connect(counter,SIGNAL(bytesReceivedChanged(quint32)),this,SLOT(bytesReceivedChanged(quint32)));

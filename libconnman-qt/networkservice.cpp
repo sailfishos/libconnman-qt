@@ -356,6 +356,63 @@ void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
     }
 }
 
+void NetworkService::resetProperties()
+{
+    QMutableMapIterator<QString, QVariant> i(m_propertiesCache);
+    while (i.hasNext()) {
+        i.next();
+
+        const QString key = i.key();
+        i.remove();
+
+        if (key == Name) {
+            Q_EMIT nameChanged(name());
+        } else if (key == Error) {
+            Q_EMIT errorChanged(error());
+        } else if (key == State) {
+            Q_EMIT stateChanged(state());
+            if (isConnected != connected()) {
+                isConnected = connected();
+                Q_EMIT connectedChanged(isConnected);
+            }
+        } else if (key == Security) {
+            Q_EMIT securityChanged(security());
+        } else if (key == Strength) {
+            Q_EMIT strengthChanged(strength());
+        } else if (key == Favorite) {
+            Q_EMIT favoriteChanged(favorite());
+        } else if (key == AutoConnect) {
+            Q_EMIT autoConnectChanged(autoConnect());
+        } else if (key == IPv4) {
+            Q_EMIT ipv4Changed(ipv4());
+        } else if (key == IPv4Config) {
+            Q_EMIT ipv4ConfigChanged(ipv4Config());
+        } else if (key == IPv6) {
+            Q_EMIT ipv6Changed(ipv6());
+        } else if (key == IPv6Config) {
+            Q_EMIT ipv6ConfigChanged(ipv6Config());
+        } else if (key == Nameservers) {
+            Q_EMIT nameserversChanged(nameservers());
+        } else if (key == NameserversConfig) {
+            Q_EMIT nameserversConfigChanged(nameserversConfig());
+        } else if (key == Domains) {
+            Q_EMIT domainsChanged(domains());
+        } else if (key == DomainsConfig) {
+            Q_EMIT domainsConfigChanged(domainsConfig());
+        } else if (key == Proxy) {
+            Q_EMIT proxyChanged(proxy());
+        } else if (key == ProxyConfig) {
+            Q_EMIT proxyConfigChanged(proxyConfig());
+        } else if (key == Ethernet) {
+            Q_EMIT ethernetChanged(ethernet());
+        } else if (key == QLatin1String("Type")) {
+            Q_EMIT typeChanged(type());
+        } else if (key == Roaming) {
+            Q_EMIT roamingChanged(roaming());
+        }
+    }
+}
+
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
     if (m_propertiesCache.value(name) == value)
@@ -410,6 +467,15 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
     }
 }
 
+void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
+{
+    QDBusPendingReply<QVariantMap> reply = *call;
+    call->deleteLater();
+
+    if (!reply.isError())
+        updateProperties(reply.value());
+}
+
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
 {
     QVariant tmp = value.variant();
@@ -428,37 +494,36 @@ void NetworkService::updateProperties(const QVariantMap &properties)
 
 void NetworkService::setPath(const QString &path)
 {
-    if (path != m_path) {
-        m_path = path;
+    if (path == m_path)
+        return;
 
-        if (m_service) {
-            delete m_service;
-            m_service = 0;
-            m_propertiesCache.clear();
-        }
-
-        if (m_path.isEmpty())
-            return;
-
-        m_service = new NetConnmanServiceInterface("net.connman", m_path,
-            QDBusConnection::systemBus(), this);
-
-        if (!m_service->isValid()) {
-            return;
-        }
-
-        if (m_propertiesCache.isEmpty() && path.count() > 2) {
-            QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
-            reply.waitForFinished();
-            if (!reply.isError()) {
-                m_propertiesCache = reply.value();
-                updateProperties(reply.value());
-            }
-        }
-
-        connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                this, SLOT(updateProperty(QString,QDBusVariant)));
+    if (m_service) {
+        delete m_service;
+        m_service = 0;
     }
+
+    m_path = path;
+    emit pathChanged(m_path);
+
+    resetProperties();
+
+    if (m_path.isEmpty())
+        return;
+
+    m_service = new NetConnmanServiceInterface("net.connman", m_path,
+                                               QDBusConnection::systemBus(), this);
+
+    if (!m_service->isValid())
+        return;
+
+    QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
+
+    connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+            this, SLOT(updateProperty(QString,QDBusVariant)));
 }
 
 bool NetworkService::connected()

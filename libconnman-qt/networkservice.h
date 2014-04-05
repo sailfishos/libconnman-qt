@@ -150,11 +150,14 @@ private:
 private Q_SLOTS:
     void updateProperty(const QString &name, const QDBusVariant &value);
     void emitPropertyChange(const QString &name, const QVariant &value);
+    void getPropertiesFinished(QDBusPendingCallWatcher *call);
 
     void handleConnectReply(QDBusPendingCallWatcher *call);
     void handleRemoveReply(QDBusPendingCallWatcher *watcher);
 
 private:
+    void resetProperties();
+
     Q_DISABLE_COPY(NetworkService);
 };
 

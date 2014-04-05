@@ -27,9 +27,9 @@ NetworkCounter::NetworkCounter(QObject *parent) :
     counter = new Counter(this);
 
     connect(counter,SIGNAL(counterChanged(QString,QVariantMap,bool)),this,SLOT(counterChanged(QString,QVariantMap,bool)));
-    connect(counter,SIGNAL(bytesReceivedChanged(quint32)),this,SLOT(bytesReceivedChanged(quint32)));
-    connect(counter,SIGNAL(bytesTransmittedChanged(quint32)),this,SLOT(bytesTransmittedChanged(quint32)));
-    connect(counter,SIGNAL(secondsOnlineChanged(quint32)),this,SLOT(secondsOnlineChanged(quint32)));
+    connect(counter,SIGNAL(bytesReceivedChanged(quint64)),this,SLOT(bytesReceivedChanged(quint64)));
+    connect(counter,SIGNAL(bytesTransmittedChanged(quint64)),this,SLOT(bytesTransmittedChanged(quint64)));
+    connect(counter,SIGNAL(secondsOnlineChanged(quint64)),this,SLOT(secondsOnlineChanged(quint64)));
     connect(counter,SIGNAL(roamingChanged(bool)),SLOT(roamingChanged(bool)));
 
     counter->setRunning(true);
@@ -49,19 +49,19 @@ void NetworkCounter::counterChanged(const QString servicePath, const QVariantMap
         << endl;
 }
 
-void NetworkCounter::bytesReceivedChanged(quint32 bytesRx)
+void NetworkCounter::bytesReceivedChanged(quint64 bytesRx)
 {
     QTextStream out(stdout);
     out  << Q_FUNC_INFO << " " << bytesRx << endl;
 }
 
-void NetworkCounter::bytesTransmittedChanged(quint32 bytesTx)
+void NetworkCounter::bytesTransmittedChanged(quint64 bytesTx)
 {
     QTextStream out(stdout);
     out  << Q_FUNC_INFO << " " << bytesTx << endl;
 }
 
-void NetworkCounter::secondsOnlineChanged(quint32 seconds)
+void NetworkCounter::secondsOnlineChanged(quint64 seconds)
 {
     QTextStream out(stdout);
     out << Q_FUNC_INFO << " " << seconds << endl;

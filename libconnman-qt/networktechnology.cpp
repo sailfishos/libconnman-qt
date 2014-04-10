@@ -61,22 +61,11 @@ void NetworkTechnology::init(const QString &path)
             qFatal("Cannot init with invalid technology");
         }
 
-        if (m_propertiesCache.isEmpty()) {
-            QDBusPendingReply<QVariantMap> reply;
-            reply = m_technology->GetProperties();
-            reply.waitForFinished();
-            if (reply.isError()) {
-                qDebug() << reply.error().message();
-            } else {
-                m_propertiesCache = reply.value();
-                Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
-                    emitPropertyChange(name,m_propertiesCache[name]);
-                }
-            }
-        }
+        QDBusPendingReply<QVariantMap> reply = m_technology->GetProperties();
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
 
-        Q_EMIT poweredChanged(powered());
-        Q_EMIT connectedChanged(connected());
+        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 
         connect(m_technology,
                 SIGNAL(PropertyChanged(const QString&, const QDBusVariant&)),
@@ -84,6 +73,21 @@ void NetworkTechnology::init(const QString &path)
                 SLOT(propertyChanged(const QString&, const QDBusVariant&)));
     }
 
+}
+
+void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
+{
+    QDBusPendingReply<QVariantMap> reply = *call;
+    call->deleteLater();
+
+    if (!reply.isError()) {
+
+        m_propertiesCache = reply.value();
+        Q_FOREACH(const QString &name,m_propertiesCache.keys()) {
+            emitPropertyChange(name,m_propertiesCache[name]);
+        }
+        Q_EMIT propertiesReady();
+    }
 }
 
 // Public API

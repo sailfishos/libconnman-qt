@@ -71,6 +71,7 @@ Q_SIGNALS:
     void tetheringIdChanged(const QString &tetheringId);
     void tetheringPassphraseChanged(const QString &passphrase);
     void pathChanged(const QString &path);
+    void propertiesReady();
 
 private:
     NetConnmanTechnologyInterface *m_technology;
@@ -94,6 +95,7 @@ private Q_SLOTS:
     void emitPropertyChange(const QString &name, const QVariant &value);
 
     void scanReply(QDBusPendingCallWatcher *call);
+    void getPropertiesFinished(QDBusPendingCallWatcher *call);
 
 private:
     Q_DISABLE_COPY(NetworkTechnology)

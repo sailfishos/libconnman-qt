@@ -105,6 +105,8 @@ Q_SIGNALS:
     void serviceDisconnectionStarted();
     void connectedChanged(bool connected);
 
+    void propertiesReady();
+
 
 public Q_SLOTS:
     void requestConnect();

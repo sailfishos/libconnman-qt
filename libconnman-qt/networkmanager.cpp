@@ -217,6 +217,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         if (!m_servicesCache.contains(svcPath)) {
             service = new NetworkService(svcPath,
                                          connmanobj.properties, this);
+            connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
             m_servicesCache.insert(svcPath, service);
             addedService = true;
         } else {
@@ -337,7 +338,6 @@ void NetworkManager::updateDefaultRoute()
             }
         }
     }
-
     m_defaultRoute = m_invalidDefaultRoute;
     Q_EMIT defaultRouteChanged(m_defaultRoute);
 }
@@ -414,15 +414,13 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
                 service->updateProperties(object.properties);
             } else {
                 service = new NetworkService(servicePath, object.properties, this);
+                connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
+                connect(service,SIGNAL(propertiesReady()),this,SIGNAL(servicesChanged()));
                 m_servicesCache.insert(servicePath, service);
             }
 
             m_servicesOrder.append(service);
         }
-
-        Q_EMIT servicesChanged();
-
-        updateDefaultRoute();
     }
 
     watcher->deleteLater();
@@ -445,6 +443,7 @@ void NetworkManager::getSavedServicesFinished(QDBusPendingCallWatcher *watcher)
                 service->updateProperties(object.properties);
             } else {
                 service = new NetworkService(servicePath, object.properties, this);
+                connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
                 m_servicesCache.insert(servicePath, service);
             }
 

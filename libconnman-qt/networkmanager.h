@@ -138,7 +138,6 @@ private:
     bool m_servicesEnabled;
     bool m_technologiesEnabled;
 
-    void updateDefaultRoute();
 
 private Q_SLOTS:
     void connectToConnman(QString = "");
@@ -154,6 +153,7 @@ private Q_SLOTS:
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
     void getPropertiesFinished(QDBusPendingCallWatcher *watcher);
+    void updateDefaultRoute();
     void getTechnologiesFinished(QDBusPendingCallWatcher *watcher);
     void getServicesFinished(QDBusPendingCallWatcher *watcher);
     void getSavedServicesFinished(QDBusPendingCallWatcher *watcher);

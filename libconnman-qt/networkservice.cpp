@@ -475,6 +475,7 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
 
     if (!reply.isError())
         updateProperties(reply.value());
+    Q_EMIT propertiesReady();
 }
 
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
@@ -491,6 +492,7 @@ void NetworkService::updateProperties(const QVariantMap &properties)
     for ( ; it != end; ++it) {
         emitPropertyChange(it.key(), it.value());
     }
+    Q_EMIT propertiesReady();
 }
 
 void NetworkService::setPath(const QString &path)

@@ -415,15 +415,12 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
             } else {
                 service = new NetworkService(servicePath, object.properties, this);
                 connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
+                connect(service,SIGNAL(propertiesReady()),this,SIGNAL(servicesChanged()));
                 m_servicesCache.insert(servicePath, service);
             }
 
             m_servicesOrder.append(service);
         }
-
-        Q_EMIT servicesChanged();
-
-        updateDefaultRoute();
     }
 
     watcher->deleteLater();

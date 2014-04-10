@@ -106,6 +106,8 @@ Q_SIGNALS:
     void technologiesEnabledChanged();
 
 private:
+    void propertyChanged(const QString &name, const QVariant &value);
+
     NetConnmanManagerInterface *m_manager;
 
     /* Contains all property related to this net.connman.Manager object */
@@ -151,7 +153,10 @@ private Q_SLOTS:
     void updateSavedServices(const ConnmanObjectList &changed);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
-
+    void getPropertiesFinished(QDBusPendingCallWatcher *watcher);
+    void getTechnologiesFinished(QDBusPendingCallWatcher *watcher);
+    void getServicesFinished(QDBusPendingCallWatcher *watcher);
+    void getSavedServicesFinished(QDBusPendingCallWatcher *watcher);
 
 private:
     Q_DISABLE_COPY(NetworkManager);

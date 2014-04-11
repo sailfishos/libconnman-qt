@@ -159,6 +159,7 @@ private Q_SLOTS:
 
 private:
     void resetProperties();
+    void reconnectServiceInterface();
 
     Q_DISABLE_COPY(NetworkService);
 };

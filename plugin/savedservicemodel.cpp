@@ -67,6 +67,9 @@ void SavedServiceModel::setName(const QString &name)
         return;
     }
 
+    m_techname = name;
+    Q_EMIT nameChanged(m_techname);
+
     QStringList netTypes = m_manager->technologiesList();
     if (!netTypes.contains(name)) {
         qDebug() << name <<  "is not a known technology name:" << netTypes;

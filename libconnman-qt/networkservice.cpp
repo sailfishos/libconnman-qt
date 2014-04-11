@@ -59,14 +59,14 @@ const QString NetworkService::Roaming("Roaming");
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
     m_service(NULL),
-    m_path(QString()),
+    m_path(path),
     m_propertiesCache(properties),
     isConnected(false)
 {
     qRegisterMetaType<NetworkService *>();
 
     Q_ASSERT(!path.isEmpty());
-    setPath(path);
+    reconnectServiceInterface();
 }
 
 NetworkService::NetworkService(QObject* parent)
@@ -414,6 +414,23 @@ void NetworkService::resetProperties()
     }
 }
 
+void NetworkService::reconnectServiceInterface()
+{
+    if (m_service) {
+        delete m_service;
+        m_service = 0;
+    }
+
+    if (m_path.isEmpty())
+        return;
+
+    m_service = new NetConnmanServiceInterface("net.connman", m_path,
+                                               QDBusConnection::systemBus(), this);
+
+    connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+            this, SLOT(updateProperty(QString,QDBusVariant)));
+}
+
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
     if (m_propertiesCache.value(name) == value)
@@ -500,21 +517,12 @@ void NetworkService::setPath(const QString &path)
     if (path == m_path)
         return;
 
-    if (m_service) {
-        delete m_service;
-        m_service = 0;
-    }
-
     m_path = path;
     emit pathChanged(m_path);
 
     resetProperties();
 
-    if (m_path.isEmpty())
-        return;
-
-    m_service = new NetConnmanServiceInterface("net.connman", m_path,
-                                               QDBusConnection::systemBus(), this);
+    reconnectServiceInterface();
 
     if (!m_service->isValid())
         return;
@@ -524,9 +532,6 @@ void NetworkService::setPath(const QString &path)
 
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
             this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
-
-    connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-            this, SLOT(updateProperty(QString,QDBusVariant)));
 }
 
 bool NetworkService::connected()

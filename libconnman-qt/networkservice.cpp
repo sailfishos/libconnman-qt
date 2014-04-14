@@ -524,7 +524,7 @@ void NetworkService::setPath(const QString &path)
 
     reconnectServiceInterface();
 
-    if (!m_service->isValid())
+    if (!m_service || !m_service->isValid())
         return;
 
     QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();

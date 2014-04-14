@@ -1,56 +1,41 @@
 Name: connman-qt5
 Summary: Qt bindings for connman
-Version: 1.0.58
+Version: 1.0.59
 Release: 1
 Group: System/GUI/Other
 License: Apache License
 URL: https://github.com/nemomobile/libconnman-qt.git
 Sources:
-    - "%{name}-%{version}.tar.bz2"
+- '%{name}-%{version}.tar.bz2'
 Description: |
-    This is a library for working with connman using Qt
-
+  This is a library for working with connman using Qt
 Requires:
-    - connman >= 1.15+git21
+- connman >= 1.15+git21
 PkgConfigBR:
-    - Qt5Core
-    - Qt5Network
-    - Qt5Qml
-    - Qt5DBus
-    - dbus-1
-
+- Qt5Core
+- Qt5Network
+- Qt5Qml
+- Qt5DBus
+- dbus-1
 Configure: none
 Builder: qmake5
 Files:
-    - "%{_libdir}/libconnman-qt5.so.*"
+- '%{_libdir}/libconnman-qt5.so.*'
 SubPackages:
- #- Name: tests
- #  Summary: Tests for connman-qt5
- #  Group: Development/Libraries
- #  Description: |
- #   This package contains the test applications for testing libconnman-qt
- #  Requires:
- #   - connman-qt5-declarative
- #  Files:
- #   - "/opt"
- - Name: declarative
-   Summary: Declarative plugin for Qt Quick for connman-qt
-   Group: Development/Libraries
-   Description: |
-    This package contains the files necessary to develop
-    applications using libconnman-qt
-   Requires:
-    - connman-qt5
-   Files:
-    - "%{_usr}/lib/qt5/qml/MeeGo/Connman"
- - Name: devel
-   Summary: Development files for connman-qt
-   Group: Development/Libraries
-   Description: |
-    This package contains the files necessary to develop
-    applications using libconnman-qt
-   Files:
-    - "%{_usr}/include/connman-qt5"
-    - "%{_usr}/lib/pkgconfig/connman-qt5.pc"
-    - "%{_usr}/lib/libconnman-qt5.prl"
-    - "%{_usr}/lib/libconnman-qt5.so"
+- Name: connman-qt5
+  Summary: Qt bindings for connman
+  Group: System/GUI/Other
+  Description: |
+    This is a library for working with connman using Qt
+  Requires:
+  - connman >= 1.15+git21
+  Files:
+  - '%{_libdir}/libconnman-qt5.so.*'
+- Name: connman-qt5
+  Summary: Qt bindings for connman
+  Group: System/GUI/Other
+  Description: |
+    This is a library for working with connman using Qt
+  Files:
+  - '%{_libdir}/libconnman-qt5.so.*'
+PkgBR: []

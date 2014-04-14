@@ -1,58 +1,52 @@
 Name: connman-qt
 Summary: Qt bindings for connman
-Version: 1.0.58
+Version: 1.0.59
 Release: 1
 Group: System/GUI/Other
 License: Apache License
 URL: https://github.com/nemomobile/libconnman-qt.git
 Sources:
-    - "%{name}-%{version}.tar.bz2"
+- '%{name}-%{version}.tar.bz2'
 Description: |
-    This is a library for working with connman using Qt
-
+  This is a library for working with connman using Qt
 Requires:
-    - connman >= 1.15+git21
+- connman >= 1.15+git21
 PkgBR:
-    - doxygen
-    - qt-devel-tools
+- qt-devel-tools
+- doxygen
 PkgConfigBR:
-    - QtCore >= 4.6.0
-    - QtNetwork
-    - QtDBus
-    - QtGui
-    - dbus-1
+- dbus-1
+- QtGui
+- QtDBus
+- QtNetwork
+- QtCore >= 4.6.0
 Configure: none
 Builder: qmake
 Files:
-    - "%{_libdir}/libconnman-qt4.so.*"
+- '%{_libdir}/libconnman-qt4.so.*'
 SubPackages:
- - Name: tests
-   Summary: Tests for connman-qt
-   Group: Development/Libraries
-   Description: |
-    This package contains the test applications for testing libconnman-qt
-   Requires:
-    - connman-qt-declarative
-   Files:
-    - "/opt"
- - Name: declarative
-   Summary: Declarative plugin for Qt Quick for connman-qt
-   Group: Development/Libraries
-   Description: |
-    This package contains the files necessary to develop
-    applications using libconnman-qt
-   Requires:
-    - connman-qt
-   Files:
-    - "%{_usr}/lib/qt4/imports/MeeGo/Connman"
- - Name: devel
-   Summary: Development files for connman-qt
-   Group: Development/Libraries
-   Description: |
-    This package contains the files necessary to develop
-    applications using libconnman-qt
-   Files:
-    - "%{_usr}/include/connman-qt4"
-    - "%{_usr}/lib/pkgconfig/connman-qt4.pc"
-    - "%{_usr}/lib/libconnman-qt4.prl"
-    - "%{_usr}/lib/libconnman-qt4.so"
+- Name: connman-qt
+  Summary: Qt bindings for connman
+  Group: System/GUI/Other
+  Description: |
+    This is a library for working with connman using Qt
+  Requires:
+  - connman >= 1.15+git21
+  Files:
+  - '%{_libdir}/libconnman-qt4.so.*'
+- Name: connman-qt
+  Summary: Qt bindings for connman
+  Group: System/GUI/Other
+  Description: |
+    This is a library for working with connman using Qt
+  Requires:
+  - connman >= 1.15+git21
+  Files:
+  - '%{_libdir}/libconnman-qt4.so.*'
+- Name: connman-qt
+  Summary: Qt bindings for connman
+  Group: System/GUI/Other
+  Description: |
+    This is a library for working with connman using Qt
+  Files:
+  - '%{_libdir}/libconnman-qt4.so.*'

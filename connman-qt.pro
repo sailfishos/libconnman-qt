@@ -21,10 +21,8 @@ equals(QT_MAJOR_VERSION, 4):  {
     # fixme for qt5
         SUBDIRS += tests
     }
-    OTHER_FILES += rpm/connman-qt.spec \
-                   rpm/connman-qt.yaml
+    OTHER_FILES += rpm/connman-qt.spec
 }
 equals(QT_MAJOR_VERSION, 5):  {
-    OTHER_FILES += rpm/connman-qt5.spec \
-                   rpm/connman-qt5.yaml
+    OTHER_FILES += rpm/connman-qt5.spec
 }

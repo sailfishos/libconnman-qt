@@ -15,7 +15,6 @@ Group:      System/GUI/Other
 License:    Apache License
 URL:        https://github.com/nemomobile/libconnman-qt.git
 Source0:    %{name}-%{version}.tar.bz2
-Source100:  connman-qt5.yaml
 Requires:   connman >= 1.15+git21
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig

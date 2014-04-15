@@ -164,6 +164,8 @@ void NetworkManager::connmanUnregistered(QString)
 
 void NetworkManager::setupTechnologies()
 {
+    if (m_available)
+        return;
     connect(m_manager, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
             this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
     connect(m_manager, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
@@ -177,6 +179,9 @@ void NetworkManager::setupTechnologies()
 
 void NetworkManager::setupServices()
 {
+    if (m_available)
+        return;
+
     connect(m_manager, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
             this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
     connect(m_manager, SIGNAL(SavedServicesChanged(ConnmanObjectList)),
@@ -621,7 +626,7 @@ bool NetworkManager::servicesEnabled() const
 
 void NetworkManager::setServicesEnabled(bool enabled)
 {
-    if (m_servicesEnabled == enabled)
+    if (!m_available || m_servicesEnabled == enabled)
         return;
 
     m_servicesEnabled = enabled;
@@ -641,7 +646,7 @@ bool NetworkManager::technologiesEnabled() const
 
 void NetworkManager::setTechnologiesEnabled(bool enabled)
 {
-    if (m_technologiesEnabled == enabled)
+    if (!m_available || m_technologiesEnabled == enabled)
         return;
 
     m_technologiesEnabled = enabled;

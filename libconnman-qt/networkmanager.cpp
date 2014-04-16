@@ -164,7 +164,7 @@ void NetworkManager::connmanUnregistered(QString)
 
 void NetworkManager::setupTechnologies()
 {
-    if (m_available)
+    if (!m_available)
         return;
     connect(m_manager, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
             this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
@@ -179,7 +179,7 @@ void NetworkManager::setupTechnologies()
 
 void NetworkManager::setupServices()
 {
-    if (m_available)
+    if (!m_available)
         return;
 
     connect(m_manager, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
@@ -371,14 +371,17 @@ void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
 void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
 {
     QDBusPendingReply<QVariantMap> reply = *watcher;
-    if (!reply.isError()) {
-        QVariantMap props = reply.value();
-
-        for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
-            propertyChanged(i.key(), i.value());
-    }
-
     watcher->deleteLater();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+        return;
+    }
+    QVariantMap props = reply.value();
+
+    for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
+        propertyChanged(i.key(), i.value());
+
     if (m_technologiesEnabled)
         setupTechnologies();
     if (m_servicesEnabled)

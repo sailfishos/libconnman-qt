@@ -430,12 +430,14 @@ void NetworkService::reconnectServiceInterface()
     connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
             this, SLOT(updateProperty(QString,QDBusVariant)));
 
-    QTimer::singleShot(500,this,SIGNAL(propertiesReady());
+    QTimer::singleShot(500,this,SIGNAL(propertiesReady()));
 }
 
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
-    if (m_propertiesCache.value(name) != value)
+    if (m_propertiesCache.value(name) == value)
+        return;
+
         m_propertiesCache[name] = value;
 
     if (name == Name) {

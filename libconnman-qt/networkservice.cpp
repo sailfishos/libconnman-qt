@@ -429,14 +429,14 @@ void NetworkService::reconnectServiceInterface()
 
     connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
             this, SLOT(updateProperty(QString,QDBusVariant)));
+
+    QTimer::singleShot(500,this,SIGNAL(propertiesReady());
 }
 
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
 {
-    if (m_propertiesCache.value(name) == value)
-        return;
-
-    m_propertiesCache[name] = value;
+    if (m_propertiesCache.value(name) != value)
+        m_propertiesCache[name] = value;
 
     if (name == Name) {
         Q_EMIT nameChanged(value.toString());
@@ -444,10 +444,8 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT errorChanged(value.toString());
     } else if (name == State) {
         Q_EMIT stateChanged(value.toString());
-        if (isConnected != connected()) {
-            isConnected = connected();
-            Q_EMIT connectedChanged(isConnected);
-        }
+        isConnected = connected();
+        Q_EMIT connectedChanged(isConnected);
     } else if (name == Security) {
         Q_EMIT securityChanged(value.toStringList());
     } else if (name == Strength) {
@@ -492,6 +490,8 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
 
     if (!reply.isError())
         updateProperties(reply.value());
+    else
+        qDebug() << reply.error().message();
     Q_EMIT propertiesReady();
 }
 

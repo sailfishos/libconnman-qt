@@ -628,7 +628,7 @@ bool NetworkManager::servicesEnabled() const
 
 void NetworkManager::setServicesEnabled(bool enabled)
 {
-    if (!m_available || m_servicesEnabled == enabled)
+    if (m_servicesEnabled == enabled)
         return;
 
     m_servicesEnabled = enabled;
@@ -648,7 +648,7 @@ bool NetworkManager::technologiesEnabled() const
 
 void NetworkManager::setTechnologiesEnabled(bool enabled)
 {
-    if (!m_available || m_technologiesEnabled == enabled)
+    if (m_technologiesEnabled == enabled)
         return;
 
     m_technologiesEnabled = enabled;

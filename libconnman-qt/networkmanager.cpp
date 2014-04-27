@@ -47,7 +47,6 @@ NetworkManager::NetworkManager(QObject* parent)
     m_technologiesEnabled(true)
 {
     registerCommonDataTypes();
-
     watcher = new QDBusServiceWatcher("net.connman",QDBusConnection::systemBus(),
             QDBusServiceWatcher::WatchForRegistration |
             QDBusServiceWatcher::WatchForUnregistration, this);
@@ -423,8 +422,8 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
         } else {
             service = new NetworkService(servicePath, object.properties, this);
             connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
-            connect(service,SIGNAL(propertiesReady()),this,SIGNAL(servicesChanged()));
             m_servicesCache.insert(servicePath, service);
+            Q_EMIT servicesChanged();
         }
 
         m_servicesOrder.append(service);
@@ -629,7 +628,7 @@ bool NetworkManager::servicesEnabled() const
 
 void NetworkManager::setServicesEnabled(bool enabled)
 {
-    if (!m_available || m_servicesEnabled == enabled)
+    if (m_servicesEnabled == enabled)
         return;
 
     m_servicesEnabled = enabled;
@@ -649,7 +648,7 @@ bool NetworkManager::technologiesEnabled() const
 
 void NetworkManager::setTechnologiesEnabled(bool enabled)
 {
-    if (!m_available || m_technologiesEnabled == enabled)
+    if (m_technologiesEnabled == enabled)
         return;
 
     m_technologiesEnabled = enabled;

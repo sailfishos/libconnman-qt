@@ -230,7 +230,10 @@ void NetworkService::requestConnect()
     if (!m_service) {
         return;
     }
-
+    if (connected()) {
+        Q_EMIT connectRequestFailed("Already connected");
+        return;
+    }
     Q_EMIT serviceConnectionStarted();
 
     // If the service is in the failure state clear the Error property so that we get notified of

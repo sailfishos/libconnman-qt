@@ -42,7 +42,7 @@ Counter::Counter(QObject *parent) :
 
 Counter::~Counter()
 {
-    m_manager->unregisterAgent(QString(counterPath));
+    m_manager->unregisterCounter(counterPath);
 }
 
 void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming)

@@ -222,6 +222,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         } else {
             service = m_servicesCache.value(svcPath);
             service->updateProperties(connmanobj.properties);
+            if (connmanobj.properties.count() > 20) { //new services have full set of properties
+                addedService = true;
+            }
         }
 
         m_servicesOrder.push_back(service);

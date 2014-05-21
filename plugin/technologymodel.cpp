@@ -214,7 +214,7 @@ void TechnologyModel::setChangesInhibited(bool b)
 
 void TechnologyModel::requestScan()
 {
-    if (m_tech) {
+    if (m_tech && !m_tech->tethering()) {
         m_tech->scan();
         m_scanning = true;
         Q_EMIT scanningChanged(m_scanning);

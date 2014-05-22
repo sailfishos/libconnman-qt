@@ -55,6 +55,11 @@ const QString NetworkService::Proxy("Proxy");
 const QString NetworkService::ProxyConfig("Proxy.Configuration");
 const QString NetworkService::Ethernet("Ethernet");
 const QString NetworkService::Roaming("Roaming");
+//const QString NetworkService::Immutable("Immutable");
+//const QString NetworkService::Privacy("Privacy");
+const QString NetworkService::Timeservers("Timeservers");
+const QString NetworkService::TimeserversConfig("Timeservers.Configuration");
+//const QString NetworkService::Provider("Provider");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -413,6 +418,10 @@ void NetworkService::resetProperties()
             Q_EMIT typeChanged(type());
         } else if (key == Roaming) {
             Q_EMIT roamingChanged(roaming());
+        } else if (key == Timeservers) {
+            Q_EMIT timeserversChanged(timeservers());
+        } else if (key == TimeserversConfig) {
+            Q_EMIT timeserversConfigChanged(timeserversConfig());
         }
     }
 }
@@ -485,6 +494,10 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT typeChanged(value.toString());
     } else if (name == Roaming) {
         Q_EMIT roamingChanged(value.toBool());
+    } else if (name == Timeservers) {
+        Q_EMIT timeserversChanged(value.toStringList());
+    } else if (name == TimeserversConfig) {
+        Q_EMIT timeserversConfigChanged(value.toStringList());
     }
 }
 
@@ -547,4 +560,24 @@ bool NetworkService::connected()
             return true;
     }
     return false;
+}
+
+QStringList NetworkService::timeservers() const
+{
+    if (m_propertiesCache.contains(Timeservers))
+        return m_propertiesCache.value(Timeservers).toStringList();
+    return QStringList();
+}
+
+QStringList NetworkService::timeserversConfig() const
+{
+    if (m_propertiesCache.contains(TimeserversConfig))
+        return m_propertiesCache.value(TimeserversConfig).toStringList();
+    return QStringList();
+}
+
+void NetworkService::setTimeserversConfig(const QStringList &servers)
+{
+    if (m_service)
+        m_service->SetProperty(TimeserversConfig, QDBusVariant(QVariant(servers)));
 }

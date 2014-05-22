@@ -73,7 +73,7 @@ export PATH=$PATH:/usr/lib/qt4/bin
 qmake install_prefix=/usr
 # << build pre
 
-%qmake
+%qmake -r VERSION=%{version}
 
 make %{?_smp_mflags}
 

@@ -1,9 +1,10 @@
 TEMPLATE     = lib
-VERSION      = 1.0.68
 CONFIG      += qt debug
 CONFIG      += create_pc create_prl
 QT          += core dbus network
 QT -= gui
+
+isEmpty(VERSION):warning(VERSION unset. Run qmake with \'qmake VERSION=x.y.z\')
 
 isEmpty(PREFIX) {
   PREFIX=/usr

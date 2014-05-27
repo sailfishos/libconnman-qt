@@ -9,7 +9,7 @@ Name:       connman-qt5
 # << macros
 
 Summary:    Qt bindings for connman
-Version:    1.0.69
+Version:    1.0.70
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License

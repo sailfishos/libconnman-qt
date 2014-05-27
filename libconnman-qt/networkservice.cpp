@@ -458,8 +458,10 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT errorChanged(value.toString());
     } else if (name == State) {
         Q_EMIT stateChanged(value.toString());
-        isConnected = connected();
-        Q_EMIT connectedChanged(isConnected);
+        if (isConnected != connected()) {
+            isConnected = connected();
+            Q_EMIT connectedChanged(isConnected);
+        }
     } else if (name == Security) {
         Q_EMIT securityChanged(value.toStringList());
     } else if (name == Strength) {

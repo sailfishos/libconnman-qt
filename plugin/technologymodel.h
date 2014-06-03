@@ -86,6 +86,7 @@ private:
     bool m_changesInhibited;
     bool m_uneffectedChanges;
     QHash<int, QByteArray> roleNames() const;
+    void doUpdateTechnologies();
 
 private Q_SLOTS:
     void updateTechnologies();
@@ -94,7 +95,6 @@ private Q_SLOTS:
     void changedPower(bool);
     void changedConnected(bool);
     void finishedScan();
-    void refresh();
     void networkServiceDestroyed(QObject *);
 };
 

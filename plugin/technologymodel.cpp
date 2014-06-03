@@ -11,30 +11,6 @@
 #include <QDebug>
 #include "technologymodel.h"
 
-#define CONNECT_TECHNOLOGY_SIGNALS(tech) \
-    connect(tech, \
-        SIGNAL(poweredChanged(bool)), \
-        this, \
-        SLOT(changedPower(bool))); \
-    connect(tech, \
-        SIGNAL(connectedChanged(bool)), \
-        this, \
-        SLOT(changedConnected(bool))); \
-    connect(tech, \
-            SIGNAL(scanFinished()), \
-            this, \
-            SLOT(finishedScan()));
-
-
-#define DISCONNECT_TECHNOLOGY_SIGNALS(tech) \
-    disconnect(tech, SIGNAL(poweredChanged(bool)), \
-               this, SLOT(changedPower(bool))); \
-    disconnect(tech, SIGNAL(connectedChanged(bool)), \
-               this, SLOT(changedConnected(bool))); \
-    disconnect(tech, SIGNAL(scanFinished()), \
-               this, SLOT(finishedScan()))
-
-
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
     m_manager(NULL),
@@ -102,7 +78,7 @@ const QString TechnologyModel::name() const
 
 bool TechnologyModel::isAvailable() const
 {
-    return m_manager->isAvailable();
+    return m_manager->isAvailable() && m_tech;
 }
 
 bool TechnologyModel::isConnected() const
@@ -144,59 +120,15 @@ void TechnologyModel::setPowered(const bool &powered)
     }
 }
 
-void TechnologyModel::refresh()
-{
-    QStringList netTypes = m_manager->technologiesList();
-
-    bool oldPowered(false);
-    bool oldConnected(false);
-
-    bool badName = false;
-    if (!netTypes.contains(m_techname)) {
-        qDebug() << m_techname <<  "is not a known technology name:" << netTypes;
-        badName = true;
-    }
-
-    if (m_tech) {
-        if (m_scanning) {
-            m_scanning = false;
-            Q_EMIT scanningChanged(m_scanning);
-        }
-
-        oldPowered = m_tech->powered();
-        oldConnected = m_tech->connected();
-        DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
-        m_tech = 0;
-    }
-    if (badName)
-        return;
-
-    m_tech = m_manager->getTechnology(m_techname);
-
-    if (!m_tech) {
-        return;
-    } else {
-        Q_EMIT nameChanged(m_techname);
-        if (oldPowered != m_tech->powered()) {
-            Q_EMIT poweredChanged(!oldPowered);
-        }
-        if (oldConnected != m_tech->connected()) {
-            Q_EMIT connectedChanged(!oldConnected);
-        }
-        CONNECT_TECHNOLOGY_SIGNALS(m_tech);
-        updateServiceList();
-    }
-}
-
 void TechnologyModel::setName(const QString &name)
 {
     if (m_techname == name || name.isEmpty()) {
         return;
     }
     m_techname = name;
-    if (m_manager->isAvailable()) {
-        refresh();
-    }
+    Q_EMIT nameChanged(m_techname);
+
+    updateTechnologies();
 }
 
 void TechnologyModel::setChangesInhibited(bool b)
@@ -223,42 +155,73 @@ void TechnologyModel::requestScan()
 
 void TechnologyModel::updateTechnologies()
 {
-    NetworkTechnology *test = NULL;
-    if (m_tech) {
-        if ((test = m_manager->getTechnology(m_techname)) == NULL) {
-            // if wifi is set and manager doesn't return a wifi, it means
-            // that wifi was removed
-            DISCONNECT_TECHNOLOGY_SIGNALS(m_tech);
-            m_tech = NULL;
-            Q_EMIT technologiesChanged();
+    bool wasAvailable = m_manager->isAvailable() && m_tech;
 
-            if (m_scanning) {
-                m_scanning = false;
-                Q_EMIT scanningChanged(m_scanning);
-            }
-        }
-    } else {
-        if ((test = m_manager->getTechnology(m_techname)) != NULL) {
-            // if wifi is not set and manager returns a wifi, it means
-            // that wifi was added
-            m_tech = test;
-            CONNECT_TECHNOLOGY_SIGNALS(m_tech);
-            Q_EMIT technologiesChanged();
-        }
+    doUpdateTechnologies();
+
+    bool isAvailable = m_manager->isAvailable() && m_tech;
+
+    if (wasAvailable != isAvailable)
+        Q_EMIT availabilityChanged(isAvailable);
+}
+
+void TechnologyModel::doUpdateTechnologies()
+{
+    NetworkTechnology *newTech = m_manager->getTechnology(m_techname);
+    if (m_tech == newTech)
+        return;
+
+    bool oldPowered = false;
+    bool oldConnected = false;
+
+    if (m_tech) {
+        oldPowered = m_tech->powered();
+        oldConnected = m_tech->connected();
+
+        disconnect(m_tech, SIGNAL(poweredChanged(bool)), this, SLOT(changedPower(bool)));
+        disconnect(m_tech, SIGNAL(connectedChanged(bool)), this, SLOT(changedConnected(bool)));
+        disconnect(m_tech, SIGNAL(scanFinished()), this, SLOT(finishedScan()));
     }
+
+    if (m_scanning) {
+        m_scanning = false;
+        Q_EMIT scanningChanged(m_scanning);
+    }
+
+    m_tech = newTech;
+
+    if (m_tech) {
+        connect(m_tech, SIGNAL(poweredChanged(bool)), this, SLOT(changedPower(bool)));
+        connect(m_tech, SIGNAL(connectedChanged(bool)), this, SLOT(changedConnected(bool)));
+        connect(m_tech, SIGNAL(scanFinished()), this, SLOT(finishedScan()));
+
+        bool b = m_tech->powered();
+        if (b != oldPowered)
+            Q_EMIT poweredChanged(b);
+        b = m_tech->connected();
+        if (b != oldConnected)
+            Q_EMIT connectedChanged(b);
+    } else {
+        if (oldPowered)
+            Q_EMIT poweredChanged(false);
+        if (oldConnected)
+            Q_EMIT connectedChanged(false);
+    }
+
+    Q_EMIT technologiesChanged();
+
+    updateServiceList();
 }
 
 void TechnologyModel::managerAvailabilityChanged(bool available)
 {
-    Q_EMIT availabilityChanged(available);
+    bool wasAvailable = !available && m_tech;
 
-    if (!available && m_scanning) {
-        m_scanning = false;
-        Q_EMIT scanningChanged(m_scanning);
-    }
-    if (available) {
-        refresh();
-    }
+    doUpdateTechnologies();
+
+    bool isAvailable = available && m_tech;
+    if (wasAvailable != isAvailable)
+        Q_EMIT availabilityChanged(isAvailable);
 }
 
 NetworkService *TechnologyModel::get(int index) const

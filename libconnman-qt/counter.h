@@ -65,7 +65,10 @@ Q_SIGNALS:
     void accuracyChanged(quint32 accuracy);
     void intervalChanged(quint32 interval);
     void runningChanged(bool running);
-    
+
+private Q_SLOTS:
+    void updateCounterAgent();
+
 private:
        NetworkManager* m_manager;
 
@@ -85,14 +88,11 @@ private:
        bool roamingEnabled;
        quint32 currentInterval;
        quint32 currentAccuracy;
-       bool isRunning;
 
-       void reRegister();
        QString counterPath;
        bool shouldBeRunning;
 
-private Q_SLOTS:
-       void updateMgrAvailability(bool);
+       bool registered;
 };
 
 class CounterAdaptor : public QDBusAbstractAdaptor

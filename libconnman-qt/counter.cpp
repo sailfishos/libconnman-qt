@@ -25,8 +25,8 @@ Counter::Counter(QObject *parent) :
     roamingEnabled(false),
     currentInterval(1),
     currentAccuracy(1024),
-    isRunning(false),
-    shouldBeRunning(false)
+    shouldBeRunning(false),
+    registered(false)
 {
     QTime time = QTime::currentTime();
     qsrand((uint)time.msec());
@@ -34,15 +34,17 @@ Counter::Counter(QObject *parent) :
     //this needs to be unique so we can use more than one at a time with different processes
     counterPath = "/ConnectivityCounter" + QString::number(randomValue);
 
-    connect(m_manager, SIGNAL(availabilityChanged(bool)),
-            this, SLOT(updateMgrAvailability(bool)));
-    if (QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman"))
-        updateMgrAvailability(true);
+    new CounterAdaptor(this);
+    if (!QDBusConnection::systemBus().registerObject(counterPath, this))
+        qWarning("Could not register DBus object on %s", qPrintable(counterPath));
+
+    connect(m_manager, SIGNAL(availabilityChanged(bool)), this, SLOT(updateCounterAgent()));
 }
 
 Counter::~Counter()
 {
-    m_manager->unregisterCounter(counterPath);
+    if (registered)
+        m_manager->unregisterCounter(counterPath);
 }
 
 void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming)
@@ -90,6 +92,8 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
 
 void Counter::release()
 {
+    registered = false;
+    Q_EMIT runningChanged(registered);
 }
 
 bool Counter::roaming() const
@@ -133,9 +137,12 @@ need to be re registered from the manager.
 */
 void Counter::setAccuracy(quint32 accuracy)
 {
+    if (currentAccuracy == accuracy)
+        return;
+
     currentAccuracy = accuracy;
-    reRegister();
     Q_EMIT accuracyChanged(accuracy);
+    updateCounterAgent();
 }
 
 quint32 Counter::accuracy() const
@@ -150,9 +157,12 @@ need to be re registered from the manager.
 */
 void Counter::setInterval(quint32 interval)
 {
+    if (currentInterval == interval)
+        return;
+
     currentInterval = interval;
-    reRegister();
     Q_EMIT intervalChanged(interval);
+    updateCounterAgent();
 }
 
 quint32 Counter::interval() const
@@ -160,47 +170,46 @@ quint32 Counter::interval() const
     return currentInterval;
 }
 
-void Counter::reRegister()
-{
-    if (m_manager->isAvailable()) {
-        m_manager->unregisterCounter(QString(counterPath));
-        m_manager->registerCounter(QString(counterPath),currentAccuracy,currentInterval);
-    }
-}
-
 void Counter::setRunning(bool on)
 {
+    if (shouldBeRunning == on)
+        return;
+
     shouldBeRunning = on;
-    if (on) {
-        if (m_manager->isAvailable()) {
-            m_manager->registerCounter(QString(counterPath),currentAccuracy,currentInterval);
-            isRunning = true;
-            Q_EMIT runningChanged(isRunning);
+    updateCounterAgent();
+}
+
+void Counter::updateCounterAgent()
+{
+    if (!m_manager->isAvailable()) {
+        if (registered) {
+            registered = false;
+            Q_EMIT runningChanged(registered);
         }
-    } else {
-        if (m_manager->isAvailable()) {
-            m_manager->unregisterCounter(QString(counterPath));
-            isRunning = false;
-            Q_EMIT runningChanged(isRunning);
+        return;
+    }
+
+    if (registered) {
+        m_manager->unregisterCounter(counterPath);
+        if (!shouldBeRunning) {
+            registered = false;
+            Q_EMIT runningChanged(registered);
+            return;
+        }
+    }
+
+    if (shouldBeRunning) {
+        m_manager->registerCounter(counterPath, currentAccuracy, currentInterval);
+        if (!registered) {
+            registered = true;
+            Q_EMIT runningChanged(registered);
         }
     }
 }
 
 bool Counter::running() const
 {
-    return isRunning;
-}
-
-void Counter::updateMgrAvailability(bool available)
-{
-    if (available) {
-        new CounterAdaptor(this);
-        if (!QDBusConnection::systemBus().registerObject(counterPath, this)) {
-            qDebug() << "could not register" << counterPath;
-        } else {
-            setRunning(shouldBeRunning);
-        }
-    }
+    return registered;
 }
 
 /*

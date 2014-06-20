@@ -11,10 +11,21 @@
 #include <QDebug>
 #include "savedservicemodel.h"
 
+namespace
+{
+
+bool compareServiceStrength(NetworkService *a, NetworkService *b)
+{
+    if ((a->strength() > 0 && b->strength() > 0) || (a->strength() == 0 && b->strength() == 0))
+        return a->name() < b->name();
+
+    return b->strength() < a->strength();
+}
+
+}
 
 SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
-  : QAbstractListModel(parent),
-    m_manager(NULL)
+:   QAbstractListModel(parent), m_sort(false)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
@@ -79,6 +90,22 @@ void SavedServiceModel::setName(const QString &name)
     updateServiceList();
 }
 
+bool SavedServiceModel::sort() const
+{
+    return m_sort;
+}
+
+void SavedServiceModel::setSort(bool sortList)
+{
+    if (m_sort == sortList)
+        return;
+
+    m_sort = sortList;
+    emit sortChanged();
+
+    updateServiceList();
+}
+
 NetworkService *SavedServiceModel::get(int index) const
 {
     if (index < 0 || index > m_services.count())
@@ -100,7 +127,10 @@ int SavedServiceModel::indexOf(const QString &dbusObjectPath) const
 
 void SavedServiceModel::updateServiceList()
 {
-    const QVector<NetworkService *> new_services = m_manager->getSavedServices(m_techname);
+    QVector<NetworkService *> new_services = m_manager->getSavedServices(m_techname);
+    if (m_sort)
+        std::stable_sort(new_services.begin(), new_services.end(), compareServiceStrength);
+
     int num_new = new_services.count();
 
     for (int i = 0; i < num_new; i++) {

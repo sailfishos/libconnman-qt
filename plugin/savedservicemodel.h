@@ -26,6 +26,7 @@ class SavedServiceModel : public QAbstractListModel
     Q_DISABLE_COPY(SavedServiceModel)
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool sort READ sort WRITE setSort NOTIFY sortChanged)
 
 public:
     enum ItemRoles {
@@ -41,17 +42,23 @@ public:
     const QString name() const;
     void setName(const QString &name);
 
+    bool sort() const;
+    void setSort(bool sortList);
+
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
 
     Q_INVOKABLE NetworkService *get(int index) const;
 
 Q_SIGNALS:
     void nameChanged(const QString &name);
+    void sortChanged();
 
 private:
     QString m_techname;
     NetworkManager* m_manager;
     QVector<NetworkService *> m_services;
+    bool m_sort;
+
     QHash<int, QByteArray> roleNames() const;
 
 private Q_SLOTS:

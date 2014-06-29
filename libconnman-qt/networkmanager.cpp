@@ -321,9 +321,11 @@ void NetworkManager::updateDefaultRoute()
         QString line = in.readLine();
         while (!line.isNull()) {
             QStringList lineList = line.split('\t');
-            if (lineList.at(1) == "00000000" && lineList.at(3) == "0003") {
-                defaultNetDev = lineList.at(0);
-                break;
+            if (lineList.size() >= 11) {
+                if (lineList.at(1) == "00000000" && lineList.at(3) == "0003") {
+                    defaultNetDev = lineList.at(0);
+                    break;
+                }
             }
             line = in.readLine();
         }
@@ -336,11 +338,13 @@ void NetworkManager::updateDefaultRoute()
              QString ipv6line = ipv6in.readLine();
              while (!ipv6line.isNull()) {
                  QStringList ipv6lineList = ipv6line.split(QRegExp("\\s+"));
-                 if (ipv6lineList.at(0) == "00000000000000000000000000000000" && ipv6lineList.at(8).endsWith("3")) {
-                     defaultNetDev = ipv6lineList.at(9).trimmed();
-                     break;
+                 if (ipv6lineList.size() >= 10) {
+                     if (ipv6lineList.at(0) == "00000000000000000000000000000000" && ipv6lineList.at(8).endsWith("3")) {
+                         defaultNetDev = ipv6lineList.at(9).trimmed();
+                         break;
+                     }
+                     ipv6line = ipv6in.readLine();
                  }
-                 ipv6line = ipv6in.readLine();
              }
              ipv6routeFile.close();
          }

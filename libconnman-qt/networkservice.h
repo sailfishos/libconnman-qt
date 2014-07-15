@@ -47,6 +47,11 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList timeservers READ timeservers NOTIFY timeserversChanged)
     Q_PROPERTY(QStringList timeserversConfig READ timeserversConfig WRITE setTimeserversConfig NOTIFY timeserversConfigChanged)
 
+    Q_PROPERTY(QString bssid READ bssid NOTIFY bssidChanged)
+    Q_PROPERTY(quint32 maxRate READ maxRate NOTIFY maxRateChanged)
+    Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
+    Q_PROPERTY(QString encryptionMode READ encryptionMode NOTIFY encryptionModeChanged)
+
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
     NetworkService(QObject* parent = 0);
@@ -83,6 +88,11 @@ public:
     QStringList timeserversConfig() const;
     void setTimeserversConfig(const QStringList &servers);
 
+    const QString bssid();
+    quint32 maxRate();
+    quint16 frequency();
+    const QString encryptionMode();
+
 Q_SIGNALS:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
@@ -115,6 +125,10 @@ Q_SIGNALS:
 
     void propertiesReady();
 
+    void bssidChanged(const QString &bssid);
+    void maxRateChanged(quint32 rate);
+    void frequencyChanged(quint16 frequency);
+    void encryptionModeChanged(const QString &mode);
 
 public Q_SLOTS:
     void requestConnect();
@@ -157,6 +171,12 @@ private:
     static const QString Roaming;
     static const QString Timeservers;
     static const QString TimeserversConfig;
+
+    static const QString BSSID;
+    static const QString MaxRate;
+    static const QString Frequency;
+    static const QString EncryptionMode;
+
 
     bool isConnected;
 

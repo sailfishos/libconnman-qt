@@ -61,6 +61,11 @@ const QString NetworkService::Timeservers("Timeservers");
 const QString NetworkService::TimeserversConfig("Timeservers.Configuration");
 //const QString NetworkService::Provider("Provider");
 
+const QString NetworkService::BSSID("BSSID");
+const QString NetworkService::MaxRate("MaxRate");
+const QString NetworkService::Frequency("Frequency");
+const QString NetworkService::EncryptionMode("EncryptionMode");
+
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
     m_service(NULL),
@@ -422,6 +427,14 @@ void NetworkService::resetProperties()
             Q_EMIT timeserversChanged(timeservers());
         } else if (key == TimeserversConfig) {
             Q_EMIT timeserversConfigChanged(timeserversConfig());
+        } else if (key == BSSID) {
+            Q_EMIT bssidChanged(bssid());
+        } else if (key == MaxRate) {
+            Q_EMIT maxRateChanged(maxRate());
+        } else if (key == Frequency) {
+            Q_EMIT frequencyChanged(frequency());
+        } else if (key == EncryptionMode) {
+            Q_EMIT encryptionModeChanged(encryptionMode());
         }
     }
 }
@@ -500,6 +513,14 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT timeserversChanged(value.toStringList());
     } else if (name == TimeserversConfig) {
         Q_EMIT timeserversConfigChanged(value.toStringList());
+    } else if (name == BSSID) {
+        Q_EMIT bssidChanged(value.toString());
+    } else if (name == MaxRate) {
+        Q_EMIT maxRateChanged(value.toUInt());
+    } else if (name == Frequency) {
+        Q_EMIT frequencyChanged(value.toUInt());
+    } else if (name == EncryptionMode) {
+        Q_EMIT encryptionModeChanged(value.toString());
     }
 }
 
@@ -582,4 +603,32 @@ void NetworkService::setTimeserversConfig(const QStringList &servers)
 {
     if (m_service)
         m_service->SetProperty(TimeserversConfig, QDBusVariant(QVariant(servers)));
+}
+
+const QString NetworkService::bssid()
+{
+    if (m_propertiesCache.contains(BSSID))
+        return m_propertiesCache.value(BSSID).toString();
+    return QString();
+}
+
+quint32 NetworkService::maxRate()
+{
+    if (m_propertiesCache.contains(MaxRate))
+        return m_propertiesCache.value(MaxRate).toUInt();
+    return 0;
+}
+
+quint16 NetworkService::frequency()
+{
+    if (m_propertiesCache.contains(Frequency))
+        return m_propertiesCache.value(Frequency).toUInt();
+    return 0;
+}
+
+const QString NetworkService::encryptionMode()
+{
+    if (m_propertiesCache.contains(EncryptionMode))
+        return m_propertiesCache.value(EncryptionMode).toString();
+    return QString();
 }

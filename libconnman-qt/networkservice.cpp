@@ -65,6 +65,7 @@ const QString NetworkService::BSSID("BSSID");
 const QString NetworkService::MaxRate("MaxRate");
 const QString NetworkService::Frequency("Frequency");
 const QString NetworkService::EncryptionMode("EncryptionMode");
+const QString NetworkService::Hidden("Hidden");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
@@ -232,6 +233,13 @@ bool NetworkService::roaming() const
 {
     if (m_propertiesCache.contains(Roaming))
         return m_propertiesCache.value(Roaming).toBool();
+    return false;
+}
+
+bool NetworkService::hidden() const
+{
+    if (m_propertiesCache.contains(Hidden))
+        return m_propertiesCache.value(Hidden).toBool();
     return false;
 }
 
@@ -435,6 +443,8 @@ void NetworkService::resetProperties()
             Q_EMIT frequencyChanged(frequency());
         } else if (key == EncryptionMode) {
             Q_EMIT encryptionModeChanged(encryptionMode());
+        } else if (key == Hidden) {
+            Q_EMIT hiddenChanged(hidden());
         }
     }
 }
@@ -521,6 +531,8 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT frequencyChanged(value.toUInt());
     } else if (name == EncryptionMode) {
         Q_EMIT encryptionModeChanged(value.toString());
+    } else if (name == Hidden) {
+        Q_EMIT hiddenChanged(value.toBool());
     }
 }
 

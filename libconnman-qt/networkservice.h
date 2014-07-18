@@ -51,6 +51,7 @@ class NetworkService : public QObject
     Q_PROPERTY(quint32 maxRate READ maxRate NOTIFY maxRateChanged)
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
     Q_PROPERTY(QString encryptionMode READ encryptionMode NOTIFY encryptionModeChanged)
+    Q_PROPERTY(bool hidden READ hidden NOTIFY hiddenChanged)
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -92,6 +93,7 @@ public:
     quint32 maxRate();
     quint16 frequency();
     const QString encryptionMode();
+    bool hidden() const;
 
 Q_SIGNALS:
     void nameChanged(const QString &name);
@@ -129,6 +131,7 @@ Q_SIGNALS:
     void maxRateChanged(quint32 rate);
     void frequencyChanged(quint16 frequency);
     void encryptionModeChanged(const QString &mode);
+    void hiddenChanged(bool);
 
 public Q_SLOTS:
     void requestConnect();
@@ -176,7 +179,7 @@ private:
     static const QString MaxRate;
     static const QString Frequency;
     static const QString EncryptionMode;
-
+    static const QString Hidden;
 
     bool isConnected;
 

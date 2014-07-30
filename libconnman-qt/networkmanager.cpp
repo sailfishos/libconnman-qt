@@ -207,6 +207,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     // make sure we don't leak memory
     m_servicesOrder.clear();
 
+    QStringList hiddenKnownBssids;
     QStringList serviceList;
     Q_FOREACH (connmanobj, changed) {
         order++;
@@ -226,6 +227,17 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             if (connmanobj.properties.count() > 20) { //new services have full set of properties
                 addedService = true;
             }
+        }
+
+        //a connected but non broadcast ssid will have hidden property and name
+        // a non connected hidden will have no name and hidden property will be false.
+        if (service->hidden() && !service->name().isEmpty())//this is the real working service
+            hiddenKnownBssids.append(service->bssid());
+
+        if (service->name().isEmpty()
+                && hiddenKnownBssids.contains(service->bssid())) {
+            // hide this one as it is the hidden service
+            continue;
         }
 
         m_servicesOrder.push_back(service);

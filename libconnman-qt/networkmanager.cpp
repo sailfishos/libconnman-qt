@@ -712,6 +712,18 @@ QStringList NetworkManager::servicesList(const QString &tech)
     return services;
 }
 
+QStringList NetworkManager::savedServicesList(const QString &tech)
+{
+    QStringList services;
+
+    Q_FOREACH (NetworkService *service, m_savedServicesOrder) {
+        if ((tech.isEmpty() || service->type() == tech) && service->favorite())
+            services.push_back(service->path());
+    }
+
+    return services;
+}
+
 QString NetworkManager::technologyPathForService(const QString &servicePath)
 {
     Q_FOREACH (NetworkService *service, m_servicesOrder) {

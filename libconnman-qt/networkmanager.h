@@ -58,6 +58,7 @@ public:
     void removeSavedService(const QString &identifier) const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
+    Q_INVOKABLE QStringList savedServicesList(const QString &tech = QString());
     Q_INVOKABLE QStringList technologiesList();
     Q_INVOKABLE QString technologyPathForService(const QString &path);
     Q_INVOKABLE QString technologyPathForType(const QString &type);

@@ -367,6 +367,7 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
 void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
 {
     QDBusPendingReply<> reply = *watcher;
+    watcher->deleteLater();
 
     if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
         // Service is probably out of range trying RemoveSavedService.

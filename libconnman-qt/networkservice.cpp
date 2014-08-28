@@ -299,12 +299,21 @@ void NetworkService::setAutoConnect(bool autoConnected)
 {
     if (m_service) {
          QDBusPendingReply<void> reply = m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoConnected)));
-         reply.waitForFinished();
-         if (reply.isError())
-             qDebug() << reply.error().message();
-         else
-             emitPropertyChange(AutoConnect, autoConnected);
+
+         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+         connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                 this, SLOT(handleAutoConnectReply(QDBusPendingCallWatcher*)));
     }
+}
+
+void NetworkService::handleAutoConnectReply(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<> reply = *watcher;
+    watcher->deleteLater();
+
+    if (reply.isError())
+        qDebug() << reply.error().message();
+    // propertyChange should handle emit
 }
 
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)

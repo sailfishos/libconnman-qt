@@ -190,6 +190,7 @@ private Q_SLOTS:
 
     void handleConnectReply(QDBusPendingCallWatcher *call);
     void handleRemoveReply(QDBusPendingCallWatcher *watcher);
+    void handleAutoConnectReply(QDBusPendingCallWatcher*);
 
 private:
     void resetProperties();

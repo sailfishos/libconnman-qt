@@ -160,7 +160,7 @@ private Q_SLOTS:
     void getSavedServicesFinished(QDBusPendingCallWatcher *watcher);
 
 private:
-    Q_DISABLE_COPY(NetworkManager);
+    Q_DISABLE_COPY(NetworkManager)
 };
 
 #endif //NETWORKMANAGER_H

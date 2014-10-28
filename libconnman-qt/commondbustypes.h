@@ -18,19 +18,19 @@
 #include <QtDBus/QDBusObjectPath>
 
 typedef QMap<QString, QString> StringMap;
-Q_DECLARE_METATYPE ( StringMap );
+Q_DECLARE_METATYPE ( StringMap )
 
 // TODO: re-implement with better interface i.e. "const QString path() const" instead of objpath
 struct ConnmanObject {
     QDBusObjectPath objpath;
     QVariantMap properties;
 };
-Q_DECLARE_METATYPE ( ConnmanObject );
+Q_DECLARE_METATYPE ( ConnmanObject )
 QDBusArgument &operator<<(QDBusArgument &argument, const ConnmanObject &obj);
 const QDBusArgument &operator>>(const QDBusArgument &argument, ConnmanObject &obj);
 
 typedef QList<ConnmanObject> ConnmanObjectList;
-Q_DECLARE_METATYPE ( ConnmanObjectList );
+Q_DECLARE_METATYPE ( ConnmanObjectList )
 
 inline void registerCommonDataTypes() {
   qDBusRegisterMetaType<StringMap>();

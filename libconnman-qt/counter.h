@@ -70,29 +70,29 @@ private Q_SLOTS:
     void updateCounterAgent();
 
 private:
-       NetworkManager* m_manager;
+    NetworkManager* m_manager;
 
-       friend class CounterAdaptor;
+    friend class CounterAdaptor;
 
-       void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
-       void release();
+    void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
+    void release();
 
-       quint64 bytesInHome;
-       quint64 bytesOutHome;
-       quint32 secondsOnlineHome;
+    quint64 bytesInHome;
+    quint64 bytesOutHome;
+    quint32 secondsOnlineHome;
 
-       quint64 bytesInRoaming;
-       quint64 bytesOutRoaming;
-       quint32 secondsOnlineRoaming;
+    quint64 bytesInRoaming;
+    quint64 bytesOutRoaming;
+    quint32 secondsOnlineRoaming;
 
-       bool roamingEnabled;
-       quint32 currentInterval;
-       quint32 currentAccuracy;
+    bool roamingEnabled;
+    quint32 currentInterval;
+    quint32 currentAccuracy;
 
-       QString counterPath;
-       bool shouldBeRunning;
+    QString counterPath;
+    bool shouldBeRunning;
 
-       bool registered;
+    bool registered;
 };
 
 class CounterAdaptor : public QDBusAbstractAdaptor

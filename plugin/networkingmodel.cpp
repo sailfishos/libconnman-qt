@@ -126,7 +126,7 @@ void NetworkingModel::updateTechnologies()
 
 void NetworkingModel::managerAvailabilityChanged(bool available)
 {
-    if(available)
+    if (available)
         m_manager->registerAgent(QString(AGENT_PATH));
 
     Q_EMIT availabilityChanged(available);

@@ -196,7 +196,7 @@ private:
     void resetProperties();
     void reconnectServiceInterface();
 
-    Q_DISABLE_COPY(NetworkService);
+    Q_DISABLE_COPY(NetworkService)
 };
 
 Q_DECLARE_METATYPE(NetworkService*)

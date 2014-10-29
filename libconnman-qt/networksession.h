@@ -42,22 +42,21 @@ public:
     virtual ~NetworkSession();
 
     //Settings
-     QString state() const;
-     QString name() const;
-     QString bearer() const;
-     QString sessionInterface() const;
-     QVariantMap ipv4() const;
-     QVariantMap ipv6() const;
-     QStringList allowedBearers() const;
-     QString connectionType() const;
+    QString state() const;
+    QString name() const;
+    QString bearer() const;
+    QString sessionInterface() const;
+    QVariantMap ipv4() const;
+    QVariantMap ipv6() const;
+    QStringList allowedBearers() const;
+    QString connectionType() const;
 
-     QString path() const;
+    QString path() const;
 
     void setAllowedBearers(const QStringList &bearers);
     void setConnectionType(const QString &type);
 
 Q_SIGNALS:
-
     void allowedBearersChanged(const QStringList &bearers);
     void connectionTypeChanged(const QString &type);
     void settingsChanged(const QVariantMap &settings);

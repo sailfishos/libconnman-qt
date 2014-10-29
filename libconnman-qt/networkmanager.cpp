@@ -20,7 +20,7 @@ static NetworkManager* staticInstance = NULL;
 
 NetworkManager* NetworkManagerFactory::createInstance()
 {
-    if(!staticInstance)
+    if (!staticInstance)
         staticInstance = new NetworkManager;
 
     return staticInstance;
@@ -59,7 +59,7 @@ NetworkManager::NetworkManager(QObject* parent)
 
     m_available = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
 
-    if(m_available)
+    if (m_available)
         connectToConnman();
     else
         qDebug() << "connman not AVAILABLE";
@@ -81,7 +81,7 @@ void NetworkManager::connectToConnman(QString)
         m_manager = NULL;
 
         // shouldn't happen but in this case service isn't available
-        if(m_available)
+        if (m_available)
             Q_EMIT availabilityChanged(m_available = false);
     } else {
         connect(m_manager, SIGNAL(PropertyChanged(QString,QDBusVariant)),
@@ -92,7 +92,7 @@ void NetworkManager::connectToConnman(QString)
         connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
                 this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 
-        if(!m_available)
+        if (!m_available)
             Q_EMIT availabilityChanged(m_available = true);
     }
 }
@@ -158,7 +158,7 @@ void NetworkManager::connmanUnregistered(QString)
 {
     disconnectFromConnman();
 
-    if(m_available)
+    if (m_available)
         Q_EMIT availabilityChanged(m_available = false);
 }
 
@@ -580,7 +580,7 @@ const QVector<NetworkService*> NetworkManager::getSavedServices(const QString &t
 
 void NetworkManager::setOfflineMode(const bool &offlineMode)
 {
-    if(!m_manager) return;
+    if (!m_manager) return;
 
     QDBusPendingReply<void> reply =
         m_manager->SetProperty(OfflineMode,
@@ -590,31 +590,31 @@ void NetworkManager::setOfflineMode(const bool &offlineMode)
   // these shouldn't crash even if connman isn't available
 void NetworkManager::registerAgent(const QString &path)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->RegisterAgent(QDBusObjectPath(path));
 }
 
 void NetworkManager::unregisterAgent(const QString &path)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->UnregisterAgent(QDBusObjectPath(path));
 }
 
 void NetworkManager::registerCounter(const QString &path, quint32 accuracy,quint32 period)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->RegisterCounter(QDBusObjectPath(path),accuracy, period);
 }
 
 void NetworkManager::unregisterCounter(const QString &path)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->UnregisterCounter(QDBusObjectPath(path));
 }
 
 QDBusObjectPath NetworkManager::createSession(const QVariantMap &settings, const QString &sessionNotifierPath)
 {
-    if(!m_manager)
+    if (!m_manager)
         return QDBusObjectPath();
 
     QDBusPendingReply<QDBusObjectPath> reply =
@@ -625,13 +625,13 @@ QDBusObjectPath NetworkManager::createSession(const QVariantMap &settings, const
 
 void NetworkManager::destroySession(const QString &sessionAgentPath)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->DestroySession(QDBusObjectPath(sessionAgentPath));
 }
 
 void NetworkManager::setSessionMode(const bool &sessionMode)
 {
-    if(m_manager)
+    if (m_manager)
         m_manager->SetProperty(SessionMode, QDBusVariant(sessionMode));
 }
 

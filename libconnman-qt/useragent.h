@@ -36,11 +36,12 @@ class UserAgent : public QObject
 public:
     explicit UserAgent(QObject* parent = 0);
     virtual ~UserAgent();
-enum ConnectionRequestType {
-    TYPE_DEFAULT =0,
-    TYPE_SUPPRESS,
-    TYPE_CLEAR
-};
+
+    enum ConnectionRequestType {
+        TYPE_DEFAULT =0,
+        TYPE_SUPPRESS,
+        TYPE_CLEAR
+    };
 
 public Q_SLOTS:
     void sendUserReply(const QVariantMap &input);
@@ -86,8 +87,8 @@ private:
 
 class AgentAdaptor : public QDBusAbstractAdaptor
 {
-    Q_OBJECT;
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent");
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent")
 
 public:
     explicit AgentAdaptor(UserAgent* parent);

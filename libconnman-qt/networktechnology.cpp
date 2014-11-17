@@ -128,22 +128,23 @@ bool NetworkTechnology::connected() const
 
 const QString NetworkTechnology::objPath() const
 {
-    Q_ASSERT(m_technology);
-
-    return m_technology->path();
+    if (m_technology)
+        return m_technology->path();
+    return QString();
 }
 
 // Setters
 
 void NetworkTechnology::setPowered(const bool &powered)
 {
-    Q_ASSERT(m_technology);
-    m_technology->SetProperty(Powered, QDBusVariant(QVariant(powered)));
+    if (m_technology)
+        m_technology->SetProperty(Powered, QDBusVariant(QVariant(powered)));
 }
 
 void NetworkTechnology::scan()
 {
-    Q_ASSERT(m_technology);
+    if (!m_technology)
+        return;
 
     QDBusPendingReply<> reply = m_technology->Scan();
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);

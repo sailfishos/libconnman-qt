@@ -17,8 +17,7 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
     m_tech(NULL),
     m_scanning(false),
     m_changesInhibited(false),
-    m_uneffectedChanges(false),
-    m_scanResultsReady(false)
+    m_uneffectedChanges(false)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
@@ -105,11 +104,6 @@ bool TechnologyModel::isPowered() const
 bool TechnologyModel::isScanning() const
 {
     return m_scanning;
-}
-
-bool TechnologyModel::isScanResultsReady() const
-{
-    return m_scanResultsReady;
 }
 
 bool TechnologyModel::changesInhibited() const
@@ -304,9 +298,6 @@ void TechnologyModel::updateServiceList()
 
     if (num_new != num_old)
         Q_EMIT countChanged();
-
-    m_scanResultsReady = true;
-    Q_EMIT scanResultsReadyChanged(m_scanResultsReady);
 }
 
 void TechnologyModel::changedPower(bool b)
@@ -335,9 +326,6 @@ void TechnologyModel::finishedScan()
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
     if (tech->type() != m_tech->type())
         return;
-
-    m_scanResultsReady = false;
-    Q_EMIT scanResultsReadyChanged(m_scanResultsReady);
 
     Q_EMIT scanRequestFinished();
 

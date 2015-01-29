@@ -334,7 +334,8 @@ void NetworkManager::updateDefaultRoute()
         while (!line.isNull()) {
             QStringList lineList = line.split('\t');
             if (lineList.size() >= 11) {
-                if (lineList.at(1) == "00000000" && lineList.at(3) == "0003") {
+                if ((lineList.at(1) == "00000000" && lineList.at(3) == "0003") ||
+                   (lineList.at(0).startsWith("ppp") && lineList.at(3) == "0001")) {
                     defaultNetDev = lineList.at(0);
                     break;
                 }
@@ -351,7 +352,8 @@ void NetworkManager::updateDefaultRoute()
              while (!ipv6line.isNull()) {
                  QStringList ipv6lineList = ipv6line.split(QRegExp("\\s+"));
                  if (ipv6lineList.size() >= 10) {
-                     if (ipv6lineList.at(0) == "00000000000000000000000000000000" && ipv6lineList.at(8).endsWith("3")) {
+                     if (ipv6lineList.at(0) == "00000000000000000000000000000000" &&
+                        (ipv6lineList.at(8).endsWith("3") || (ipv6lineList.at(8).endsWith("1")))) {
                          defaultNetDev = ipv6lineList.at(9).trimmed();
                          break;
                      }

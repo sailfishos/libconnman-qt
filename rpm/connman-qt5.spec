@@ -5,11 +5,8 @@
 
 Name:       connman-qt5
 
-# >> macros
-# << macros
-
 Summary:    Qt bindings for connman
-Version:    1.0.85
+Version:    1.0.86
 Release:    1
 Group:      System/GUI/Other
 License:    Apache License
@@ -52,28 +49,15 @@ applications using libconnman-qt
 %prep
 %setup -q -n %{name}-%{version}
 
-# >> setup
-# << setup
-
 %build
-# >> build pre
-# << build pre
 
 %qmake5 -r VERSION=%{version}
 
 make %{?_smp_mflags}
 
-# >> build post
-# << build post
-
 %install
 rm -rf %{buildroot}
-# >> install pre
-# << install pre
 %qmake5_install
-
-# >> install post
-# << install post
 
 %post -p /sbin/ldconfig
 
@@ -82,14 +66,10 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{_libdir}/libconnman-qt5.so.*
-# >> files
-# << files
 
 %files declarative
 %defattr(-,root,root,-)
 %{_usr}/lib/qt5/qml/MeeGo/Connman
-# >> files declarative
-# << files declarative
 
 %files devel
 %defattr(-,root,root,-)
@@ -97,5 +77,3 @@ rm -rf %{buildroot}
 %{_usr}/lib/pkgconfig/connman-qt5.pc
 %{_usr}/lib/libconnman-qt5.prl
 %{_usr}/lib/libconnman-qt5.so
-# >> files devel
-# << files devel

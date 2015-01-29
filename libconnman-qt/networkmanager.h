@@ -53,8 +53,8 @@ public:
 
     Q_INVOKABLE NetworkTechnology* getTechnology(const QString &type) const;
     const QVector<NetworkTechnology *> getTechnologies() const;
-    const QVector<NetworkService*> getServices(const QString &tech = "") const;
-    const QVector<NetworkService*> getSavedServices(const QString &tech = "") const;
+    const QVector<NetworkService*> getServices(const QString &tech = QString()) const;
+    const QVector<NetworkService*> getSavedServices(const QString &tech = QString()) const;
     void removeSavedService(const QString &identifier) const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
@@ -141,9 +141,9 @@ private:
 
 
 private Q_SLOTS:
-    void connectToConnman(QString = "");
-    void disconnectFromConnman(QString = "");
-    void connmanUnregistered(QString = "");
+    void connectToConnman(QString = QString());
+    void disconnectFromConnman(QString = QString());
+    void connmanUnregistered(QString = QString());
     void disconnectTechnologies();
     void setupTechnologies();
     void disconnectServices();

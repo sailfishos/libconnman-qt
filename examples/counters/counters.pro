@@ -13,9 +13,6 @@ isEmpty(TARGET_SUFFIX) {
 }
 PKGCONFIG += connman-$$TARGET_SUFFIX
 
-equals(QT_MAJOR_VERSION, 4): {
-    QT -= gui
-}
 SOURCES += main.cpp \
     networkcounter.cpp
 

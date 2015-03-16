@@ -13,3 +13,6 @@ testconnman-qt
 Makefile*
 *.pc
 *.prl
+
+libconnman-qt/connman_*_interface.*
+

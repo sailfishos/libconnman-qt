@@ -14,18 +14,11 @@ isEmpty(TARGET_SUFFIX) {
 
 LIBS += -l$$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 
-equals(QT_MAJOR_VERSION, 4): {
-    QT += declarative
-}
-
-equals(QT_MAJOR_VERSION, 5): {
-    QT += qml
-    OTHER_FILES += plugin.json qmldirs
-}
+QT += qml
+OTHER_FILES += plugin.json qmldirs
 
 MODULENAME = MeeGo/Connman
-equals(QT_MAJOR_VERSION, 4): TARGETPATH = $$[QT_INSTALL_IMPORTS]/$$MODULENAME
-equals(QT_MAJOR_VERSION, 5): TARGETPATH = $$[QT_INSTALL_QML]/$$MODULENAME
+TARGETPATH = $$[QT_INSTALL_QML]/$$MODULENAME
 
 target.path = $$TARGETPATH
 qmldir.files += qmldir

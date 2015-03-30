@@ -15,6 +15,10 @@ BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(dbus-1)
 
+%{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
+%{!?qtc_make:%define qtc_make make}
+
+
 %description
 This is a library for working with connman using Qt
 
@@ -44,9 +48,8 @@ applications using libconnman-qt
 %setup -q -n %{name}-%{version}
 
 %build
-%qmake5 -r VERSION=%{version}
-
-make %{?_smp_mflags}
+%qtc_qmake5 -r VERSION=%{version}
+%qtc_make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}

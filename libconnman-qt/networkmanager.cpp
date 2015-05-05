@@ -530,12 +530,7 @@ NetworkService* NetworkManager::defaultRoute() const
 
 NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
 {
-    if (m_technologiesCache.contains(type))
-        return m_technologiesCache.value(type);
-    else {
-        qDebug() << "Technology " << type << " doesn't exist";
-        return NULL;
-    }
+    return m_technologiesCache.value(type);
 }
 
 const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const

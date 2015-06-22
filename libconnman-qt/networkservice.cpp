@@ -475,7 +475,13 @@ void NetworkService::reconnectServiceInterface()
     connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
             this, SLOT(updateProperty(QString,QDBusVariant)));
 
-    QTimer::singleShot(500,this,SIGNAL(propertiesReady()));
+    if (m_path != QStringLiteral("/") && m_service->isValid()) {
+        QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+
+        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
+    }
 }
 
 void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
@@ -586,15 +592,6 @@ void NetworkService::setPath(const QString &path)
     resetProperties();
 
     reconnectServiceInterface();
-
-    if (!m_service || !m_service->isValid())
-        return;
-
-    QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 }
 
 bool NetworkService::connected()

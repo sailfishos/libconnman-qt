@@ -475,9 +475,9 @@ void NetworkService::reconnectServiceInterface()
     connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
             this, SLOT(updateProperty(QString,QDBusVariant)));
 
-    if (state().isEmpty()) //saved services have an empty state and cached properties
+    if (state().isEmpty() || m_path == QStringLiteral("/")) //saved services have an empty state and cached properties
         QTimer::singleShot(500,this,SIGNAL(propertiesReady()));
-    else if (m_path != QStringLiteral("/") && m_service->isValid()) {
+    else  {
         QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
 
@@ -594,6 +594,15 @@ void NetworkService::setPath(const QString &path)
     resetProperties();
 
     reconnectServiceInterface();
+
+    if (!m_service || !m_service->isValid())
+        return;
+
+    QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+
+    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+            this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 }
 
 bool NetworkService::connected()

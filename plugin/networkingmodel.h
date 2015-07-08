@@ -29,11 +29,11 @@ struct ServiceReqData
  */
 class NetworkingModel : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 
-    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged);
-    Q_PROPERTY(bool wifiPowered READ isWifiPowered WRITE setWifiPowered NOTIFY wifiPoweredChanged);
-    Q_PROPERTY(QList<QObject*> networks READ networks NOTIFY networksChanged);
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    Q_PROPERTY(bool wifiPowered READ isWifiPowered WRITE setWifiPowered NOTIFY wifiPoweredChanged)
+    Q_PROPERTY(QList<QObject*> networks READ networks NOTIFY networksChanged)
 
 public:
     NetworkingModel(QObject* parent=0);
@@ -70,13 +70,13 @@ private Q_SLOTS:
     void managerAvailabilityChanged(bool available);
 
 private:
-    Q_DISABLE_COPY(NetworkingModel);
+    Q_DISABLE_COPY(NetworkingModel)
 };
 
 class UserInputAgent : public QDBusAbstractAdaptor
 {
-    Q_OBJECT;
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent");
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent")
 
 public:
     UserInputAgent(NetworkingModel* parent);

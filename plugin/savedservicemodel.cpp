@@ -29,10 +29,6 @@ SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    setRoleNames(roleNames());
-#endif
-
     connect(m_manager,
             SIGNAL(savedServicesChanged()),
             this,

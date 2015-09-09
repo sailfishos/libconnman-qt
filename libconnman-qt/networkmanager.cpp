@@ -204,12 +204,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     int order = -1;
     NetworkService *service = NULL;
 
-    // make sure we don't leak memory
-    if (changed.count() > 0)
-        m_servicesOrder.clear();
+    m_servicesOrder.clear();
 
     QStringList hiddenKnownBssids;
-    QStringList serviceList;
     Q_FOREACH (connmanobj, changed) {
         order++;
         bool addedService = false;
@@ -241,16 +238,12 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             continue;
         }
 
-        m_servicesOrder.push_back(service);
-        serviceList.push_back(service->path());
+        m_servicesOrder.append(service->path());
 
         // If this is no longer a favorite network, remove it from the saved list
-        if (!service->favorite()) {
-            int savedIndex;
-            if ((savedIndex = m_savedServicesOrder.indexOf(service)) != -1) {
-                m_savedServicesOrder.remove(savedIndex);
-            }
-        }
+        if (!service->favorite())
+            m_savedServicesOrder.removeOne(svcPath);
+
         if (order == 0)
             updateDefaultRoute();
 
@@ -261,21 +254,22 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
 
     Q_FOREACH (QDBusObjectPath obj, removed) {
         const QString svcPath(obj.path());
-        if (m_servicesCache.contains(svcPath)) {
-            if (NetworkService *service = m_servicesCache.value(svcPath)) {
-                if (m_savedServicesOrder.contains(service)) {
-                    // Don't remove this service from the cache, since the saved model needs it
-                    // Update the strength value to zero, so we know it isn't visible
-                    QVariantMap properties;
-                    properties.insert(QString::fromLatin1("Strength"), QVariant(static_cast<quint32>(0)));
-                    properties.insert(QLatin1String("State"), QLatin1String("idle"));
-                    service->updateProperties(properties);
-                } else {
-                    service->deleteLater();
-                    m_servicesCache.remove(svcPath);
-                }
-                Q_EMIT serviceRemoved(svcPath);
+
+        NetworkService *service = m_servicesCache.value(svcPath);
+        if (service) {
+            if (m_savedServicesOrder.contains(svcPath)) {
+                // Don't remove this service from the cache, since the saved model needs it
+                // Update the strength value to zero, so we know it isn't visible
+                QVariantMap properties;
+                properties.insert(QString::fromLatin1("Strength"), QVariant(static_cast<quint32>(0)));
+                properties.insert(QLatin1String("State"), QLatin1String("idle"));
+                service->updateProperties(properties);
+            } else {
+                service->deleteLater();
+                m_servicesCache.remove(svcPath);
             }
+
+            Q_EMIT serviceRemoved(svcPath);
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init
             qDebug() << "attempted to remove non-existing service";
@@ -285,7 +279,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     if (order == -1)
         updateDefaultRoute();
     Q_EMIT servicesChanged();
-    Q_EMIT servicesListChanged(serviceList);
+    Q_EMIT servicesListChanged(m_servicesOrder);
 
     Q_EMIT savedServicesChanged();
 }
@@ -296,7 +290,6 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
     int order = -1;
     NetworkService *service = NULL;
 
-    // make sure we don't leak memory
     m_savedServicesOrder.clear();
 
     Q_FOREACH (connmanobj, changed) {
@@ -314,7 +307,7 @@ void NetworkManager::updateSavedServices(const ConnmanObjectList &changed)
             service->updateProperties(connmanobj.properties);
         }
 
-        m_savedServicesOrder.push_back(service);
+        m_savedServicesOrder.append(svcPath);
     }
 
     Q_EMIT savedServicesChanged();
@@ -452,11 +445,8 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     Q_FOREACH (const ConnmanObject &object, reply.value()) {
         const QString servicePath = object.objpath.path();
 
-        NetworkService *service;
-
-        QHash<QString, NetworkService *>::ConstIterator it = m_servicesCache.find(servicePath);
-        if (it != m_servicesCache.constEnd()) {
-            service = *it;
+        NetworkService *service = m_servicesCache.value(servicePath);
+        if (service) {
             service->updateProperties(object.properties);
         } else {
             service = new NetworkService(servicePath, object.properties, this);
@@ -464,7 +454,7 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
             m_servicesCache.insert(servicePath, service);
         }
 
-        m_servicesOrder.append(service);
+        m_servicesOrder.append(servicePath);
     }
 
     updateDefaultRoute();
@@ -481,11 +471,8 @@ void NetworkManager::getSavedServicesFinished(QDBusPendingCallWatcher *watcher)
         Q_FOREACH (const ConnmanObject &object, reply.value()) {
             const QString servicePath = object.objpath.path();
 
-            NetworkService *service;
-
-            QHash<QString, NetworkService *>::ConstIterator it = m_servicesCache.find(servicePath);
-            if (it != m_servicesCache.constEnd()) {
-                service = *it;
+            NetworkService *service = m_servicesCache.value(servicePath);
+            if (service) {
                 service->updateProperties(object.properties);
             } else {
                 service = new NetworkService(servicePath, object.properties, this);
@@ -493,7 +480,7 @@ void NetworkManager::getSavedServicesFinished(QDBusPendingCallWatcher *watcher)
                 m_servicesCache.insert(servicePath, service);
             }
 
-            m_savedServicesOrder.append(service);
+            m_savedServicesOrder.append(servicePath);
         }
 
         Q_EMIT savedServicesChanged();
@@ -551,7 +538,11 @@ const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) 
 
     // this Q_FOREACH is based on the m_servicesOrder to keep connman's sort
     // of services.
-    Q_FOREACH (NetworkService *service, m_servicesOrder) {
+    Q_FOREACH (const QString &servicePath, m_servicesOrder) {
+        NetworkService *service = m_servicesCache.value(servicePath);
+        if (!service)
+            continue;
+
         if (tech.isEmpty() || service->type() == tech)
             services.push_back(service);
     }
@@ -565,7 +556,11 @@ const QVector<NetworkService*> NetworkManager::getSavedServices(const QString &t
 
     // this Q_FOREACH is based on the m_servicesOrder to keep connman's sort
     // of services.
-    Q_FOREACH (NetworkService *service, m_savedServicesOrder) {
+    Q_FOREACH (const QString &servicePath, m_savedServicesOrder) {
+        NetworkService *service = m_servicesCache.value(servicePath);
+        if (!service)
+            continue;
+
         // A previously-saved network which is then removed, remains saved with favorite == false
         if ((tech.isEmpty() || service->type() == tech) && service->favorite())
             services.push_back(service);
@@ -703,10 +698,14 @@ void NetworkManager::resetCountersForType(const QString &type)
 QStringList NetworkManager::servicesList(const QString &tech)
 {
     QStringList services;
-    if (m_servicesOrder.count() > 0) {
-        Q_FOREACH (NetworkService *service, m_servicesOrder) {
+    if (!m_servicesOrder.isEmpty()) {
+        Q_FOREACH (const QString &servicePath, m_servicesOrder) {
+            NetworkService *service = m_servicesCache.value(servicePath);
+            if (!service)
+                continue;
+
             if (tech.isEmpty() || service->type() == tech)
-                services.push_back(service->path());
+                services.push_back(servicePath);
         }
     } else {
         QHash<QString, NetworkService *>::const_iterator i = m_servicesCache.constBegin();
@@ -726,10 +725,14 @@ QStringList NetworkManager::savedServicesList(const QString &tech)
 {
     QStringList services;
 
-    if (m_savedServicesOrder.count() > 0) {
-        Q_FOREACH (NetworkService *service, m_savedServicesOrder) {
+    if (!m_savedServicesOrder.isEmpty()) {
+        Q_FOREACH (const QString &servicePath, m_savedServicesOrder) {
+            NetworkService *service = m_servicesCache.value(servicePath);
+            if (!service)
+                continue;
+
             if ((tech.isEmpty() || service->type() == tech) && service->favorite())
-                services.push_back(service->path());
+                services.push_back(servicePath);
         }
     } else {
         QHash<QString, NetworkService *>::const_iterator i = m_servicesCache.constBegin();
@@ -747,12 +750,13 @@ QStringList NetworkManager::savedServicesList(const QString &tech)
 
 QString NetworkManager::technologyPathForService(const QString &servicePath)
 {
-    Q_FOREACH (NetworkService *service, m_servicesOrder) {
-        if (service->path() == servicePath)
-            return service->path();
-    }
-    return QString();
+    NetworkService *service = m_servicesCache.value(servicePath);
+    if (!service)
+        return QString();
+
+    return technologyPathForType(service->type());
 }
+
 QString NetworkManager::technologyPathForType(const QString &techType)
 {
     Q_FOREACH (NetworkTechnology *tech, m_technologiesCache) {

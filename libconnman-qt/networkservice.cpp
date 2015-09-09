@@ -7,6 +7,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  */
+#include <QSettings>
 
 #include "networkservice.h"
 #include "commondbustypes.h"
@@ -87,6 +88,11 @@ NetworkService::NetworkService(QObject* parent)
       isConnected(false)
 {
     qRegisterMetaType<NetworkService *>();
+
+    QSettings connmanConfig("/etc/connman/main.conf", QSettings::IniFormat);
+    int configTimeout = connmanConfig.value("InputRequestTimeout", CONNECT_TIMEOUT).toInt();
+qDebug() << "configTimeout" << configTimeout;
+
 }
 
 NetworkService::~NetworkService() {}
@@ -259,12 +265,16 @@ void NetworkService::requestConnect()
     if (state() == QLatin1String("failure"))
         m_service->ClearProperty(QLatin1String("Error"));
 
+    QSettings connmanConfig("/etc/connman/main.conf", QSettings::IniFormat);
+    int configTimeout = connmanConfig.value("InputRequestTimeout").toInt() * 1000;
+    if (configTimeout == 0)
+        configTimeout = CONNECT_TIMEOUT;
+
     // increase reply timeout when connecting
     int timeout = CONNECT_TIMEOUT_FAVORITE;
     int old_timeout = m_service->timeout();
-    if (!favorite()) {
-        timeout = CONNECT_TIMEOUT;
-    }
+    timeout = configTimeout;
+
     m_service->setTimeout(timeout);
     QDBusPendingReply<> conn_reply = m_service->Connect();
     m_service->setTimeout(old_timeout);

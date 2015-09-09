@@ -205,7 +205,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     NetworkService *service = NULL;
 
     // make sure we don't leak memory
-    m_servicesOrder.clear();
+    if (changed.count() > 0)
+        m_servicesOrder.clear();
 
     QStringList hiddenKnownBssids;
     QStringList serviceList;
@@ -702,9 +703,21 @@ void NetworkManager::resetCountersForType(const QString &type)
 QStringList NetworkManager::servicesList(const QString &tech)
 {
     QStringList services;
-    Q_FOREACH (NetworkService *service, m_servicesOrder) {
-        if (tech.isEmpty() || service->type() == tech)
-            services.push_back(service->path());
+    if (m_servicesOrder.count() > 0) {
+        Q_FOREACH (NetworkService *service, m_servicesOrder) {
+            if (tech.isEmpty() || service->type() == tech)
+                services.push_back(service->path());
+        }
+    } else {
+        QHash<QString, NetworkService *>::const_iterator i = m_servicesCache.constBegin();
+        while (i != m_servicesCache.constEnd()) {
+            QString path = i.key();
+            // services not ethernet with 0 strength are saved and no use here
+            if ((tech != "ethernet" && i.value()->strength() > 0) && (tech.isEmpty() || path.contains(tech))) {
+                services.push_back(path);
+            }
+            ++i;
+        }
     }
     return services;
 }
@@ -713,9 +726,20 @@ QStringList NetworkManager::savedServicesList(const QString &tech)
 {
     QStringList services;
 
-    Q_FOREACH (NetworkService *service, m_savedServicesOrder) {
-        if ((tech.isEmpty() || service->type() == tech) && service->favorite())
-            services.push_back(service->path());
+    if (m_savedServicesOrder.count() > 0) {
+        Q_FOREACH (NetworkService *service, m_savedServicesOrder) {
+            if ((tech.isEmpty() || service->type() == tech) && service->favorite())
+                services.push_back(service->path());
+        }
+    } else {
+        QHash<QString, NetworkService *>::const_iterator i = m_servicesCache.constBegin();
+        while (i != m_servicesCache.constEnd()) {
+            QString path = i.key();
+            if (i.value()->strength() == 0 && (tech.isEmpty() || path.contains(tech))) {
+                services.push_back(path);
+            }
+            ++i;
+        }
     }
 
     return services;

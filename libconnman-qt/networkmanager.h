@@ -118,9 +118,9 @@ private:
     QHash<QString, NetworkTechnology *> m_technologiesCache;
     QHash<QString, NetworkService *> m_servicesCache;
 
-    /* This is for sorting purpose only, never delete an object from here */
-    QVector<NetworkService *> m_servicesOrder;
-    QVector<NetworkService *> m_savedServicesOrder;
+    /* Define the order of services returned in service lists */
+    QStringList m_servicesOrder;
+    QStringList m_savedServicesOrder;
 
     /* This variable is used just to send signal if changed */
     NetworkService* m_defaultRoute;

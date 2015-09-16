@@ -88,11 +88,6 @@ NetworkService::NetworkService(QObject* parent)
       isConnected(false)
 {
     qRegisterMetaType<NetworkService *>();
-
-    QSettings connmanConfig("/etc/connman/main.conf", QSettings::IniFormat);
-    int configTimeout = connmanConfig.value("InputRequestTimeout", CONNECT_TIMEOUT).toInt();
-qDebug() << "configTimeout" << configTimeout;
-
 }
 
 NetworkService::~NetworkService() {}

@@ -238,7 +238,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             continue;
         }
 
-        m_servicesOrder.append(service->path());
+        if (!m_servicesOrder.contains(service->path()))
+            m_servicesOrder.append(service->path());
 
         // If this is no longer a favorite network, remove it from the saved list
         if (!service->favorite())
@@ -453,8 +454,8 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
             connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
             m_servicesCache.insert(servicePath, service);
         }
-
-        m_servicesOrder.append(servicePath);
+        if (!m_servicesOrder.contains(servicePath))
+            m_servicesOrder.append(servicePath);
     }
 
     updateDefaultRoute();

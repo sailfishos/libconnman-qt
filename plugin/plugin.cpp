@@ -7,7 +7,11 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-#include "components.h"
+#include <QtPlugin>
+
+#include <QtQml>
+#include <QQmlEngine>
+#include <QQmlExtensionPlugin>
 
 #include <networkservice.h>
 #include <clockmodel.h>
@@ -18,7 +22,18 @@
 #include "networksession.h"
 #include "counter.h"
 
-void Components::registerTypes(const char *uri)
+class ConnmanPlugin: public QQmlExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "MeeGo.Connman")
+
+public:
+    void registerTypes(const char *uri);
+
+    void initializeEngine(QQmlEngine *engine, const char *uri);
+};
+
+void ConnmanPlugin::registerTypes(const char *uri)
 {
     // @uri MeeGo.Connman
 
@@ -35,8 +50,10 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
 }
 
-void Components::initializeEngine(QQmlEngine *engine, const char *uri)
+void ConnmanPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(uri);
     Q_UNUSED(engine);
 }
+
+#include "plugin.moc"

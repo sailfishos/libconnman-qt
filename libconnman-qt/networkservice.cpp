@@ -1,25 +1,192 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
+
 #include <QSettings>
 
 #include "networkservice.h"
 #include "commondbustypes.h"
+
 #include "connman_manager_interface.h"
-#include "connman_service_interface.h"
+
+class NetworkService::Private: public QObject
+{
+    Q_OBJECT
+
+public:
+    class InterfaceProxy;
+    class GetPropertyWatcher;
+    static const QString Passphrase;
+    static QVariantMap adaptToConnmanProperties(const QVariantMap& map);
+
+    Private(NetworkService* parent);
+
+    void deleteProxy();
+    InterfaceProxy* createProxy(QString path);
+    NetworkService* service();
+
+private Q_SLOTS:
+    void onRestrictedPropertyChanged(QString name);
+    void onGetPropertyFinished(QDBusPendingCallWatcher* call);
+
+public:
+    InterfaceProxy* m_proxy;
+    bool m_passphraseAvailable;
+};
+
+// ==========================================================================
+// NetworkService::Private::InterfaceProxy
+//
+// qdbusxml2cpp doesn't really do much, it's easier to write these
+// proxies by hand. Basically, this is what we have here:
+//
+// <interface name="net.connman.Service">
+//   <method name="GetProperties">
+//     <arg name="properties" type="a{sv}" direction="out"/>
+//   </method>
+//   <method name="GetProperty">
+//     <arg name="value" type="v" direction="out"/>
+//   </method>
+//   <method name="SetProperty">
+//     <arg name="name" type="s"/>
+//     <arg name="value" type="v" direction="out"/>
+//   </method>
+//   <method name="ClearProperty">
+//     <arg name="name" type="s" />
+//   </method>
+//   <method name="Connect"/>
+//   <method name="Disconnect"/>
+//   <method name="Remove"/>
+//   <method name="MoveBefore">
+//     <arg name="service" type="o"/>
+//   </method>
+//   <method name="MoveAfter">
+//     <arg name="service" type="o"/>
+//   </method>
+//   <method name="ResetCounters"/>
+//   <signal name="PropertyChanged">
+//     <arg name="name" type="s"/>
+//     <arg name="value" type="v"/>
+//   </signal>
+//   <signal name="RestrictedPropertyChanged">
+//     <arg name="name" type="s"/>
+//   </signal>
+// </interface>
+//
+// ==========================================================================
+
+class NetworkService::Private::InterfaceProxy: public QDBusAbstractInterface
+{
+    Q_OBJECT
+
+public:
+    InterfaceProxy(QString path, NetworkService::Private* parent) :
+        QDBusAbstractInterface(CONNMAN_SERVICE, path, "net.connman.Service",
+            CONNMAN_BUS, parent) {}
+
+public Q_SLOTS:
+    QDBusPendingCall GetProperties()
+        { return asyncCall("GetProperties"); }
+    QDBusPendingCall GetProperty(QString name)
+        { return asyncCall("GetProperty", name); }
+    QDBusPendingCall SetProperty(QString name, QVariant value)
+        { return asyncCall("SetProperty", name, qVariantFromValue(value)); }
+    QDBusPendingCall ClearProperty(QString name)
+        { return asyncCall("ClearProperty", name); }
+    QDBusPendingCall Connect()
+        { return asyncCall("Connect"); }
+    QDBusPendingCall Disconnect()
+        { return asyncCall("Disconnect"); }
+    QDBusPendingCall Remove()
+        { return asyncCall("Remove"); }
+    QDBusPendingCall ResetCounters()
+        { return asyncCall("ResetCounters"); }
+
+Q_SIGNALS:
+    void PropertyChanged(QString name, QDBusVariant value);
+    void RestrictedPropertyChanged(QString name);
+};
+
+// ==========================================================================
+// NetworkService::Private::GetPropertyWatcher
+// ==========================================================================
+
+class NetworkService::Private::GetPropertyWatcher : public QDBusPendingCallWatcher {
+public:
+    GetPropertyWatcher(QString name, InterfaceProxy* proxy) :
+        QDBusPendingCallWatcher(proxy->GetProperty(name), proxy),
+        m_name(name) {}
+    QString m_name;
+};
+
+// ==========================================================================
+// NetworkService::Private
+// ==========================================================================
+
+const QString NetworkService::Private::Passphrase("Passphrase");
+
+NetworkService::Private::Private(NetworkService* parent) :
+    QObject(parent),
+    m_proxy(NULL),
+    m_passphraseAvailable(false)
+{
+}
+
+void NetworkService::Private::deleteProxy()
+{
+    if (m_proxy) {
+        delete m_proxy;
+        m_proxy = NULL;
+    }
+}
+
+NetworkService::Private::InterfaceProxy*
+NetworkService::Private::createProxy(QString path)
+{
+    delete m_proxy;
+    m_proxy = new InterfaceProxy(path, this);
+    connect(m_proxy, SIGNAL(RestrictedPropertyChanged(QString)),
+        SLOT(onRestrictedPropertyChanged(QString)));
+    return m_proxy;
+}
+
+inline NetworkService* NetworkService::Private::service()
+{
+    return (NetworkService*)parent();
+}
+
+void NetworkService::Private::onRestrictedPropertyChanged(QString name)
+{
+    qDebug() << name;
+    connect(new GetPropertyWatcher(name, m_proxy),
+        SIGNAL(finished(QDBusPendingCallWatcher*)),
+        SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
+}
+
+void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* call)
+{
+    GetPropertyWatcher* watcher = (GetPropertyWatcher*)call;
+    QDBusPendingReply<QVariant> reply = *call;
+    call->deleteLater();
+    if (reply.isError()) {
+        qDebug() << watcher->m_name << reply.error();
+    } else {
+        qDebug() << watcher->m_name << "=" << reply.value();
+        service()->emitPropertyChange(watcher->m_name, reply.value());
+    }
+}
 
 /*
  * JS returns arrays as QVariantList or a(v) in terms of D-Bus,
  * but ConnMan requires some properties to be lists of strings
  * or a(s) thus this function.
  */
-QVariantMap adaptToConnmanProperties(const QVariantMap &map)
+QVariantMap NetworkService::Private::adaptToConnmanProperties(const QVariantMap &map)
 {
     QVariantMap buffer;
     Q_FOREACH (const QString &key, map.keys()) {
@@ -35,6 +202,10 @@ QVariantMap adaptToConnmanProperties(const QVariantMap &map)
     }
     return buffer;
 }
+
+// ==========================================================================
+// NetworkService
+// ==========================================================================
 
 const QString NetworkService::Name("Name");
 const QString NetworkService::State("State");
@@ -70,10 +241,10 @@ const QString NetworkService::Hidden("Hidden");
 
 NetworkService::NetworkService(const QString &path, const QVariantMap &properties, QObject* parent)
   : QObject(parent),
-    m_service(NULL),
+    m_priv(new Private(this)),
     m_path(path),
     m_propertiesCache(properties),
-    isConnected(false)
+    m_connected(false)
 {
     qRegisterMetaType<NetworkService *>();
 
@@ -83,9 +254,8 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 
 NetworkService::NetworkService(QObject* parent)
     : QObject(parent),
-      m_service(NULL),
-      m_path(QString()),
-      isConnected(false)
+      m_priv(new Private(this)),
+      m_connected(false)
 {
     qRegisterMetaType<NetworkService *>();
 }
@@ -115,37 +285,27 @@ const QString NetworkService::error() const
 
 const QString NetworkService::type() const
 {
-    if (m_propertiesCache.contains(Type))
-        return m_propertiesCache.value(Type).toString();
-    return QString();
+    return m_propertiesCache.value(Type).toString();
 }
 
 const QStringList NetworkService::security() const
 {
-    if (m_propertiesCache.contains(Security))
-        return m_propertiesCache.value(Security).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(Security).toStringList();
 }
 
 uint NetworkService::strength() const
 {
-    if (m_propertiesCache.contains(Strength))
-        return m_propertiesCache.value(Strength).toUInt();
-    return 0;
+    return m_propertiesCache.value(Strength).toUInt();
 }
 
 bool NetworkService::favorite() const
 {
-    if (m_propertiesCache.contains(Favorite))
-        return m_propertiesCache.value(Favorite).toBool();
-    return false;
+    return m_propertiesCache.value(Favorite).toBool();
 }
 
 bool NetworkService::autoConnect() const
 {
-    if (m_propertiesCache.contains(AutoConnect))
-        return m_propertiesCache.value(AutoConnect).toBool();
-    return false;
+    return m_propertiesCache.value(AutoConnect).toBool();
 }
 
 const QString NetworkService::path() const
@@ -155,111 +315,110 @@ const QString NetworkService::path() const
 
 const QVariantMap NetworkService::ipv4() const
 {
-    if (m_propertiesCache.contains(IPv4))
+    if (m_propertiesCache.contains(IPv4)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
+    }
     return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv4Config() const
 {
-    if (m_propertiesCache.contains(IPv4Config))
+    if (m_propertiesCache.contains(IPv4Config)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
+    }
     return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv6() const
 {
-    if (m_propertiesCache.contains(IPv6))
+    if (m_propertiesCache.contains(IPv6)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
+    }
     return QVariantMap();
 }
 
 const QVariantMap NetworkService::ipv6Config() const
 {
-    if (m_propertiesCache.contains(IPv6Config))
+    if (m_propertiesCache.contains(IPv6Config)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
+    }
     return QVariantMap();
 }
 
 const QStringList NetworkService::nameservers() const
 {
-    if (m_propertiesCache.contains(Nameservers))
-        return m_propertiesCache.value(Nameservers).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(Nameservers).toStringList();
 }
 
 const QStringList NetworkService::nameserversConfig() const
 {
-    if (m_propertiesCache.contains(NameserversConfig))
-        return m_propertiesCache.value(NameserversConfig).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(NameserversConfig).toStringList();
 }
 
 const QStringList NetworkService::domains() const
 {
-    if (m_propertiesCache.contains(Domains))
-        return m_propertiesCache.value(Domains).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(Domains).toStringList();
 }
 
 const QStringList NetworkService::domainsConfig() const
 {
-    if (m_propertiesCache.contains(DomainsConfig))
-        return m_propertiesCache.value(DomainsConfig).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(DomainsConfig).toStringList();
 }
 
 const QVariantMap NetworkService::proxy() const
 {
-    if (m_propertiesCache.contains(Proxy))
+    if (m_propertiesCache.contains(Proxy)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
+    }
     return QVariantMap();
 }
 
 const QVariantMap NetworkService::proxyConfig() const
 {
-    if (m_propertiesCache.contains(ProxyConfig))
+    if (m_propertiesCache.contains(ProxyConfig)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
+    }
     return QVariantMap();
 }
 
 const QVariantMap NetworkService::ethernet() const
 {
-    if (m_propertiesCache.contains(Ethernet))
+    if (m_propertiesCache.contains(Ethernet)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
+    }
     return QVariantMap();
 }
 
 bool NetworkService::roaming() const
 {
-    if (m_propertiesCache.contains(Roaming))
-        return m_propertiesCache.value(Roaming).toBool();
-    return false;
+    return m_propertiesCache.value(Roaming).toBool();
 }
 
 bool NetworkService::hidden() const
 {
-    if (m_propertiesCache.contains(Hidden))
-        return m_propertiesCache.value(Hidden).toBool();
-    return false;
+    return m_propertiesCache.value(Hidden).toBool();
 }
 
 void NetworkService::requestConnect()
 {
-    if (!m_service) {
+    Private::InterfaceProxy* service = m_priv->m_proxy;
+
+    if (!service) {
         return;
     }
     if (connected()) {
         Q_EMIT connectRequestFailed("Already connected");
         return;
     }
+
     Q_EMIT serviceConnectionStarted();
 
     // If the service is in the failure state clear the Error property so that we get notified of
     // errors on subsequent connection attempts.
     if (state() == QLatin1String("failure"))
-        m_service->ClearProperty(QLatin1String("Error"));
+        service->ClearProperty(QLatin1String("Error"));
 
+    // This is wrong, it should be somehow fetched over D-Bus
     QSettings connmanConfig("/etc/connman/main.conf", QSettings::IniFormat);
     int configTimeout = connmanConfig.value("InputRequestTimeout").toInt() * 1000;
     if (configTimeout == 0)
@@ -267,47 +426,45 @@ void NetworkService::requestConnect()
 
     // increase reply timeout when connecting
     int timeout = CONNECT_TIMEOUT_FAVORITE;
-    int old_timeout = m_service->timeout();
+    int old_timeout = service->timeout();
     timeout = configTimeout;
 
-    m_service->setTimeout(timeout);
-    QDBusPendingReply<> conn_reply = m_service->Connect();
-    m_service->setTimeout(old_timeout);
+    service->setTimeout(timeout);
+    QDBusPendingCall conn_reply = m_priv->m_proxy->Connect();
+    service->setTimeout(old_timeout);
 
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(conn_reply, this);
-    connect(watcher,
+    connect(new QDBusPendingCallWatcher(conn_reply, service),
             SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this,
             SLOT(handleConnectReply(QDBusPendingCallWatcher*)));
 }
 
 void NetworkService::requestDisconnect()
 {
-    if (m_service) {
+    Private::InterfaceProxy* service = m_priv->m_proxy;
+    if (service) {
         Q_EMIT serviceDisconnectionStarted();
-        m_service->Disconnect();
+        service->Disconnect();
     }
 }
 
 void NetworkService::remove()
 {
-    if (!m_service)
-        return;
-
-    QDBusPendingReply<> reply = m_service->Remove();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
+    Private::InterfaceProxy* service = m_priv->m_proxy;
+    if (service) {
+        connect(new QDBusPendingCallWatcher(service->Remove(), service),
+            SIGNAL(finished(QDBusPendingCallWatcher*)),
+            SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
+    }
 }
 
 void NetworkService::setAutoConnect(bool autoConnected)
 {
-    if (m_service) {
-         QDBusPendingReply<void> reply = m_service->SetProperty(AutoConnect, QDBusVariant(QVariant(autoConnected)));
-
-         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-         connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                 this, SLOT(handleAutoConnectReply(QDBusPendingCallWatcher*)));
+    Private::InterfaceProxy* service = m_priv->m_proxy;
+    if (service) {
+         connect(new QDBusPendingCallWatcher(
+            service->SetProperty(AutoConnect, autoConnected), service),
+            SIGNAL(finished(QDBusPendingCallWatcher*)),
+            SLOT(handleAutoConnectReply(QDBusPendingCallWatcher*)));
     }
 }
 
@@ -323,43 +480,44 @@ void NetworkService::handleAutoConnectReply(QDBusPendingCallWatcher *watcher)
 
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(IPv4Config, QDBusVariant(QVariant(ipv4)));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(IPv4Config, ipv4);
+    }
 }
 
 void NetworkService::setIpv6Config(const QVariantMap &ipv6)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(IPv6Config, QDBusVariant(QVariant(ipv6)));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(IPv6Config, ipv6);
+    }
 }
 
 void NetworkService::setNameserversConfig(const QStringList &nameservers)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(NameserversConfig, QDBusVariant(QVariant(nameservers)));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(NameserversConfig, nameservers);
+    }
 }
 
 void NetworkService::setDomainsConfig(const QStringList &domains)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(DomainsConfig, QDBusVariant(QVariant(domains)));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(DomainsConfig, domains);
+    }
 }
 
 void NetworkService::setProxyConfig(const QVariantMap &proxy)
 {
-    // QDBusPendingReply<void> reply =
-    if (m_service)
-        m_service->SetProperty(ProxyConfig, QDBusVariant(QVariant(adaptToConnmanProperties(proxy))));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(ProxyConfig, Private::adaptToConnmanProperties(proxy));
+    }
 }
 
 void NetworkService::resetCounters()
 {
-    if (m_service)
-        m_service->ResetCounters();
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->ResetCounters();
+    }
 }
 
 void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
@@ -408,9 +566,9 @@ void NetworkService::resetProperties()
             Q_EMIT errorChanged(error());
         } else if (key == State) {
             Q_EMIT stateChanged(state());
-            if (isConnected != connected()) {
-                isConnected = connected();
-                Q_EMIT connectedChanged(isConnected);
+            if (m_connected != connected()) {
+                m_connected = connected();
+                Q_EMIT connectedChanged(m_connected);
             }
         } else if (key == Security) {
             Q_EMIT securityChanged(security());
@@ -442,7 +600,7 @@ void NetworkService::resetProperties()
             Q_EMIT proxyConfigChanged(proxyConfig());
         } else if (key == Ethernet) {
             Q_EMIT ethernetChanged(ethernet());
-        } else if (key == QLatin1String("Type")) {
+        } else if (key == Type) {
             Q_EMIT typeChanged(type());
         } else if (key == Roaming) {
             Q_EMIT roamingChanged(roaming());
@@ -460,34 +618,35 @@ void NetworkService::resetProperties()
             Q_EMIT encryptionModeChanged(encryptionMode());
         } else if (key == Hidden) {
             Q_EMIT hiddenChanged(hidden());
+        } else if (key == Private::Passphrase) {
+            Q_EMIT passphraseChanged(passphrase());
+            if (m_priv->m_passphraseAvailable) {
+                m_priv->m_passphraseAvailable = false;
+                Q_EMIT passphraseAvailableChanged(false);
+            }
         }
     }
 }
 
 void NetworkService::reconnectServiceInterface()
 {
-    if (m_service) {
-        delete m_service;
-        m_service = 0;
-    }
+    m_priv->deleteProxy();
 
     if (m_path.isEmpty())
         return;
 
-    m_service = new NetConnmanServiceInterface("net.connman", m_path,
-                                               QDBusConnection::systemBus(), this);
+    Private::InterfaceProxy* service = m_priv->createProxy(m_path);
+    connect(service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+        SLOT(updateProperty(QString,QDBusVariant)));
 
-    connect(m_service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-            this, SLOT(updateProperty(QString,QDBusVariant)));
-
-    if (state().isEmpty() || m_path == QStringLiteral("/")) //saved services have an empty state and cached properties
-        QTimer::singleShot(500,this,SIGNAL(propertiesReady()));
-    else  {
-        QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
-        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-
-        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
+    if (state().isEmpty() || m_path == QStringLiteral("/")) {
+        // saved services have an empty state and cached properties
+        // (so what? what is that supposed to mean?)
+        QTimer::singleShot(500, this, SIGNAL(propertiesReady()));
+    } else {
+        connect(new QDBusPendingCallWatcher(service->GetProperties(), service),
+            SIGNAL(finished(QDBusPendingCallWatcher*)),
+            SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
     }
 }
 
@@ -496,7 +655,7 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
     if (m_propertiesCache.value(name) == value)
         return;
 
-        m_propertiesCache[name] = value;
+    m_propertiesCache[name] = value;
 
     if (name == Name) {
         Q_EMIT nameChanged(value.toString());
@@ -504,9 +663,9 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT errorChanged(value.toString());
     } else if (name == State) {
         Q_EMIT stateChanged(value.toString());
-        if (isConnected != connected()) {
-            isConnected = connected();
-            Q_EMIT connectedChanged(isConnected);
+        if (m_connected != connected()) {
+            m_connected = connected();
+            Q_EMIT connectedChanged(m_connected);
         }
     } else if (name == Security) {
         Q_EMIT securityChanged(value.toStringList());
@@ -556,6 +715,12 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT encryptionModeChanged(value.toString());
     } else if (name == Hidden) {
         Q_EMIT hiddenChanged(value.toBool());
+    } else if (name == Private::Passphrase) {
+        Q_EMIT passphraseChanged(value.toString());
+        if (!m_priv->m_passphraseAvailable) {
+            m_priv->m_passphraseAvailable = true;
+            Q_EMIT passphraseAvailableChanged(true);
+        }
     }
 }
 
@@ -573,10 +738,7 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
 
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
 {
-    QVariant tmp = value.variant();
-
-    Q_ASSERT(m_service);
-    emitPropertyChange(name,tmp);
+    emitPropertyChange(name, value.variant());
 }
 
 void NetworkService::updateProperties(const QVariantMap &properties)
@@ -597,17 +759,7 @@ void NetworkService::setPath(const QString &path)
     emit pathChanged(m_path);
 
     resetProperties();
-
     reconnectServiceInterface();
-
-    if (!m_service || !m_service->isValid())
-        return;
-
-    QDBusPendingReply<QVariantMap> reply = m_service->GetProperties();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
 }
 
 bool NetworkService::connected()
@@ -622,9 +774,7 @@ bool NetworkService::connected()
 
 QStringList NetworkService::timeservers() const
 {
-    if (m_propertiesCache.contains(Timeservers))
-        return m_propertiesCache.value(Timeservers).toStringList();
-    return QStringList();
+    return m_propertiesCache.value(Timeservers).toStringList();
 }
 
 QStringList NetworkService::timeserversConfig() const
@@ -636,34 +786,66 @@ QStringList NetworkService::timeserversConfig() const
 
 void NetworkService::setTimeserversConfig(const QStringList &servers)
 {
-    if (m_service)
-        m_service->SetProperty(TimeserversConfig, QDBusVariant(QVariant(servers)));
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(TimeserversConfig, servers);
+    }
 }
 
 const QString NetworkService::bssid()
 {
-    if (m_propertiesCache.contains(BSSID))
-        return m_propertiesCache.value(BSSID).toString();
-    return QString();
+    return m_propertiesCache.value(BSSID).toString();
 }
 
 quint32 NetworkService::maxRate()
 {
-    if (m_propertiesCache.contains(MaxRate))
-        return m_propertiesCache.value(MaxRate).toUInt();
-    return 0;
+    return m_propertiesCache.value(MaxRate).toUInt();
 }
 
 quint16 NetworkService::frequency()
 {
-    if (m_propertiesCache.contains(Frequency))
-        return m_propertiesCache.value(Frequency).toUInt();
-    return 0;
+    return m_propertiesCache.value(Frequency).toUInt();
 }
 
 const QString NetworkService::encryptionMode()
 {
-    if (m_propertiesCache.contains(EncryptionMode))
-        return m_propertiesCache.value(EncryptionMode).toString();
-    return QString();
+    return m_propertiesCache.value(EncryptionMode).toString();
 }
+
+QString NetworkService::bssid() const
+{
+    return m_propertiesCache.value(BSSID).toString();
+}
+
+quint32 NetworkService::maxRate() const
+{
+    return m_propertiesCache.value(MaxRate).toUInt();
+}
+
+quint16 NetworkService::frequency() const
+{
+    return m_propertiesCache.value(Frequency).toUInt();
+}
+
+QString NetworkService::encryptionMode() const
+{
+    return m_propertiesCache.value(EncryptionMode).toString();
+}
+
+QString NetworkService::passphrase() const
+{
+    return m_propertiesCache.value(Private::Passphrase).toString();
+}
+
+void NetworkService::setPassphrase(QString passphrase)
+{
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->SetProperty(Private::Passphrase, passphrase);
+    }
+}
+
+bool NetworkService::passphraseAvailable() const
+{
+    return m_propertiesCache.contains(Private::Passphrase);
+}
+
+#include "networkservice.moc"

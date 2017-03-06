@@ -1,11 +1,10 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #ifndef NETWORKSERVICE_H
@@ -16,8 +15,6 @@
 #define CONNECT_TIMEOUT 300000 // user is supposed to provide input for unconfigured networks
 #define CONNECT_TIMEOUT_FAVORITE 60000
 
-class NetConnmanServiceInterface;
-
 class NetworkService : public QObject
 {
     Q_OBJECT
@@ -26,6 +23,8 @@ class NetworkService : public QObject
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
+    Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
+    Q_PROPERTY(bool passphraseAvailable READ passphraseAvailable NOTIFY passphraseAvailableChanged)
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged)
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged)
@@ -52,6 +51,9 @@ class NetworkService : public QObject
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
     Q_PROPERTY(QString encryptionMode READ encryptionMode NOTIFY encryptionModeChanged)
     Q_PROPERTY(bool hidden READ hidden NOTIFY hiddenChanged)
+
+    class Private;
+    friend class Private;
 
 public:
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -95,6 +97,16 @@ public:
     const QString encryptionMode();
     bool hidden() const;
 
+    // Canonical variants of the above with const in the right place
+    QString bssid() const;
+    quint32 maxRate() const;
+    quint16 frequency() const;
+    QString encryptionMode() const;
+
+    QString passphrase() const;
+    void setPassphrase(QString passphrase);
+    bool passphraseAvailable() const;
+
 Q_SIGNALS:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
@@ -133,6 +145,9 @@ Q_SIGNALS:
     void encryptionModeChanged(const QString &mode);
     void hiddenChanged(bool);
 
+    void passphraseChanged(QString);
+    void passphraseAvailableChanged(bool);
+
 public Q_SLOTS:
     void requestConnect();
     void requestDisconnect();
@@ -148,7 +163,7 @@ public Q_SLOTS:
     void resetCounters();
 
 private:
-    NetConnmanServiceInterface *m_service;
+    Private *m_priv;
     QString m_path;
     QVariantMap m_propertiesCache;
 
@@ -181,7 +196,7 @@ private:
     static const QString EncryptionMode;
     static const QString Hidden;
 
-    bool isConnected;
+    bool m_connected;
 
 private Q_SLOTS:
     void updateProperty(const QString &name, const QDBusVariant &value);

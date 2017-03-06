@@ -1,11 +1,10 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #ifndef NETWORKTECHNOLOGY_H
@@ -19,8 +18,8 @@ class NetworkTechnology : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name)
-    Q_PROPERTY(QString type READ type)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
@@ -56,7 +55,6 @@ public:
     QString tetheringPassphrase() const;
     void setTetheringPassphrase(const QString &pass);
 
-
 public Q_SLOTS:
     void setPowered(const bool &powered);
     void scan();
@@ -72,6 +70,8 @@ Q_SIGNALS:
     void tetheringPassphraseChanged(const QString &passphrase);
     void pathChanged(const QString &path);
     void propertiesReady();
+    void nameChanged(const QString &name);
+    void typeChanged(const QString &type);
 
 private:
     NetConnmanTechnologyInterface *m_technology;
@@ -88,7 +88,6 @@ private:
 
     QString m_path;
     void init(const QString &path);
-
 
 private Q_SLOTS:
     void propertyChanged(const QString &name, const QDBusVariant &value);

@@ -17,9 +17,6 @@
 #include <QtDBus/QtDBus>
 #include <QtDBus/QDBusObjectPath>
 
-#define CONNMAN_BUS QDBusConnection::systemBus()
-#define CONNMAN_SERVICE QLatin1String("net.connman")
-
 typedef QMap<QString, QString> StringMap;
 Q_DECLARE_METATYPE ( StringMap )
 

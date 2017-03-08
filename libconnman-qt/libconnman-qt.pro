@@ -17,6 +17,10 @@ isEmpty(TARGET_SUFFIX) {
     TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
+CONFIG(debug, debug|release) {
+    DEFINES += CONNMAN_DEBUG=1
+}
+
 TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
@@ -26,7 +30,7 @@ DBUS_INTERFACES = \
     connman_session.xml \
     connman_technology.xml \
 
-HEADERS += \
+PUBLIC_HEADERS += \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \
@@ -37,6 +41,10 @@ HEADERS += \
     sessionagent.h \
     networksession.h \
     counter.h
+
+HEADERS += \
+    $$PUBLIC_HEADERS \
+    libconnman_p.h \
 
 SOURCES += \
     networkmanager.cpp \
@@ -52,7 +60,7 @@ SOURCES += \
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
-headers.files = $$HEADERS
+headers.files = $$PUBLIC_HEADERS
 
 QMAKE_PKGCONFIG_DESCRIPTION = Qt Connman Library
 QMAKE_PKGCONFIG_DESTDIR = pkgconfig

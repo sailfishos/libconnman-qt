@@ -10,7 +10,7 @@
 #include <QSettings>
 
 #include "networkservice.h"
-#include "commondbustypes.h"
+#include "libconnman_p.h"
 
 #include "connman_manager_interface.h"
 
@@ -21,7 +21,16 @@ class NetworkService::Private: public QObject
 public:
     class InterfaceProxy;
     class GetPropertyWatcher;
+    typedef QHash<QString,EapMethod> EapMethodMap;
+    typedef QSharedPointer<EapMethodMap> EapMethodMapRef;
+
+    static const int NUM_EAP_METHODS = 4; // NONE, PEAP, TTLS, TLS
+    static const QString EapMethodName[NUM_EAP_METHODS];
+
+    static const QString EAP;
+    static const QString Identity;
     static const QString Passphrase;
+
     static QVariantMap adaptToConnmanProperties(const QVariantMap& map);
 
     Private(NetworkService* parent);
@@ -29,6 +38,10 @@ public:
     void deleteProxy();
     InterfaceProxy* createProxy(QString path);
     NetworkService* service();
+    EapMethodMapRef eapMethodMap();
+    EapMethod eapMethod();
+    void setEapMethod(EapMethod method);
+    void setProperty(QString name, QVariant value);
 
 private Q_SLOTS:
     void onRestrictedPropertyChanged(QString name);
@@ -36,14 +49,17 @@ private Q_SLOTS:
 
 public:
     InterfaceProxy* m_proxy;
+    EapMethodMapRef m_eapMethodMapRef;
+    bool m_eapMethodAvailable;
+    bool m_identityAvailable;
     bool m_passphraseAvailable;
 };
 
 // ==========================================================================
 // NetworkService::Private::InterfaceProxy
 //
-// qdbusxml2cpp doesn't really do much, it's easier to write these
-// proxies by hand. Basically, this is what we have here:
+// qdbusxml2cpp doesn't really do much, it's easier to write these proxies
+// by hand. Basically, this is what we have here:
 //
 // <interface name="net.connman.Service">
 //   <method name="GetProperties">
@@ -128,11 +144,19 @@ public:
 // NetworkService::Private
 // ==========================================================================
 
+const QString NetworkService::Private::EAP("EAP");
+const QString NetworkService::Private::Identity("Identity");
 const QString NetworkService::Private::Passphrase("Passphrase");
+
+const QString NetworkService::Private::EapMethodName[] = {
+    QString(), "peap", "ttls", "tls"
+};
 
 NetworkService::Private::Private(NetworkService* parent) :
     QObject(parent),
     m_proxy(NULL),
+    m_eapMethodAvailable(false),
+    m_identityAvailable(false),
     m_passphraseAvailable(false)
 {
 }
@@ -162,10 +186,10 @@ inline NetworkService* NetworkService::Private::service()
 
 void NetworkService::Private::onRestrictedPropertyChanged(QString name)
 {
-    qDebug() << name;
+    DBG_(name);
     connect(new GetPropertyWatcher(name, m_proxy),
         SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
+        SLOT(onGetPropertyFinished(QDBusPendingCallWatcher*)));
 }
 
 void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* call)
@@ -174,10 +198,51 @@ void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* cal
     QDBusPendingReply<QVariant> reply = *call;
     call->deleteLater();
     if (reply.isError()) {
-        qDebug() << watcher->m_name << reply.error();
+        DBG_(watcher->m_name << reply.error());
     } else {
-        qDebug() << watcher->m_name << "=" << reply.value();
+        DBG_(watcher->m_name << "=" << reply.value());
         service()->emitPropertyChange(watcher->m_name, reply.value());
+    }
+}
+
+NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
+{
+    static QWeakPointer<EapMethodMap> sharedInstance;
+    m_eapMethodMapRef = sharedInstance;
+    if (m_eapMethodMapRef.isNull()) {
+        EapMethodMap* map = new EapMethodMap;
+        // Start with 1 because 0 is EAP_NONE
+        for (int i=1; i<NUM_EAP_METHODS; i++) {
+            const QString name = EapMethodName[i];
+            map->insert(name.toLower(), (EapMethod)i);
+            map->insert(name.toUpper(), (EapMethod)i);
+        }
+        m_eapMethodMapRef = EapMethodMapRef(map);
+    }
+    return m_eapMethodMapRef;
+}
+
+NetworkService::EapMethod NetworkService::Private::eapMethod()
+{
+    QString eap = service()->m_propertiesCache.value(EAP).toString();
+    if (eap.isEmpty()) {
+        return EAP_NONE;
+    } else {
+        return eapMethodMap()->value(eap, EAP_NONE);
+    }
+}
+
+void NetworkService::Private::setEapMethod(EapMethod method)
+{
+    if (method >= EAP_NONE && method < NUM_EAP_METHODS) {
+        setProperty(EAP, EapMethodName[method]);
+    }
+}
+
+void NetworkService::Private::setProperty(QString name, QVariant value)
+{
+    if (m_proxy) {
+        m_proxy->SetProperty(name, value);
     }
 }
 
@@ -248,7 +313,10 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 {
     qRegisterMetaType<NetworkService *>();
 
-    Q_ASSERT(!path.isEmpty());
+    m_priv->m_eapMethodAvailable = m_propertiesCache.contains(Private::EAP);
+    m_priv->m_identityAvailable = m_propertiesCache.contains(Private::Identity);
+    m_priv->m_passphraseAvailable = m_propertiesCache.contains(Private::Passphrase);
+
     reconnectServiceInterface();
 }
 
@@ -264,23 +332,17 @@ NetworkService::~NetworkService() {}
 
 const QString NetworkService::name() const
 {
-    if (m_propertiesCache.contains(Name))
-        return m_propertiesCache.value(Name).toString();
-    return QString();
+    return m_propertiesCache.value(Name).toString();
 }
 
 const QString NetworkService::state() const
 {
-    if (m_propertiesCache.contains(State))
-        return m_propertiesCache.value(State).toString();
-    return QString();
+    return m_propertiesCache.value(State).toString();
 }
 
 const QString NetworkService::error() const
 {
-    if (m_propertiesCache.contains(Error))
-        return m_propertiesCache.value(Error).toString();
-    return QString();
+    return m_propertiesCache.value(Error).toString();
 }
 
 const QString NetworkService::type() const
@@ -474,43 +536,33 @@ void NetworkService::handleAutoConnectReply(QDBusPendingCallWatcher *watcher)
     watcher->deleteLater();
 
     if (reply.isError())
-        qDebug() << reply.error().message();
+        DBG_(reply.error().message());
     // propertyChange should handle emit
 }
 
 void NetworkService::setIpv4Config(const QVariantMap &ipv4)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(IPv4Config, ipv4);
-    }
+    m_priv->setProperty(IPv4Config, ipv4);
 }
 
 void NetworkService::setIpv6Config(const QVariantMap &ipv6)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(IPv6Config, ipv6);
-    }
+    m_priv->setProperty(IPv6Config, ipv6);
 }
 
 void NetworkService::setNameserversConfig(const QStringList &nameservers)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(NameserversConfig, nameservers);
-    }
+    m_priv->setProperty(NameserversConfig, nameservers);
 }
 
 void NetworkService::setDomainsConfig(const QStringList &domains)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(DomainsConfig, domains);
-    }
+    m_priv->setProperty(DomainsConfig, domains);
 }
 
 void NetworkService::setProxyConfig(const QVariantMap &proxy)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(ProxyConfig, Private::adaptToConnmanProperties(proxy));
-    }
+    m_priv->setProperty(ProxyConfig, Private::adaptToConnmanProperties(proxy));
 }
 
 void NetworkService::resetCounters()
@@ -526,10 +578,10 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     QDBusPendingReply<> reply = *call;
 
     if (!reply.isFinished()) {
-       qDebug() << "connect() not finished yet";
+       DBG_("connect() not finished yet");
     }
     if (reply.isError()) {
-        qDebug() << "Reply from service.connect(): " << reply.error().message();
+        DBG_("Reply from service.connect(): " << reply.error().message());
         Q_EMIT connectRequestFailed(reply.error().message());
     }
 
@@ -618,12 +670,24 @@ void NetworkService::resetProperties()
             Q_EMIT encryptionModeChanged(encryptionMode());
         } else if (key == Hidden) {
             Q_EMIT hiddenChanged(hidden());
+        } else if (key == Private::EAP) {
+            if (m_priv->m_eapMethodAvailable) {
+                m_priv->m_eapMethodAvailable = false;
+                Q_EMIT eapMethodAvailableChanged(false);
+            }
+            Q_EMIT eapMethodChanged();
+        } else if (key == Private::Identity) {
+            if (m_priv->m_identityAvailable) {
+                m_priv->m_identityAvailable = false;
+                Q_EMIT identityAvailableChanged(false);
+            }
+            Q_EMIT identityChanged(identity());
         } else if (key == Private::Passphrase) {
-            Q_EMIT passphraseChanged(passphrase());
             if (m_priv->m_passphraseAvailable) {
                 m_priv->m_passphraseAvailable = false;
                 Q_EMIT passphraseAvailableChanged(false);
             }
+            Q_EMIT passphraseChanged(passphrase());
         }
     }
 }
@@ -641,7 +705,6 @@ void NetworkService::reconnectServiceInterface()
 
     if (state().isEmpty() || m_path == QStringLiteral("/")) {
         // saved services have an empty state and cached properties
-        // (so what? what is that supposed to mean?)
         QTimer::singleShot(500, this, SIGNAL(propertiesReady()));
     } else {
         connect(new QDBusPendingCallWatcher(service->GetProperties(), service),
@@ -715,6 +778,18 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT encryptionModeChanged(value.toString());
     } else if (name == Hidden) {
         Q_EMIT hiddenChanged(value.toBool());
+    } else if (name == Private::EAP) {
+        Q_EMIT eapMethodChanged();
+        if (!m_priv->m_eapMethodAvailable) {
+            m_priv->m_eapMethodAvailable = true;
+            Q_EMIT eapMethodAvailableChanged(true);
+        }
+    } else if (name == Private::Identity) {
+        Q_EMIT identityChanged(value.toString());
+        if (!m_priv->m_identityAvailable) {
+            m_priv->m_identityAvailable = true;
+            Q_EMIT identityAvailableChanged(true);
+        }
     } else if (name == Private::Passphrase) {
         Q_EMIT passphraseChanged(value.toString());
         if (!m_priv->m_passphraseAvailable) {
@@ -729,10 +804,11 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
     QDBusPendingReply<QVariantMap> reply = *call;
     call->deleteLater();
 
-    if (!reply.isError())
+    if (!reply.isError()) {
         updateProperties(reply.value());
-    else
-        qDebug() << reply.error().message();
+    } else {
+        DBG_(reply.error().message());
+    }
     Q_EMIT propertiesReady();
 }
 
@@ -786,9 +862,7 @@ QStringList NetworkService::timeserversConfig() const
 
 void NetworkService::setTimeserversConfig(const QStringList &servers)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(TimeserversConfig, servers);
-    }
+    m_priv->setProperty(TimeserversConfig, servers);
 }
 
 const QString NetworkService::bssid()
@@ -838,14 +912,42 @@ QString NetworkService::passphrase() const
 
 void NetworkService::setPassphrase(QString passphrase)
 {
-    if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(Private::Passphrase, passphrase);
-    }
+    m_priv->setProperty(Private::Passphrase, passphrase);
 }
 
 bool NetworkService::passphraseAvailable() const
 {
-    return m_propertiesCache.contains(Private::Passphrase);
+    return m_priv->m_passphraseAvailable;
+}
+
+QString NetworkService::identity() const
+{
+    return m_propertiesCache.value(Private::Identity).toString();
+}
+
+void NetworkService::setIdentity(QString identity)
+{
+    m_priv->setProperty(Private::Identity, identity);
+}
+
+bool NetworkService::identityAvailable() const
+{
+    return m_priv->m_identityAvailable;
+}
+
+NetworkService::EapMethod NetworkService::eapMethod() const
+{
+    return m_priv->eapMethod();
+}
+
+void NetworkService::setEapMethod(EapMethod method)
+{
+    m_priv->setEapMethod(method);
+}
+
+bool NetworkService::eapMethodAvailable() const
+{
+    return m_priv->m_eapMethodAvailable;
 }
 
 #include "networkservice.moc"

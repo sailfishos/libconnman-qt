@@ -23,8 +23,6 @@ class NetworkService : public QObject
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
-    Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
-    Q_PROPERTY(bool passphraseAvailable READ passphraseAvailable NOTIFY passphraseAvailableChanged)
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged)
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged)
@@ -46,6 +44,13 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList timeservers READ timeservers NOTIFY timeserversChanged)
     Q_PROPERTY(QStringList timeserversConfig READ timeserversConfig WRITE setTimeserversConfig NOTIFY timeserversConfigChanged)
 
+    Q_ENUMS(EapMethod)
+    Q_PROPERTY(EapMethod eapMethod READ eapMethod WRITE setEapMethod NOTIFY eapMethodChanged)
+    Q_PROPERTY(QString identity READ identity WRITE setIdentity NOTIFY identityChanged)
+    Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
+    Q_PROPERTY(bool eapMethodAvailable READ eapMethodAvailable NOTIFY eapMethodAvailableChanged)
+    Q_PROPERTY(bool identityAvailable READ identityAvailable NOTIFY identityAvailableChanged)
+    Q_PROPERTY(bool passphraseAvailable READ passphraseAvailable NOTIFY passphraseAvailableChanged)
     Q_PROPERTY(QString bssid READ bssid NOTIFY bssidChanged)
     Q_PROPERTY(quint32 maxRate READ maxRate NOTIFY maxRateChanged)
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
@@ -56,6 +61,13 @@ class NetworkService : public QObject
     friend class Private;
 
 public:
+    enum EapMethod {
+        EAP_NONE,
+        EAP_PEAP,
+        EAP_TTLS,
+        EAP_TLS
+    };
+
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
     NetworkService(QObject* parent = 0);
 
@@ -107,6 +119,14 @@ public:
     void setPassphrase(QString passphrase);
     bool passphraseAvailable() const;
 
+    QString identity() const;
+    void setIdentity(QString identity);
+    bool identityAvailable() const;
+
+    EapMethod eapMethod() const;
+    void setEapMethod(EapMethod method);
+    bool eapMethodAvailable() const;
+
 Q_SIGNALS:
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
@@ -147,6 +167,10 @@ Q_SIGNALS:
 
     void passphraseChanged(QString);
     void passphraseAvailableChanged(bool);
+    void identityChanged(QString);
+    void identityAvailableChanged(bool);
+    void eapMethodChanged();
+    void eapMethodAvailableChanged(bool);
 
 public Q_SLOTS:
     void requestConnect();

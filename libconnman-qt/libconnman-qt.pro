@@ -5,7 +5,7 @@ QT          += core dbus network
 QT          -= gui
 
 isEmpty(VERSION) {
-    VERSION = 1.1.0
+    VERSION = 1.1.1
     message("VERSION is unset, assuming $$VERSION")
 }
 

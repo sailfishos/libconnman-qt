@@ -24,8 +24,11 @@ public:
     typedef QHash<QString,EapMethod> EapMethodMap;
     typedef QSharedPointer<EapMethodMap> EapMethodMapRef;
 
-    static const int NUM_EAP_METHODS = 4; // NONE, PEAP, TTLS, TLS
+    static const int NUM_EAP_METHODS = 4; // None, PEAP, TTLS, TLS
     static const QString EapMethodName[NUM_EAP_METHODS];
+
+    static const int NUM_SECURITY_TYPES = 5; // Unknown, None, WEP, PSK, IEEE802.1x
+    static const QString SecurityTypeName[NUM_SECURITY_TYPES];
 
     static const QString EAP;
     static const QString Identity;
@@ -40,6 +43,7 @@ public:
     NetworkService* service();
     EapMethodMapRef eapMethodMap();
     EapMethod eapMethod();
+    bool updateSecurityType();
     void setEapMethod(EapMethod method);
     void setProperty(QString name, QVariant value);
 
@@ -50,6 +54,7 @@ private Q_SLOTS:
 public:
     InterfaceProxy* m_proxy;
     EapMethodMapRef m_eapMethodMapRef;
+    SecurityType m_securityType;
     bool m_eapMethodAvailable;
     bool m_identityAvailable;
     bool m_passphraseAvailable;
@@ -148,13 +153,20 @@ const QString NetworkService::Private::EAP("EAP");
 const QString NetworkService::Private::Identity("Identity");
 const QString NetworkService::Private::Passphrase("Passphrase");
 
+// The order must match EapMethod enum
 const QString NetworkService::Private::EapMethodName[] = {
     QString(), "peap", "ttls", "tls"
+};
+
+// The order must match SecurityType enum
+const QString NetworkService::Private::SecurityTypeName[] = {
+    "", "none", "wep", "psk", "ieee8021x"
 };
 
 NetworkService::Private::Private(NetworkService* parent) :
     QObject(parent),
     m_proxy(NULL),
+    m_securityType(SecurityNone),
     m_eapMethodAvailable(false),
     m_identityAvailable(false),
     m_passphraseAvailable(false)
@@ -205,13 +217,34 @@ void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* cal
     }
 }
 
+bool NetworkService::Private::updateSecurityType()
+{
+    SecurityType type = SecurityUnknown;
+    const QStringList security = service()->security();
+    if (!security.isEmpty()) {
+        // Start with 1 because 0 is SecurityUnknown
+        for (int i=1; i<NUM_SECURITY_TYPES; i++) {
+            if (security.contains(SecurityTypeName[i])) {
+                type = (SecurityType)i;
+                break;
+            }
+        }
+    }
+    if (m_securityType != type) {
+        m_securityType = type;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
 {
     static QWeakPointer<EapMethodMap> sharedInstance;
     m_eapMethodMapRef = sharedInstance;
     if (m_eapMethodMapRef.isNull()) {
         EapMethodMap* map = new EapMethodMap;
-        // Start with 1 because 0 is EAP_NONE
+        // Start with 1 because 0 is EapNone
         for (int i=1; i<NUM_EAP_METHODS; i++) {
             const QString name = EapMethodName[i];
             map->insert(name.toLower(), (EapMethod)i);
@@ -226,15 +259,15 @@ NetworkService::EapMethod NetworkService::Private::eapMethod()
 {
     QString eap = service()->m_propertiesCache.value(EAP).toString();
     if (eap.isEmpty()) {
-        return EAP_NONE;
+        return EapNone;
     } else {
-        return eapMethodMap()->value(eap, EAP_NONE);
+        return eapMethodMap()->value(eap, EapNone);
     }
 }
 
 void NetworkService::Private::setEapMethod(EapMethod method)
 {
-    if (method >= EAP_NONE && method < NUM_EAP_METHODS) {
+    if (method >= EapNone && method < NUM_EAP_METHODS) {
         setProperty(EAP, EapMethodName[method]);
     }
 }
@@ -313,6 +346,7 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 {
     qRegisterMetaType<NetworkService *>();
 
+    m_priv->updateSecurityType();
     m_priv->m_eapMethodAvailable = m_propertiesCache.contains(Private::EAP);
     m_priv->m_identityAvailable = m_propertiesCache.contains(Private::Identity);
     m_priv->m_passphraseAvailable = m_propertiesCache.contains(Private::Passphrase);
@@ -624,6 +658,9 @@ void NetworkService::resetProperties()
             }
         } else if (key == Security) {
             Q_EMIT securityChanged(security());
+            if (m_priv->updateSecurityType()) {
+                Q_EMIT securityTypeChanged();
+            }
         } else if (key == Strength) {
             Q_EMIT strengthChanged(strength());
         } else if (key == Favorite) {
@@ -732,6 +769,9 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         }
     } else if (name == Security) {
         Q_EMIT securityChanged(value.toStringList());
+        if (m_priv->updateSecurityType()) {
+            Q_EMIT securityTypeChanged();
+        }
     } else if (name == Strength) {
         Q_EMIT strengthChanged(value.toUInt());
     } else if (name == Favorite) {
@@ -933,6 +973,11 @@ void NetworkService::setIdentity(QString identity)
 bool NetworkService::identityAvailable() const
 {
     return m_priv->m_identityAvailable;
+}
+
+NetworkService::SecurityType NetworkService::securityType() const
+{
+    return m_priv->m_securityType;
 }
 
 NetworkService::EapMethod NetworkService::eapMethod() const

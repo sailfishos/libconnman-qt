@@ -19,11 +19,15 @@ class NetworkService : public QObject
 {
     Q_OBJECT
 
+    Q_ENUMS(EapMethod)
+    Q_ENUMS(SecurityType)
+
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
+    Q_PROPERTY(SecurityType securityType READ securityType NOTIFY securityTypeChanged)
     Q_PROPERTY(uint strength READ strength NOTIFY strengthChanged)
     Q_PROPERTY(bool favorite READ favorite NOTIFY favoriteChanged)
     Q_PROPERTY(bool autoConnect READ autoConnect WRITE setAutoConnect NOTIFY autoConnectChanged)
@@ -44,7 +48,6 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList timeservers READ timeservers NOTIFY timeserversChanged)
     Q_PROPERTY(QStringList timeserversConfig READ timeserversConfig WRITE setTimeserversConfig NOTIFY timeserversConfigChanged)
 
-    Q_ENUMS(EapMethod)
     Q_PROPERTY(EapMethod eapMethod READ eapMethod WRITE setEapMethod NOTIFY eapMethodChanged)
     Q_PROPERTY(QString identity READ identity WRITE setIdentity NOTIFY identityChanged)
     Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
@@ -61,11 +64,19 @@ class NetworkService : public QObject
     friend class Private;
 
 public:
+    enum SecurityType {
+        SecurityUnknown,
+        SecurityNone,
+        SecurityWEP,
+        SecurityPSK,
+        SecurityIEEE802
+    };
+
     enum EapMethod {
-        EAP_NONE,
-        EAP_PEAP,
-        EAP_TTLS,
-        EAP_TLS
+        EapNone,
+        EapPEAP,
+        EapTTLS,
+        EapTLS
     };
 
     NetworkService(const QString &path, const QVariantMap &properties, QObject* parent);
@@ -78,6 +89,7 @@ public:
     const QString state() const;
     const QString error() const;
     const QStringList security() const;
+    SecurityType securityType() const;
     bool autoConnect() const;
     uint strength() const;
     bool favorite() const;
@@ -169,6 +181,7 @@ Q_SIGNALS:
     void passphraseAvailableChanged(bool);
     void identityChanged(QString);
     void identityAvailableChanged(bool);
+    void securityTypeChanged();
     void eapMethodChanged();
     void eapMethodAvailableChanged(bool);
 

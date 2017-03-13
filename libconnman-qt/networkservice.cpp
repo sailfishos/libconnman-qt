@@ -116,7 +116,7 @@ public Q_SLOTS:
     QDBusPendingCall GetProperty(QString name)
         { return asyncCall("GetProperty", name); }
     QDBusPendingCall SetProperty(QString name, QVariant value)
-        { return asyncCall("SetProperty", name, qVariantFromValue(value)); }
+        { return asyncCall("SetProperty", name, qVariantFromValue(QDBusVariant(value))); }
     QDBusPendingCall ClearProperty(QString name)
         { return asyncCall("ClearProperty", name); }
     QDBusPendingCall Connect()

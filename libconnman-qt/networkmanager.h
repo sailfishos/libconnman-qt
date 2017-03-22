@@ -1,11 +1,11 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #ifndef NETWORKMANAGER_H
@@ -55,14 +55,15 @@ public:
     const QVector<NetworkTechnology *> getTechnologies() const;
     const QVector<NetworkService*> getServices(const QString &tech = QString()) const;
     const QVector<NetworkService*> getSavedServices(const QString &tech = QString()) const;
+    const QVector<NetworkService*> getAvailableServices(const QString &tech = QString()) const;
     void removeSavedService(const QString &identifier) const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
     Q_INVOKABLE QStringList savedServicesList(const QString &tech = QString());
+    Q_INVOKABLE QStringList availableServices(const QString &tech = QString());
     Q_INVOKABLE QStringList technologiesList();
     Q_INVOKABLE QString technologyPathForService(const QString &path);
     Q_INVOKABLE QString technologyPathForType(const QString &type);
-
 
     const QString state() const;
     bool offlineMode() const;
@@ -86,7 +87,6 @@ public Q_SLOTS:
     void unregisterCounter(const QString &path);
     QDBusObjectPath createSession(const QVariantMap &settings, const QString &sessionNotifierPath);
     void destroySession(const QString &sessionAgentPath);
-
     void setSessionMode(const bool &sessionMode);
 
 Q_SIGNALS:
@@ -107,9 +107,17 @@ Q_SIGNALS:
     void technologiesEnabledChanged();
 
 private:
+    class Private;
+    class InterfaceProxy;
+    typedef bool (*ServiceSelector)(NetworkService*);
     void propertyChanged(const QString &name, const QVariant &value);
+    void setConnmanAvailable(bool available);
+    bool connectToConnman();
+    void disconnectFromConnman();
+    const QVector<NetworkService*> selectServices(const QString &tech, ServiceSelector selector) const;
+    QStringList selectServiceList(const QString &tech, ServiceSelector selector) const;
 
-    NetConnmanManagerInterface *m_manager;
+    InterfaceProxy *m_proxy;
 
     /* Contains all property related to this net.connman.Manager object */
     QVariantMap m_propertiesCache;
@@ -135,29 +143,24 @@ private:
     static const QString SessionMode;
 
     bool m_available;
-
     bool m_servicesEnabled;
     bool m_technologiesEnabled;
 
-
 private Q_SLOTS:
-    void connectToConnman(QString = QString());
-    void disconnectFromConnman(QString = QString());
-    void connmanUnregistered(QString = QString());
+    void onConnmanRegistered();
+    void onConnmanUnregistered();
     void disconnectTechnologies();
     void setupTechnologies();
     void disconnectServices();
     void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
-    void updateSavedServices(const ConnmanObjectList &changed);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
     void getPropertiesFinished(QDBusPendingCallWatcher *watcher);
     void updateDefaultRoute();
     void getTechnologiesFinished(QDBusPendingCallWatcher *watcher);
     void getServicesFinished(QDBusPendingCallWatcher *watcher);
-    void getSavedServicesFinished(QDBusPendingCallWatcher *watcher);
 
 private:
     Q_DISABLE_COPY(NetworkManager)

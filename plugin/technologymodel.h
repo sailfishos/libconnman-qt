@@ -1,13 +1,11 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * WARNING: this class is experimetal and is about to be refactored in order
- *          to deprecate NetworkingModel.
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #ifndef TECHNOLOGYMODEL_H
@@ -33,8 +31,16 @@ class TechnologyModel : public QAbstractListModel
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(bool changesInhibited READ changesInhibited WRITE setChangesInhibited NOTIFY changesInhibitedChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(ServiceFilter filter READ filter WRITE setFilter NOTIFY filterChanged)
+    Q_ENUMS(ServiceFilter)
 
 public:
+    enum ServiceFilter {
+        AllServices,
+        SavedServices,
+        AvailableServices
+    };
+
     enum ItemRoles {
         ServiceRole = Qt::UserRole + 1
     };
@@ -53,12 +59,13 @@ public:
     bool isPowered() const;
     bool isScanning() const;
     bool changesInhibited() const;
+    ServiceFilter filter() const;
 
     void setName(const QString &name);
     void setChangesInhibited(bool b);
+    void setFilter(ServiceFilter filter);
 
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
-
     Q_INVOKABLE NetworkService *get(int index) const;
 
 public Q_SLOTS:
@@ -74,6 +81,7 @@ Q_SIGNALS:
     void changesInhibitedChanged(const bool &changesInhibited);
     void technologiesChanged();
     void countChanged();
+    void filterChanged();
 
     void scanRequestFinished();
 
@@ -85,6 +93,8 @@ private:
     bool m_scanning;
     bool m_changesInhibited;
     bool m_uneffectedChanges;
+    ServiceFilter m_filter;
+
     QHash<int, QByteArray> roleNames() const;
     void doUpdateTechnologies();
 

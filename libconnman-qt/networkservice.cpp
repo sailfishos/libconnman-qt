@@ -1,6 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -11,8 +12,6 @@
 
 #include "networkservice.h"
 #include "libconnman_p.h"
-
-#include "connman_manager_interface.h"
 
 class NetworkService::Private: public QObject
 {
@@ -33,6 +32,8 @@ public:
     static const QString EAP;
     static const QString Identity;
     static const QString Passphrase;
+    static const QString Available;
+    static const QString Saved;
 
     static QVariantMap adaptToConnmanProperties(const QVariantMap& map);
 
@@ -152,6 +153,8 @@ public:
 const QString NetworkService::Private::EAP("EAP");
 const QString NetworkService::Private::Identity("Identity");
 const QString NetworkService::Private::Passphrase("Passphrase");
+const QString NetworkService::Private::Available("Available");
+const QString NetworkService::Private::Saved("Saved");
 
 // The order must match EapMethod enum
 const QString NetworkService::Private::EapMethodName[] = {
@@ -391,7 +394,8 @@ const QStringList NetworkService::security() const
 
 uint NetworkService::strength() const
 {
-    return m_propertiesCache.value(Strength).toUInt();
+    // connman is not reporting signal strength if network is unavailable
+    return available() ? m_propertiesCache.value(Strength).toUInt() : 0;
 }
 
 bool NetworkService::favorite() const
@@ -547,9 +551,7 @@ void NetworkService::remove()
 {
     Private::InterfaceProxy* service = m_priv->m_proxy;
     if (service) {
-        connect(new QDBusPendingCallWatcher(service->Remove(), service),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(handleRemoveReply(QDBusPendingCallWatcher*)));
+        service->Remove();
     }
 }
 
@@ -622,28 +624,14 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
     call->deleteLater();
 }
 
-void NetworkService::handleRemoveReply(QDBusPendingCallWatcher *watcher)
-{
-    QDBusPendingReply<> reply = *watcher;
-    watcher->deleteLater();
-
-    if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
-        // Service is probably out of range trying RemoveSavedService.
-        NetConnmanManagerInterface manager(QLatin1String("net.connman"), QLatin1String("/"),
-                                           QDBusConnection::systemBus());
-
-        // Remove /net/connman/service/ from front of string.
-        manager.RemoveSavedService(m_path.mid(21));
-    }
-}
-
 void NetworkService::resetProperties()
 {
     QMutableMapIterator<QString, QVariant> i(m_propertiesCache);
     while (i.hasNext()) {
         i.next();
 
-        const QString key = i.key();
+        const QString &key = i.key();
+        const QVariant &value = i.value();
         i.remove();
 
         if (key == Name) {
@@ -707,6 +695,14 @@ void NetworkService::resetProperties()
             Q_EMIT encryptionModeChanged(encryptionMode());
         } else if (key == Hidden) {
             Q_EMIT hiddenChanged(hidden());
+        } else if (key == Private::Available) {
+            if (value.toBool()) {
+                Q_EMIT availableChanged(false);
+            }
+        } else if (key == Private::Saved) {
+            if (value.toBool()) {
+                Q_EMIT savedChanged(false);
+            }
         } else if (key == Private::EAP) {
             if (m_priv->m_eapMethodAvailable) {
                 m_priv->m_eapMethodAvailable = false;
@@ -736,14 +732,13 @@ void NetworkService::reconnectServiceInterface()
     if (m_path.isEmpty())
         return;
 
-    Private::InterfaceProxy* service = m_priv->createProxy(m_path);
-    connect(service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-        SLOT(updateProperty(QString,QDBusVariant)));
-
-    if (state().isEmpty() || m_path == QStringLiteral("/")) {
-        // saved services have an empty state and cached properties
+    if (m_path == QStringLiteral("/")) {
+        // This is a dummy invalidDefaultRoute created by NetworkManager
         QTimer::singleShot(500, this, SIGNAL(propertiesReady()));
     } else {
+        Private::InterfaceProxy* service = m_priv->createProxy(m_path);
+        connect(service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
+            SLOT(updateProperty(QString,QDBusVariant)));
         connect(new QDBusPendingCallWatcher(service->GetProperties(), service),
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
@@ -818,6 +813,12 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT encryptionModeChanged(value.toString());
     } else if (name == Hidden) {
         Q_EMIT hiddenChanged(value.toBool());
+    } else if (name == Private::Available) {
+        // We need to signal both, see NetworkService::strength()
+        Q_EMIT availableChanged(value.toBool());
+        Q_EMIT strengthChanged(strength());
+    } else if (name == Private::Saved) {
+        Q_EMIT savedChanged(value.toBool());
     } else if (name == Private::EAP) {
         Q_EMIT eapMethodChanged();
         if (!m_priv->m_eapMethodAvailable) {
@@ -847,7 +848,7 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
     if (!reply.isError()) {
         updateProperties(reply.value());
     } else {
-        DBG_(reply.error().message());
+        DBG_(m_path << reply.error().message());
     }
     Q_EMIT propertiesReady();
 }
@@ -880,12 +881,31 @@ void NetworkService::setPath(const QString &path)
 
 bool NetworkService::connected()
 {
-    if (m_propertiesCache.contains(State)) {
-        QString state = m_propertiesCache.value(State).toString();
-        if (state == "online" || state == "ready")
-            return true;
-    }
-    return false;
+    const NetworkService* self = this;
+    return self->connected();
+}
+
+bool NetworkService::connected() const
+{
+    QString s = state();
+    return (s == "online" || s == "ready");
+}
+
+bool NetworkService::managed() const
+{
+    // This is a stub for now. The criteria of being "managed"
+    // will be defined later
+    return !m_priv->m_eapMethodAvailable;
+}
+
+bool NetworkService::available() const
+{
+    return m_propertiesCache.value(Private::Available, true).toBool();
+}
+
+bool NetworkService::saved() const
+{
+    return m_propertiesCache.value(Private::Saved).toBool();
 }
 
 QStringList NetworkService::timeservers() const

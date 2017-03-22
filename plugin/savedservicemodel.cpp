@@ -1,11 +1,11 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2013, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #include <QDebug>
@@ -14,12 +14,18 @@
 namespace
 {
 
-bool compareServiceStrength(NetworkService *a, NetworkService *b)
+bool compareServices(NetworkService *a, NetworkService *b)
 {
-    if ((a->strength() > 0 && b->strength() > 0) || (a->strength() == 0 && b->strength() == 0))
-        return a->name() < b->name();
+    if (a->available() && !b->available())
+        return true;
 
-    return b->strength() < a->strength();
+    if (b->available() && !a->available())
+        return false;
+
+    if (a->available() && b->available() && a->strength() > 0 && b->strength() > 0)
+        return b->strength() < a->strength();
+
+    return a->name() < b->name();
 }
 
 }
@@ -28,11 +34,8 @@ SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
 :   QAbstractListModel(parent), m_sort(false)
 {
     m_manager = NetworkManagerFactory::createInstance();
-
-    connect(m_manager,
-            SIGNAL(savedServicesChanged()),
-            this,
-            SLOT(updateServiceList()));
+    connect(m_manager, SIGNAL(technologiesChanged()), SLOT(updateServiceList()));
+    connect(m_manager, SIGNAL(servicesChanged()), SLOT(updateServiceList()));
 }
 
 SavedServiceModel::~SavedServiceModel()
@@ -125,7 +128,7 @@ void SavedServiceModel::updateServiceList()
 {
     QVector<NetworkService *> new_services = m_manager->getSavedServices(m_techname);
     if (m_sort)
-        std::stable_sort(new_services.begin(), new_services.end(), compareServiceStrength);
+        std::stable_sort(new_services.begin(), new_services.end(), compareServices);
 
     int num_new = new_services.count();
 

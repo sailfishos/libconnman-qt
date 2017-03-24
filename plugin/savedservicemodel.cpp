@@ -28,10 +28,21 @@ bool compareServices(NetworkService *a, NetworkService *b)
     return a->name() < b->name();
 }
 
+bool compareManagedServices(NetworkService *a, NetworkService *b)
+{
+    if (a->managed() && !b->managed())
+        return true;
+
+    if (b->managed() && !a->managed())
+        return false;
+
+    return compareServices(a, b);
+}
+
 }
 
 SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
-:   QAbstractListModel(parent), m_sort(false)
+:   QAbstractListModel(parent), m_sort(false), m_groupByCategory(false)
 {
     m_manager = NetworkManagerFactory::createInstance();
     connect(m_manager, SIGNAL(technologiesChanged()), SLOT(updateServiceList()));
@@ -46,6 +57,7 @@ QHash<int, QByteArray> SavedServiceModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ServiceRole] = "networkService";
+    roles[ManagedRole] = "managed";
     return roles;
 }
 
@@ -53,7 +65,9 @@ QVariant SavedServiceModel::data(const QModelIndex &index, int role) const
 {
     switch (role) {
     case ServiceRole:
-        return QVariant::fromValue(static_cast<QObject *>(m_services.value(index.row())));
+        return QVariant::fromValue(static_cast<NetworkService *>(m_services.value(index.row())));
+    case ManagedRole:
+        return m_services.value(index.row())->managed();
     }
 
     return QVariant();
@@ -105,6 +119,24 @@ void SavedServiceModel::setSort(bool sortList)
     updateServiceList();
 }
 
+
+bool SavedServiceModel::groupByCategory() const
+{
+    return m_groupByCategory;
+}
+
+void SavedServiceModel::setGroupByCategory(bool groupByCategory)
+{
+    if (m_groupByCategory == groupByCategory)
+        return;
+
+    m_groupByCategory = groupByCategory;
+    emit groupByCategoryChanged();
+
+    updateServiceList();
+}
+
+
 NetworkService *SavedServiceModel::get(int index) const
 {
     if (index < 0 || index > m_services.count())
@@ -127,8 +159,13 @@ int SavedServiceModel::indexOf(const QString &dbusObjectPath) const
 void SavedServiceModel::updateServiceList()
 {
     QVector<NetworkService *> new_services = m_manager->getSavedServices(m_techname);
-    if (m_sort)
-        std::stable_sort(new_services.begin(), new_services.end(), compareServices);
+    if (m_sort) {
+        if (m_groupByCategory) {
+            std::stable_sort(new_services.begin(), new_services.end(), compareManagedServices);
+        } else {
+            std::stable_sort(new_services.begin(), new_services.end(), compareServices);
+        }
+    }
 
     int num_new = new_services.count();
 

@@ -27,10 +27,12 @@ class SavedServiceModel : public QAbstractListModel
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool sort READ sort WRITE setSort NOTIFY sortChanged)
+    Q_PROPERTY(bool groupByCategory READ groupByCategory WRITE setGroupByCategory NOTIFY groupByCategoryChanged)
 
 public:
     enum ItemRoles {
-        ServiceRole = Qt::UserRole + 1
+        ServiceRole = Qt::UserRole + 1,
+        ManagedRole
     };
 
     SavedServiceModel(QAbstractListModel* parent = 0);
@@ -45,6 +47,9 @@ public:
     bool sort() const;
     void setSort(bool sortList);
 
+    bool groupByCategory() const;
+    void setGroupByCategory(bool groupByCategory);
+
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
 
     Q_INVOKABLE NetworkService *get(int index) const;
@@ -52,12 +57,14 @@ public:
 Q_SIGNALS:
     void nameChanged(const QString &name);
     void sortChanged();
+    void groupByCategoryChanged();
 
 private:
     QString m_techname;
     NetworkManager* m_manager;
     QVector<NetworkService *> m_services;
     bool m_sort;
+    bool m_groupByCategory;
 
     QHash<int, QByteArray> roleNames() const;
 

@@ -1,11 +1,11 @@
 /*
- * Copyright © 2010, Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright © 2010 Intel Corporation.
+ * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * Apache License, version 2.0. The full text of the Apache License
+ * is at http://www.apache.org/licenses/LICENSE-2.0
  */
 
 #include <QDebug>
@@ -17,7 +17,8 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
     m_tech(NULL),
     m_scanning(false),
     m_changesInhibited(false),
-    m_uneffectedChanges(false)
+    m_uneffectedChanges(false),
+    m_filter(AvailableServices)
 {
     m_manager = NetworkManagerFactory::createInstance();
 
@@ -106,6 +107,20 @@ bool TechnologyModel::isScanning() const
 bool TechnologyModel::changesInhibited() const
 {
     return m_changesInhibited;
+}
+
+TechnologyModel::ServiceFilter TechnologyModel::filter() const
+{
+    return m_filter;
+}
+
+void TechnologyModel::setFilter(ServiceFilter filter)
+{
+    if (m_filter != filter) {
+        m_filter = filter;
+        updateServiceList();
+        Q_EMIT filterChanged();
+    }
 }
 
 void TechnologyModel::setPowered(const bool &powered)
@@ -250,15 +265,19 @@ void TechnologyModel::updateServiceList()
     if (m_techname.isEmpty())
         return;
 
-    int num_old = m_services.count();
+    const int num_old = m_services.count();
 
     foreach(const NetworkService *s, m_services) {
         disconnect(s, SIGNAL(destroyed(QObject*)),
                    this, SLOT(networkServiceDestroyed(QObject*)));
     }
 
-    const QVector<NetworkService *> new_services = m_manager->getServices(m_techname);
-    int num_new = new_services.count();
+    const QVector<NetworkService *> new_services =
+        (m_filter == SavedServices) ? m_manager->getSavedServices(m_techname) :
+        (m_filter == AvailableServices) ? m_manager->getAvailableServices(m_techname) :
+        m_manager->getServices(m_techname);
+
+    const int num_new = new_services.count();
 
     // Since m_changesInhibited can also inhibit updates
     // about removed/deleted services, connect destroyed.

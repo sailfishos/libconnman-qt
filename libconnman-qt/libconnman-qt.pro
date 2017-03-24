@@ -26,7 +26,6 @@ headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
 DBUS_INTERFACES = \
     connman_clock.xml \
-    connman_manager.xml \
     connman_session.xml \
     connman_technology.xml \
 
@@ -71,7 +70,5 @@ INSTALLS += target headers
 OTHER_FILES = connman_service.xml \
     connman_technology.xml \
     connman_clock.xml \
-    connman_manager.xml \
     connman_session.xml \
     connman_notification.xml
-

@@ -1,6 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -59,6 +60,9 @@ class NetworkService : public QObject
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
     Q_PROPERTY(QString encryptionMode READ encryptionMode NOTIFY encryptionModeChanged)
     Q_PROPERTY(bool hidden READ hidden NOTIFY hiddenChanged)
+    Q_PROPERTY(bool available READ available NOTIFY availableChanged)
+    Q_PROPERTY(bool managed READ managed NOTIFY eapMethodAvailableChanged) // will be managedChanged
+    Q_PROPERTY(bool saved READ saved NOTIFY savedChanged)
 
     class Private;
     friend class Private;
@@ -110,6 +114,10 @@ public:
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
     bool connected();
+    bool connected() const;
+    bool available() const;
+    bool managed() const;
+    bool saved() const;
 
     QStringList timeservers() const;
     QStringList timeserversConfig() const;
@@ -184,6 +192,8 @@ Q_SIGNALS:
     void securityTypeChanged();
     void eapMethodChanged();
     void eapMethodAvailableChanged(bool);
+    void availableChanged(bool);
+    void savedChanged(bool);
 
 public Q_SLOTS:
     void requestConnect();
@@ -241,7 +251,6 @@ private Q_SLOTS:
     void getPropertiesFinished(QDBusPendingCallWatcher *call);
 
     void handleConnectReply(QDBusPendingCallWatcher *call);
-    void handleRemoveReply(QDBusPendingCallWatcher *watcher);
     void handleAutoConnectReply(QDBusPendingCallWatcher*);
 
 private:

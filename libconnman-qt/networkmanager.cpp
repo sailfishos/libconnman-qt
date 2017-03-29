@@ -712,6 +712,11 @@ void NetworkManager::setServicesEnabled(bool enabled)
     if (m_servicesEnabled == enabled)
         return;
 
+    if (this == staticInstance) {
+        qWarning() << "Refusing to modify the shared instance";
+        return;
+    }
+
     m_servicesEnabled = enabled;
 
     if (m_servicesEnabled)
@@ -731,6 +736,11 @@ void NetworkManager::setTechnologiesEnabled(bool enabled)
 {
     if (m_technologiesEnabled == enabled)
         return;
+
+    if (this == staticInstance) {
+        qWarning() << "Refusing to modify the shared instance";
+        return;
+    }
 
     m_technologiesEnabled = enabled;
 

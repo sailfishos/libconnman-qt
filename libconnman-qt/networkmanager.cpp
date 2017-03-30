@@ -39,6 +39,10 @@ NetworkManager* NetworkManagerFactory::instance()
 class NetworkManager::Private {
 public:
     static const QString Ethernet;
+    static const QString WifiTechnology;
+    static const QString CellularTechnology;
+    static const QString BluetoothTechnology;
+    static const QString GpsTechnology;
 
     static bool selectAll(NetworkService *service);
     static bool selectSaved(NetworkService *service);
@@ -46,6 +50,10 @@ public:
 };
 
 const QString NetworkManager::Private::Ethernet("ethernet");
+const QString NetworkManager::Private::WifiTechnology("/net/connman/technology/wifi");
+const QString NetworkManager::Private::CellularTechnology("/net/connman/technology/cellular");
+const QString NetworkManager::Private::BluetoothTechnology("/net/connman/technology/bluetooth");
+const QString NetworkManager::Private::GpsTechnology("/net/connman/technology/gps");
 
 bool NetworkManager::Private::selectAll(NetworkService *service)
 {
@@ -704,6 +712,11 @@ void NetworkManager::setServicesEnabled(bool enabled)
     if (m_servicesEnabled == enabled)
         return;
 
+    if (this == staticInstance) {
+        qWarning() << "Refusing to modify the shared instance";
+        return;
+    }
+
     m_servicesEnabled = enabled;
 
     if (m_servicesEnabled)
@@ -723,6 +736,11 @@ void NetworkManager::setTechnologiesEnabled(bool enabled)
 {
     if (m_technologiesEnabled == enabled)
         return;
+
+    if (this == staticInstance) {
+        qWarning() << "Refusing to modify the shared instance";
+        return;
+    }
 
     m_technologiesEnabled = enabled;
 
@@ -804,6 +822,26 @@ QStringList NetworkManager::technologiesList()
         techList << tech->type();
     }
     return techList;
+}
+
+QString NetworkManager::wifiTechnologyPath() const
+{
+    return NetworkManager::Private::WifiTechnology;
+}
+
+QString NetworkManager::cellularTechnologyPath() const
+{
+    return NetworkManager::Private::CellularTechnology;
+}
+
+QString NetworkManager::bluetoothTechnologyPath() const
+{
+    return NetworkManager::Private::BluetoothTechnology;
+}
+
+QString NetworkManager::gpsTechnologyPath() const
+{
+    return NetworkManager::Private::GpsTechnology;
 }
 
 #include "networkmanager.moc"

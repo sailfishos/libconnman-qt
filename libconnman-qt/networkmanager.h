@@ -45,6 +45,11 @@ class NetworkManager : public QObject
     Q_PROPERTY(bool servicesEnabled READ servicesEnabled WRITE setServicesEnabled NOTIFY servicesEnabledChanged)
     Q_PROPERTY(bool technologiesEnabled READ technologiesEnabled WRITE setTechnologiesEnabled NOTIFY technologiesEnabledChanged)
 
+    Q_PROPERTY(QString WifiTechnology READ wifiTechnologyPath CONSTANT)
+    Q_PROPERTY(QString CellularTechnology READ cellularTechnologyPath CONSTANT)
+    Q_PROPERTY(QString BluetoothTechnology READ bluetoothTechnologyPath CONSTANT)
+    Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
+
 public:
     NetworkManager(QObject* parent=0);
     virtual ~NetworkManager();
@@ -78,6 +83,11 @@ public:
     void setTechnologiesEnabled(bool enabled);
 
     Q_INVOKABLE void resetCountersForType(const QString &type);
+
+    QString wifiTechnologyPath() const;
+    QString cellularTechnologyPath() const;
+    QString bluetoothTechnologyPath() const;
+    QString gpsTechnologyPath() const;
 
 public Q_SLOTS:
     void setOfflineMode(const bool &offlineMode);

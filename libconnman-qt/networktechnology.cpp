@@ -1,6 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2017 Jolla Ltd.
+ * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -9,6 +10,7 @@
 
 #include "networktechnology.h"
 #include "connman_technology_interface.h"
+#include "libconnman_p.h"
 
 const QString NetworkTechnology::Name("Name");
 const QString NetworkTechnology::Type("Type");
@@ -46,27 +48,24 @@ void NetworkTechnology::init(const QString &path)
         if (m_technology) {
             delete m_technology;
             m_technology = 0;
-            if (!m_propertiesCache.isEmpty()) {
-                QStringList keys = m_propertiesCache.keys();
-                const int n = keys.count();
-                m_propertiesCache.clear();
-                for (int i=0; i<n; i++) {
-                    emitPropertyChange(keys.at(i), QVariant());
-                }
+        }
+
+        // Clear the property cache (only) if the path is becoming empty.
+        if (m_path.isEmpty()) {
+            QStringList keys = m_propertiesCache.keys();
+            m_propertiesCache.clear();
+            Q_EMIT pathChanged(m_path);
+            const int n = keys.count();
+            for (int i=0; i<n; i++) {
+                emitPropertyChange(keys.at(i), QVariant());
             }
-        }
-
-        Q_EMIT pathChanged(m_path);
-
-        if (m_path.isEmpty())
             return;
-
-        m_technology = new NetConnmanTechnologyInterface("net.connman", path,
-                                                         QDBusConnection::systemBus(), this);
-        if (!m_technology->isValid()) {
-            qWarning() << "Invalid technology: " << path;
-            qFatal("Cannot init with invalid technology");
         }
+
+        // Emit the signal after creating NetConnmanTechnologyInterface
+        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, path,
+                                                         CONNMAN_BUS, this);
+        Q_EMIT pathChanged(m_path);
 
         connect(m_technology,
                 SIGNAL(PropertyChanged(QString,QDBusVariant)),

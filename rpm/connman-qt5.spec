@@ -1,12 +1,12 @@
 Name:       connman-qt5
 Summary:    Qt bindings for connman
-Version:    1.1.5
+Version:    1.1.6
 Release:    1
 Group:      System/GUI/Other
 License:    ASL 2.0
 URL:        https://git.merproject.org/mer-core/libconnman-qt
 Source0:    %{name}-%{version}.tar.bz2
-Requires:   connman >= 1.24+git8
+Requires:   connman >= 1.31+git18
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)

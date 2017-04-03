@@ -61,7 +61,7 @@ class NetworkService : public QObject
     Q_PROPERTY(QString encryptionMode READ encryptionMode NOTIFY encryptionModeChanged)
     Q_PROPERTY(bool hidden READ hidden NOTIFY hiddenChanged)
     Q_PROPERTY(bool available READ available NOTIFY availableChanged)
-    Q_PROPERTY(bool managed READ managed NOTIFY eapMethodAvailableChanged) // will be managedChanged
+    Q_PROPERTY(bool managed READ managed NOTIFY managedChanged)
     Q_PROPERTY(bool saved READ saved NOTIFY savedChanged)
 
     class Private;
@@ -185,15 +185,16 @@ Q_SIGNALS:
     void encryptionModeChanged(const QString &mode);
     void hiddenChanged(bool);
 
+    void managedChanged();
     void passphraseChanged(QString);
-    void passphraseAvailableChanged(bool);
+    void passphraseAvailableChanged();
     void identityChanged(QString);
-    void identityAvailableChanged(bool);
+    void identityAvailableChanged();
     void securityTypeChanged();
     void eapMethodChanged();
-    void eapMethodAvailableChanged(bool);
-    void availableChanged(bool);
-    void savedChanged(bool);
+    void eapMethodAvailableChanged();
+    void availableChanged();
+    void savedChanged();
 
 public Q_SLOTS:
     void requestConnect();

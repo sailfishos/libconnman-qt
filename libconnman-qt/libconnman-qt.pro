@@ -3,6 +3,11 @@ QT          += core dbus network
 QT          -= gui
 CONFIG      += qt create_pc create_prl link_pkgconfig
 
+isEmpty(VERSION) {
+    VERSION = 1.1.7
+    message("VERSION is unset, assuming $$VERSION")
+}
+
 isEmpty(HAVE_LIBDBUSACCESS) {
     packagesExist(libdbusaccess) {
         HAVE_LIBDBUSACCESS = 1
@@ -16,11 +21,6 @@ equals(HAVE_LIBDBUSACCESS, 1) {
     DEFINES     += HAVE_LIBDBUSACCESS=1
 } else {
     DEFINES     += HAVE_LIBDBUSACCESS=0
-}
-
-isEmpty(VERSION) {
-    VERSION = 1.1.6
-    message("VERSION is unset, assuming $$VERSION")
 }
 
 isEmpty(PREFIX) {

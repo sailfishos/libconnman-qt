@@ -6,7 +6,8 @@ Group:      System/GUI/Other
 License:    ASL 2.0
 URL:        https://git.merproject.org/mer-core/libconnman-qt
 Source0:    %{name}-%{version}.tar.bz2
-Requires:   connman >= 1.31+git18
+Requires:   connman >= 1.31+git20
+Requires:   libdbusaccess >= 1.0.4
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)
@@ -14,6 +15,7 @@ BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(dbus-1)
+BuildRequires:  pkgconfig(libdbusaccess) >= 1.0.4
 
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}

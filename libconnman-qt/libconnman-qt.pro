@@ -1,8 +1,22 @@
 TEMPLATE     = lib
-CONFIG      += qt debug
-CONFIG      += create_pc create_prl
 QT          += core dbus network
 QT          -= gui
+CONFIG      += qt create_pc create_prl link_pkgconfig
+
+isEmpty(HAVE_LIBDBUSACCESS) {
+    packagesExist(libdbusaccess) {
+        HAVE_LIBDBUSACCESS = 1
+    } else {
+        HAVE_LIBDBUSACCESS = 0
+    }
+}
+
+equals(HAVE_LIBDBUSACCESS, 1) {
+    PKGCONFIG   += libdbusaccess libglibutil
+    DEFINES     += HAVE_LIBDBUSACCESS=1
+} else {
+    DEFINES     += HAVE_LIBDBUSACCESS=0
+}
 
 isEmpty(VERSION) {
     VERSION = 1.1.6

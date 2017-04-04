@@ -29,11 +29,52 @@ public:
     static const int NUM_SECURITY_TYPES = 5; // Unknown, None, WEP, PSK, IEEE802.1x
     static const QString SecurityTypeName[NUM_SECURITY_TYPES];
 
-    static const QString EAP;
+    static const QString Access;
+    static const QString DefaultAccess;
     static const QString Identity;
     static const QString Passphrase;
+    static const QString EAP;
     static const QString Available;
     static const QString Saved;
+
+    static const QString PolicyPrefix;
+
+    enum PropertyFlags {
+        PropertyNone          = 0x00000000,
+        PropertyAccess        = 0x00000001,
+        PropertyDefaultAccess = 0x00000002,
+        PropertyPassphrase    = 0x00000004,
+        PropertyIdentity      = 0x00000008,
+        PropertyEAP           = 0x00000010,
+        PropertyAll           = 0x0000001f
+    };
+
+    enum CallFlags {
+        CallNone              = 0x00000000,
+        CallClearProperty     = 0x00000001,
+        CallConnect           = 0x00000002,
+        CallDisconnect        = 0x00000004,
+        CallRemove            = 0x00000008,
+        CallResetCounters     = 0x00000010,
+        CallGetProperties     = 0x00000020,
+        CallGetProperty       = 0x00000040,
+        CallSetProperty       = 0x00000080,
+        CallAll               = 0x000000ff
+    };
+
+    struct PropertyInfo {
+        const QString &name;
+        PropertyFlags flag;
+        void (NetworkService::*notify)();
+    };
+
+    static const int NUM_PROPERTIES = 5;
+    static const PropertyInfo* Properties[NUM_PROPERTIES];
+    static const PropertyInfo PropAccess;
+    static const PropertyInfo PropDefaultAccess;
+    static const PropertyInfo PropIdentity;
+    static const PropertyInfo PropPassphrase;
+    static const PropertyInfo PropEAP;
 
     static QVariantMap adaptToConnmanProperties(const QVariantMap& map);
 
@@ -47,18 +88,27 @@ public:
     bool updateSecurityType();
     void setEapMethod(EapMethod method);
     void setProperty(QString name, QVariant value);
+    void setPropertyAvailable(const PropertyInfo* prop, bool available);
+
+#if HAVE_LIBDBUSACCESS
+    void policyCheck(QString rules);
+#endif // HAVE_LIBDBUSACCESS
+
+private:
+    void checkAccess();
 
 private Q_SLOTS:
     void onRestrictedPropertyChanged(QString name);
     void onGetPropertyFinished(QDBusPendingCallWatcher* call);
+    void onCheckAccessFinished(QDBusPendingCallWatcher* call);
 
 public:
     InterfaceProxy* m_proxy;
     EapMethodMapRef m_eapMethodMapRef;
     SecurityType m_securityType;
-    bool m_eapMethodAvailable;
-    bool m_identityAvailable;
-    bool m_passphraseAvailable;
+    uint m_propGetFlags;
+    uint m_propSetFlags;
+    uint m_callFlags;
 };
 
 // ==========================================================================
@@ -91,6 +141,11 @@ public:
 //     <arg name="service" type="o"/>
 //   </method>
 //   <method name="ResetCounters"/>
+//   <method name="CheckAccess">
+//     <arg name="get_properties" type="u" direction="out"/>
+//     <arg name="set_properties" type="u" direction="out"/>
+//     <arg name="calls" type="u" direction="out"/>
+//   </method>
 //   <signal name="PropertyChanged">
 //     <arg name="name" type="s"/>
 //     <arg name="value" type="v"/>
@@ -128,6 +183,8 @@ public Q_SLOTS:
         { return asyncCall("Remove"); }
     QDBusPendingCall ResetCounters()
         { return asyncCall("ResetCounters"); }
+    QDBusPendingCall CheckAccess()
+        { return asyncCall("CheckAccess"); }
 
 Q_SIGNALS:
     void PropertyChanged(QString name, QDBusVariant value);
@@ -150,11 +207,37 @@ public:
 // NetworkService::Private
 // ==========================================================================
 
-const QString NetworkService::Private::EAP("EAP");
+const QString NetworkService::Private::Access("Access");
+const QString NetworkService::Private::DefaultAccess("DefaultAccess");
 const QString NetworkService::Private::Identity("Identity");
 const QString NetworkService::Private::Passphrase("Passphrase");
+const QString NetworkService::Private::EAP("EAP");
 const QString NetworkService::Private::Available("Available");
 const QString NetworkService::Private::Saved("Saved");
+
+const QString NetworkService::Private::PolicyPrefix("sailfish:");
+
+const NetworkService::Private::PropertyInfo NetworkService::Private::PropAccess =
+    { NetworkService::Private::Access, NetworkService::Private::PropertyAccess, NULL };
+const NetworkService::Private::PropertyInfo NetworkService::Private::PropDefaultAccess =
+    { NetworkService::Private::DefaultAccess, NetworkService::Private::PropertyDefaultAccess, NULL };
+const NetworkService::Private::PropertyInfo NetworkService::Private::PropIdentity =
+    { NetworkService::Private::Identity, NetworkService::Private::PropertyPassphrase,
+      &NetworkService::identityAvailableChanged };
+const NetworkService::Private::PropertyInfo NetworkService::Private::PropPassphrase =
+    { NetworkService::Private::Passphrase, NetworkService::Private::PropertyIdentity,
+      &NetworkService::passphraseAvailableChanged };
+const NetworkService::Private::PropertyInfo NetworkService::Private::PropEAP =
+    { NetworkService::Private::EAP, NetworkService::Private::PropertyEAP,
+      &NetworkService::eapMethodAvailableChanged };
+
+const NetworkService::Private::PropertyInfo* NetworkService::Private::Properties[] = {
+    &NetworkService::Private::PropAccess,
+    &NetworkService::Private::PropDefaultAccess,
+    &NetworkService::Private::PropIdentity,
+    &NetworkService::Private::PropPassphrase,
+    &NetworkService::Private::PropEAP
+};
 
 // The order must match EapMethod enum
 const QString NetworkService::Private::EapMethodName[] = {
@@ -170,10 +253,11 @@ NetworkService::Private::Private(NetworkService* parent) :
     QObject(parent),
     m_proxy(NULL),
     m_securityType(SecurityNone),
-    m_eapMethodAvailable(false),
-    m_identityAvailable(false),
-    m_passphraseAvailable(false)
+    m_propGetFlags(PropertyEAP),
+    m_propSetFlags(PropertyNone),
+    m_callFlags(CallAll)
 {
+    qRegisterMetaType<NetworkService *>();
 }
 
 void NetworkService::Private::deleteProxy()
@@ -191,6 +275,7 @@ NetworkService::Private::createProxy(QString path)
     m_proxy = new InterfaceProxy(path, this);
     connect(m_proxy, SIGNAL(RestrictedPropertyChanged(QString)),
         SLOT(onRestrictedPropertyChanged(QString)));
+    checkAccess();
     return m_proxy;
 }
 
@@ -199,12 +284,22 @@ inline NetworkService* NetworkService::Private::service()
     return (NetworkService*)parent();
 }
 
+void NetworkService::Private::checkAccess()
+{
+    connect(new QDBusPendingCallWatcher(m_proxy->CheckAccess(), m_proxy),
+        SIGNAL(finished(QDBusPendingCallWatcher*)),
+        SLOT(onCheckAccessFinished(QDBusPendingCallWatcher*)));
+}
+
 void NetworkService::Private::onRestrictedPropertyChanged(QString name)
 {
     DBG_(name);
     connect(new GetPropertyWatcher(name, m_proxy),
         SIGNAL(finished(QDBusPendingCallWatcher*)),
         SLOT(onGetPropertyFinished(QDBusPendingCallWatcher*)));
+    if (name == Access) {
+        checkAccess();
+    }
 }
 
 void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* call)
@@ -217,6 +312,40 @@ void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* cal
     } else {
         DBG_(watcher->m_name << "=" << reply.value());
         service()->emitPropertyChange(watcher->m_name, reply.value());
+    }
+}
+
+void NetworkService::Private::onCheckAccessFinished(QDBusPendingCallWatcher* call)
+{
+    QDBusPendingReply<uint,uint,uint> reply = *call;
+    call->deleteLater();
+    if (reply.isError()) {
+        DBG_(reply.error());
+    } else {
+        const uint get_props = reply.argumentAt<0>();
+        const uint set_props = reply.argumentAt<1>();
+        const uint calls = reply.argumentAt<2>();
+
+        DBG_(get_props << set_props << calls);
+
+        NetworkService *obj = service();
+        const uint prev = m_propGetFlags;
+        const bool wasManaged = obj->managed();
+        m_propGetFlags = get_props;
+        m_propSetFlags = set_props;
+        m_callFlags = calls;
+
+        for (int i=0; i<NUM_PROPERTIES; i++) {
+            const PropertyInfo* p = Properties[i];
+            if ((m_propGetFlags & p->flag) != (prev & p->flag) && p->notify) {
+                Q_EMIT (obj->*(p->notify))();
+            }
+        }
+
+        if (obj->managed() != wasManaged) {
+            DBG_(obj->path() << "managed:" << obj->managed());
+            Q_EMIT obj->managedChanged();
+        }
     }
 }
 
@@ -304,6 +433,92 @@ QVariantMap NetworkService::Private::adaptToConnmanProperties(const QVariantMap 
     return buffer;
 }
 
+void NetworkService::Private::setPropertyAvailable(const PropertyInfo* prop, bool available)
+{
+    if (available) {
+        if (!(m_propGetFlags & prop->flag)) {
+            m_propGetFlags |= prop->flag;
+            if (prop->notify) {
+                Q_EMIT (service()->*(prop->notify))();
+            }
+        }
+    } else {
+        if (m_propGetFlags & prop->flag) {
+            m_propGetFlags &= ~prop->flag;
+            if (prop->notify) {
+                Q_EMIT (service()->*(prop->notify))();
+            }
+        }
+    }
+}
+
+#if HAVE_LIBDBUSACCESS
+#include <dbusaccess_self.h>
+#include <dbusaccess_policy.h>
+
+// This is a local policy check which is still based on some assumptions
+// like what's enabled or disabled by default. The real access rights are
+// reported by the (asynchronous) CheckAccess call. However, if our guess
+// turns out to be right, we can avoid a few unnecessary property change
+// events when CheckAccess comes back with the accurate answer. It's not
+// so much about optimization, mostly to avoid UI flickering (but should
+// slightly optimize things too).
+void NetworkService::Private::policyCheck(QString rules)
+{
+    static const DA_ACTION calls [] = {
+        { "GetProperty",   CallGetProperty,   1 },
+        { "get",           CallGetProperty,   1 },
+        { "SetProperty",   CallSetProperty,   1 },
+        { "set",           CallSetProperty,   1 },
+        { "ClearProperty", CallClearProperty, 1 },
+        { "Connect",       CallConnect,       0 },
+        { "Disconnect",    CallDisconnect,    0 },
+        { "Remove",        CallRemove,        0 },
+        { "ResetCounters", CallResetCounters, 0 },
+        { 0, 0, 0 }
+    };
+    DAPolicy* policy = da_policy_new_full(qPrintable(rules), calls);
+    if (policy) {
+        DASelf* self = da_self_new_shared();
+        if (self) {
+            int i;
+            const DACred* cred = &self->cred;
+            // Method calls (assume that they are enabled by default)
+            for (i=0; calls[i].name; i++) {
+                const uint id = calls[i].id;
+                if (da_policy_check(policy, cred, id, "",
+                    DA_ACCESS_ALLOW) == DA_ACCESS_ALLOW) {
+                    m_callFlags |= id;
+                } else {
+                    m_callFlags &= ~id;
+                }
+            }
+            // Properties (assume that they are disabled by default)
+            for (int i=0; i<NUM_PROPERTIES; i++) {
+                const PropertyInfo* p = Properties[i];
+                if (da_policy_check(policy, cred, CallGetProperty,
+                    qPrintable(p->name), DA_ACCESS_DENY) == DA_ACCESS_ALLOW) {
+                    m_propGetFlags |= p->flag;
+                } else {
+                    m_propGetFlags &= ~p->flag;
+                }
+                if (da_policy_check(policy, cred, CallSetProperty,
+                    qPrintable(p->name), DA_ACCESS_DENY) == DA_ACCESS_ALLOW) {
+                    m_propSetFlags |= p->flag;
+                } else {
+                    m_propSetFlags &= ~p->flag;
+                }
+            }
+            da_self_unref(self);
+        }
+        da_policy_unref(policy);
+    } else {
+        DBG_("Failed to parse" << rules);
+    }
+}
+
+#endif // HAVE_LIBDBUSACCESS
+
 // ==========================================================================
 // NetworkService
 // ==========================================================================
@@ -347,14 +562,39 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     m_propertiesCache(properties),
     m_connected(false)
 {
-    qRegisterMetaType<NetworkService *>();
-
     m_priv->updateSecurityType();
-    m_priv->m_eapMethodAvailable = m_propertiesCache.contains(Private::EAP);
-    m_priv->m_identityAvailable = m_propertiesCache.contains(Private::Identity);
-    m_priv->m_passphraseAvailable = m_propertiesCache.contains(Private::Passphrase);
+
+    // If the property is present in GetProperties output, it means that it's
+    // at least gettable for us
+    for (int i=0; i<Private::NUM_PROPERTIES; i++) {
+        const Private::PropertyInfo* prop = Private::Properties[i];
+        if (m_propertiesCache.contains(prop->name)) {
+            m_priv->m_propGetFlags |= prop->flag;
+        }
+    }
+
+#if HAVE_LIBDBUSACCESS
+    // Pre-check the access locally, to initialize access control flags
+    // to the right values from the beginning. Otherwise we would have
+    // to live with the default values until CheckAccess call completes
+    // (which results in unpleasant UI flickering during initialization).
+
+    // Note that CheckAccess call will be made anyway but most likely
+    // it will returns exactly the same flags as we figure out ourself
+    // (and there won't be any unnecessary property changes causing UI
+    // to flicker).
+    QString access = m_propertiesCache.value(Private::Access).toString();
+    if (access.isEmpty()) {
+        access = m_propertiesCache.value(Private::DefaultAccess).toString();
+    }
+    if (access.startsWith(Private::PolicyPrefix)) {
+        const int len = access.length()- Private::PolicyPrefix.length();
+        m_priv->policyCheck(access.right(len));
+    }
+#endif // HAVE_LIBDBUSACCESS
 
     reconnectServiceInterface();
+    DBG_(path << "managed:" << managed());
 }
 
 NetworkService::NetworkService(QObject* parent)
@@ -362,7 +602,6 @@ NetworkService::NetworkService(QObject* parent)
       m_priv(new Private(this)),
       m_connected(false)
 {
-    qRegisterMetaType<NetworkService *>();
 }
 
 NetworkService::~NetworkService() {}
@@ -530,7 +769,7 @@ void NetworkService::requestConnect()
     timeout = configTimeout;
 
     service->setTimeout(timeout);
-    QDBusPendingCall conn_reply = m_priv->m_proxy->Connect();
+    QDBusPendingCall conn_reply = service->Connect();
     service->setTimeout(old_timeout);
 
     connect(new QDBusPendingCallWatcher(conn_reply, service),
@@ -627,6 +866,7 @@ void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
 void NetworkService::resetProperties()
 {
     QMutableMapIterator<QString, QVariant> i(m_propertiesCache);
+    const bool wasManaged = managed();
     while (i.hasNext()) {
         i.next();
 
@@ -697,31 +937,26 @@ void NetworkService::resetProperties()
             Q_EMIT hiddenChanged(hidden());
         } else if (key == Private::Available) {
             if (value.toBool()) {
-                Q_EMIT availableChanged(false);
+                Q_EMIT availableChanged();
             }
         } else if (key == Private::Saved) {
             if (value.toBool()) {
-                Q_EMIT savedChanged(false);
+                Q_EMIT savedChanged();
             }
-        } else if (key == Private::EAP) {
-            if (m_priv->m_eapMethodAvailable) {
-                m_priv->m_eapMethodAvailable = false;
-                Q_EMIT eapMethodAvailableChanged(false);
-            }
-            Q_EMIT eapMethodChanged();
-        } else if (key == Private::Identity) {
-            if (m_priv->m_identityAvailable) {
-                m_priv->m_identityAvailable = false;
-                Q_EMIT identityAvailableChanged(false);
-            }
-            Q_EMIT identityChanged(identity());
+        } else if (key == Private::Access) {
+            m_priv->setPropertyAvailable(&Private::PropAccess, false);
+        } else if (key == Private::DefaultAccess) {
+            m_priv->setPropertyAvailable(&Private::PropDefaultAccess, false);
         } else if (key == Private::Passphrase) {
-            if (m_priv->m_passphraseAvailable) {
-                m_priv->m_passphraseAvailable = false;
-                Q_EMIT passphraseAvailableChanged(false);
-            }
-            Q_EMIT passphraseChanged(passphrase());
+            m_priv->setPropertyAvailable(&Private::PropPassphrase, false);
+        } else if (key == Private::Identity) {
+            m_priv->setPropertyAvailable(&Private::PropIdentity, false);
+        } else if (key == Private::EAP) {
+            m_priv->setPropertyAvailable(&Private::PropEAP, false);
         }
+    }
+    if (wasManaged != managed()) {
+        Q_EMIT managedChanged();
     }
 }
 
@@ -750,6 +985,7 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
     if (m_propertiesCache.value(name) == value)
         return;
 
+    const bool wasManaged = managed();
     m_propertiesCache[name] = value;
 
     if (name == Name) {
@@ -815,28 +1051,26 @@ void NetworkService::emitPropertyChange(const QString &name, const QVariant &val
         Q_EMIT hiddenChanged(value.toBool());
     } else if (name == Private::Available) {
         // We need to signal both, see NetworkService::strength()
-        Q_EMIT availableChanged(value.toBool());
+        Q_EMIT availableChanged();
         Q_EMIT strengthChanged(strength());
     } else if (name == Private::Saved) {
-        Q_EMIT savedChanged(value.toBool());
-    } else if (name == Private::EAP) {
-        Q_EMIT eapMethodChanged();
-        if (!m_priv->m_eapMethodAvailable) {
-            m_priv->m_eapMethodAvailable = true;
-            Q_EMIT eapMethodAvailableChanged(true);
-        }
-    } else if (name == Private::Identity) {
-        Q_EMIT identityChanged(value.toString());
-        if (!m_priv->m_identityAvailable) {
-            m_priv->m_identityAvailable = true;
-            Q_EMIT identityAvailableChanged(true);
-        }
+        Q_EMIT savedChanged();
+    } else if (name == Private::Access) {
+        m_priv->setPropertyAvailable(&Private::PropAccess, true);
+    } else if (name == Private::DefaultAccess) {
+        m_priv->setPropertyAvailable(&Private::PropDefaultAccess, true);
     } else if (name == Private::Passphrase) {
         Q_EMIT passphraseChanged(value.toString());
-        if (!m_priv->m_passphraseAvailable) {
-            m_priv->m_passphraseAvailable = true;
-            Q_EMIT passphraseAvailableChanged(true);
-        }
+        m_priv->setPropertyAvailable(&Private::PropPassphrase, true);
+    } else if (name == Private::Identity) {
+        Q_EMIT identityChanged(value.toString());
+        m_priv->setPropertyAvailable(&Private::PropIdentity, true);
+    } else if (name == Private::EAP) {
+        Q_EMIT eapMethodChanged();
+        m_priv->setPropertyAvailable(&Private::PropEAP, true);
+    }
+    if (wasManaged != managed()) {
+        Q_EMIT managedChanged();
     }
 }
 
@@ -893,9 +1127,8 @@ bool NetworkService::connected() const
 
 bool NetworkService::managed() const
 {
-    // This is a stub for now. The criteria of being "managed"
-    // will be defined later
-    return !m_priv->m_eapMethodAvailable;
+    // This defines the criteria of being "managed"
+    return !(m_priv->m_callFlags & Private::CallRemove) && saved();
 }
 
 bool NetworkService::available() const
@@ -977,7 +1210,7 @@ void NetworkService::setPassphrase(QString passphrase)
 
 bool NetworkService::passphraseAvailable() const
 {
-    return m_priv->m_passphraseAvailable;
+    return (m_priv->m_propGetFlags & Private::PropertyPassphrase) != 0;
 }
 
 QString NetworkService::identity() const
@@ -992,7 +1225,7 @@ void NetworkService::setIdentity(QString identity)
 
 bool NetworkService::identityAvailable() const
 {
-    return m_priv->m_identityAvailable;
+    return (m_priv->m_propGetFlags & Private::PropertyIdentity) != 0;
 }
 
 NetworkService::SecurityType NetworkService::securityType() const
@@ -1012,7 +1245,7 @@ void NetworkService::setEapMethod(EapMethod method)
 
 bool NetworkService::eapMethodAvailable() const
 {
-    return m_priv->m_eapMethodAvailable;
+    return (m_priv->m_propGetFlags & Private::PropertyEAP) != 0;
 }
 
 #include "networkservice.moc"

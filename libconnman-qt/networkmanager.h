@@ -119,6 +119,7 @@ Q_SIGNALS:
 private:
     class Private;
     class InterfaceProxy;
+    friend class Private;
     typedef bool (*ServiceSelector)(NetworkService*);
     void propertyChanged(const QString &name, const QVariant &value);
     void setConnmanAvailable(bool available);
@@ -146,7 +147,7 @@ private:
     /* Invalid default route service for use when there is no default route */
     NetworkService *m_invalidDefaultRoute;
 
-    QDBusServiceWatcher *watcher;
+    Private *m_priv;
 
     static const QString State;
     static const QString OfflineMode;

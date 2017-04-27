@@ -36,7 +36,10 @@ NetworkManager* NetworkManagerFactory::instance()
 // NetworkManager::Private
 // ==========================================================================
 
-class NetworkManager::Private {
+class NetworkManager::Private : QObject
+{
+    Q_OBJECT
+
 public:
     static const QString Ethernet;
     static const QString WifiTechnology;
@@ -47,6 +50,19 @@ public:
     static bool selectAll(NetworkService *service);
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
+
+    bool m_registered;
+
+public:
+    Private(NetworkManager *parent) :
+        QObject(parent), m_registered(false) {}
+    NetworkManager* manager()
+        { return (NetworkManager*)parent(); }
+    void maybeCreateInterfaceProxyLater()
+        { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
+
+public Q_SLOTS:
+    void maybeCreateInterfaceProxy();
 };
 
 const QString NetworkManager::Private::Ethernet("ethernet");
@@ -68,6 +84,18 @@ bool NetworkManager::Private::selectSaved(NetworkService *service)
 bool NetworkManager::Private::selectAvailable(NetworkService *service)
 {
     return service && service->available();
+}
+
+void NetworkManager::Private::maybeCreateInterfaceProxy()
+{
+    // Theoretically, connman may have become unregistered while this call
+    // was sitting in the queue. We need to re-check the m_registered flag.
+    if (m_registered) {
+        NetworkManager* mgr = manager();
+        if (!mgr->m_available) {
+            mgr->setConnmanAvailable(true);
+        }
+    }
 }
 
 // ==========================================================================
@@ -187,13 +215,13 @@ NetworkManager::NetworkManager(QObject* parent)
     m_proxy(NULL),
     m_defaultRoute(NULL),
     m_invalidDefaultRoute(new NetworkService("/", QVariantMap(), this)),
-    watcher(NULL),
+    m_priv(new Private(this)),
     m_available(false),
     m_servicesEnabled(true),
     m_technologiesEnabled(true)
 {
     registerCommonDataTypes();
-    watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+    QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
             QDBusServiceWatcher::WatchForRegistration |
             QDBusServiceWatcher::WatchForUnregistration, this);
     connect(watcher, SIGNAL(serviceRegistered(QString)), SLOT(onConnmanRegistered()));
@@ -207,11 +235,17 @@ NetworkManager::~NetworkManager()
 
 void NetworkManager::onConnmanRegistered()
 {
+    // Store the current connman registration state so that
+    // Private::maybeCreateInterfaceProxy() could check it.
+    // m_proxy is not a reliable indicator because proxy creation
+    // can (and sometimes does) fail.
+    m_priv->m_registered = true;
     setConnmanAvailable(true);
 }
 
 void NetworkManager::onConnmanUnregistered()
 {
+    m_priv->m_registered = false;
     setConnmanAvailable(false);
 }
 
@@ -221,6 +255,21 @@ void NetworkManager::setConnmanAvailable(bool available)
         if (available) {
             if (connectToConnman()) {
                 Q_EMIT availabilityChanged(m_available = true);
+            } else {
+
+                //
+                // There is a race condition (at least in Qt 5.6) between
+                // this thread and "QDBusConnection" thread updating the
+                // service owner map. If we get there first (before the
+                // owner map is updated) we would fetch the old (empty)
+                // owner from there which makes QDBusAbstractInterface
+                // invalid, even though the name is actually owned.
+                //
+                // The easy workaround is to try again a bit later.
+                // This is a very narrow race condition, no delay is
+                // necessary.
+                //
+                m_priv->maybeCreateInterfaceProxyLater();
             }
         } else {
             DBG_("connman not AVAILABLE");
@@ -235,6 +284,7 @@ bool NetworkManager::connectToConnman()
     disconnectFromConnman();
     m_proxy = new InterfaceProxy(this);
     if (!m_proxy->isValid()) {
+        WARN_(m_proxy->lastError());
         delete m_proxy;
         m_proxy = NULL;
         return false;

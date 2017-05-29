@@ -14,6 +14,14 @@
 #include "networkservice.h"
 #include "libconnman_p.h"
 
+#define COUNT(a) ((uint)(sizeof(a)/sizeof(a[0])))
+
+// New private date and methods are added to NetworkService::Private
+// whenever possible to avoid contaminating the public header with
+// irrelevant information. The old redundant stuff (the one which
+// existed before NetworkService::Private was introduced) is still
+// kept in the public header, for backward ABI compatibility.
+
 class NetworkService::Private: public QObject
 {
     Q_OBJECT
@@ -23,12 +31,10 @@ public:
     class GetPropertyWatcher;
     typedef QHash<QString,EapMethod> EapMethodMap;
     typedef QSharedPointer<EapMethodMap> EapMethodMapRef;
+    typedef void (NetworkService::*SignalEmitter)();
 
-    static const int NUM_EAP_METHODS = 4; // None, PEAP, TTLS, TLS
-    static const QString EapMethodName[NUM_EAP_METHODS];
-
-    static const int NUM_SECURITY_TYPES = 5; // Unknown, None, WEP, PSK, IEEE802.1x
-    static const QString SecurityTypeName[NUM_SECURITY_TYPES];
+    static const QString EapMethodName[];
+    static const QString SecurityTypeName[];
 
     static const QString Access;
     static const QString DefaultAccess;
@@ -63,19 +69,67 @@ public:
         CallAll               = 0x000000ff
     };
 
-    struct PropertyInfo {
-        const QString &name;
-        PropertyFlags flag;
-        void (NetworkService::*notify)();
+    // The order and count of Signals must match the list of
+    // signal emitters in emitQueuedSignals()
+    enum Signal {
+        NoSignal = -1,
+        SignalNameChanged,
+        SignalStateChanged,
+        SignalErrorChanged,
+        SignalSecurityChanged,
+        SignalStrengthChanged,
+        SignalFavoriteChanged,
+        SignalAutoConnectChanged,
+        SignalPathChanged,
+        SignalIpv4Changed,
+        SignalIpv4ConfigChanged,
+        SignalIpv6Changed,
+        SignalIpv6ConfigChanged,
+        SignalNameserversChanged,
+        SignalNameserversConfigChanged,
+        SignalDomainsChanged,
+        SignalDomainsConfigChanged,
+        SignalProxyChanged,
+        SignalProxyConfigChanged,
+        SignalEthernetChanged,
+        SignalTypeChanged,
+        SignalRoamingChanged,
+        SignalTimeserversChanged,
+        SignalTimeserversConfigChanged,
+        SignalConnectedChanged,
+        SignalBssidChanged,
+        SignalMaxRateChanged,
+        SignalFrequencyChanged,
+        SignalEncryptionModeChanged,
+        SignalHiddenChanged,
+        SignalManagedChanged,
+        SignalPassphraseChanged,
+        SignalPassphraseAvailableChanged,
+        SignalIdentityChanged,
+        SignalIdentityAvailableChanged,
+        SignalSecurityTypeChanged,
+        SignalEapMethodChanged,
+        SignalEapMethodAvailableChanged,
+        SignalAvailableChanged,
+        SignalSavedChanged,
+        SignalConnectingChanged,
+        SignalLastConnectErrorChanged,
+        SignalCount
     };
 
-    static const int NUM_PROPERTIES = 5;
-    static const PropertyInfo* Properties[NUM_PROPERTIES];
-    static const PropertyInfo PropAccess;
-    static const PropertyInfo PropDefaultAccess;
-    static const PropertyInfo PropIdentity;
-    static const PropertyInfo PropPassphrase;
-    static const PropertyInfo PropEAP;
+    struct PropertyAccessInfo {
+        const QString &name;
+        PropertyFlags flag;
+        Signal sig;
+    };
+
+    // Properties that are subject to access control
+    static const PropertyAccessInfo* Properties[];
+    static const PropertyAccessInfo PropAccess;
+    static const PropertyAccessInfo PropDefaultAccess;
+    static const PropertyAccessInfo PropIdentity;
+    static const PropertyAccessInfo PropPassphrase;
+    static const PropertyAccessInfo PropEAP;
 
     static QVariantMap adaptToConnmanProperties(const QVariantMap& map);
 
@@ -86,16 +140,26 @@ public:
     NetworkService* service();
     EapMethodMapRef eapMethodMap();
     EapMethod eapMethod();
-    bool updateSecurityType();
+    void updateSecurityType();
     void setEapMethod(EapMethod method);
     void setProperty(QString name, QVariant value);
-    void setPropertyAvailable(const PropertyInfo* prop, bool available);
+    void setPropertyAvailable(const PropertyAccessInfo* prop, bool available);
+    void setLastConnectError(QString error);
+    void updateConnecting();
+    void updateConnected();
+    void updateState();
+    void updateManaged();
+    void queueSignal(Signal sig);
+    void emitQueuedSignals();
+    void dropQueuedSignals();
 
 #if HAVE_LIBDBUSACCESS
     void policyCheck(QString rules);
 #endif // HAVE_LIBDBUSACCESS
 
 private:
+    void updateConnecting(QString state);
+    void updateConnected(QString state);
     void checkAccess();
 
 private Q_SLOTS:
@@ -103,13 +167,22 @@ private Q_SLOTS:
     void onGetPropertyFinished(QDBusPendingCallWatcher* call);
     void onCheckAccessFinished(QDBusPendingCallWatcher* call);
 
+private:
+    quint64 m_queuedSignals;
+    int m_firstQueuedSignal;
+
 public:
     InterfaceProxy* m_proxy;
+    QDBusPendingCallWatcher* m_connectWatcher;
     EapMethodMapRef m_eapMethodMapRef;
     SecurityType m_securityType;
     uint m_propGetFlags;
     uint m_propSetFlags;
     uint m_callFlags;
+    bool m_managed;
+    bool m_connecting;
+    QString m_lastConnectError;
+    QString m_state;
 };
 
 // ==========================================================================
@@ -218,21 +291,23 @@ const QString NetworkService::Private::Saved("Saved");
 
 const QString NetworkService::Private::PolicyPrefix("sailfish:");
 
-const NetworkService::Private::PropertyInfo NetworkService::Private::PropAccess =
-    { NetworkService::Private::Access, NetworkService::Private::PropertyAccess, NULL };
-const NetworkService::Private::PropertyInfo NetworkService::Private::PropDefaultAccess =
-    { NetworkService::Private::DefaultAccess, NetworkService::Private::PropertyDefaultAccess, NULL };
-const NetworkService::Private::PropertyInfo NetworkService::Private::PropIdentity =
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropAccess =
+    { NetworkService::Private::Access, NetworkService::Private::PropertyAccess,
+      NetworkService::Private::NoSignal };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropDefaultAccess =
+    { NetworkService::Private::DefaultAccess, NetworkService::Private::PropertyDefaultAccess,
+      NetworkService::Private::NoSignal };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropIdentity =
     { NetworkService::Private::Identity, NetworkService::Private::PropertyPassphrase,
-      &NetworkService::identityAvailableChanged };
-const NetworkService::Private::PropertyInfo NetworkService::Private::PropPassphrase =
+      NetworkService::Private::SignalIdentityAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropPassphrase =
     { NetworkService::Private::Passphrase, NetworkService::Private::PropertyIdentity,
-      &NetworkService::passphraseAvailableChanged };
-const NetworkService::Private::PropertyInfo NetworkService::Private::PropEAP =
+      NetworkService::Private::SignalPassphraseAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropEAP =
     { NetworkService::Private::EAP, NetworkService::Private::PropertyEAP,
-      &NetworkService::eapMethodAvailableChanged };
+      NetworkService::Private::SignalEapMethodAvailableChanged };
 
-const NetworkService::Private::PropertyInfo* NetworkService::Private::Properties[] = {
+const NetworkService::Private::PropertyAccessInfo* NetworkService::Private::Properties[] = {
     &NetworkService::Private::PropAccess,
     &NetworkService::Private::PropDefaultAccess,
     &NetworkService::Private::PropIdentity,
@@ -247,18 +322,104 @@ const QString NetworkService::Private::EapMethodName[] = {
 
 // The order must match SecurityType enum
 const QString NetworkService::Private::SecurityTypeName[] = {
-    "", "none", "wep", "psk", "ieee8021x"
+    QString(), "none", "wep", "psk", "ieee8021x"
 };
 
 NetworkService::Private::Private(NetworkService* parent) :
     QObject(parent),
+    m_queuedSignals(0),
+    m_firstQueuedSignal(0),
     m_proxy(NULL),
+    m_connectWatcher(NULL),
     m_securityType(SecurityNone),
     m_propGetFlags(PropertyEAP),
     m_propSetFlags(PropertyNone),
-    m_callFlags(CallAll)
+    m_callFlags(CallAll),
+    m_managed(false),
+    m_connecting(false)
 {
     qRegisterMetaType<NetworkService *>();
+}
+
+inline void NetworkService::Private::dropQueuedSignals()
+{
+    m_queuedSignals = 0;
+}
+
+inline void NetworkService::Private::queueSignal(Signal sig)
+{
+    if (sig > NoSignal && sig < SignalCount) {
+        const quint64 signalBit = (Q_UINT64_C(1) << sig);
+        if (m_queuedSignals) {
+            m_queuedSignals |= signalBit;
+            if (m_firstQueuedSignal > sig) {
+                m_firstQueuedSignal = sig;
+            }
+        } else {
+            m_queuedSignals = signalBit;
+            m_firstQueuedSignal = sig;
+        }
+    }
+}
+
+void NetworkService::Private::emitQueuedSignals()
+{
+    // The order and count of signal emitters must match the Signal enum
+    static const SignalEmitter emitSignal [] = {
+        &NetworkService::nameChanged,
+        &NetworkService::stateChanged,
+        &NetworkService::errorChanged,
+        &NetworkService::securityChanged,
+        &NetworkService::strengthChanged,
+        &NetworkService::favoriteChanged,
+        &NetworkService::autoConnectChanged,
+        &NetworkService::pathChanged,
+        &NetworkService::ipv4Changed,
+        &NetworkService::ipv4ConfigChanged,
+        &NetworkService::ipv6Changed,
+        &NetworkService::ipv6ConfigChanged,
+        &NetworkService::nameserversChanged,
+        &NetworkService::nameserversConfigChanged,
+        &NetworkService::domainsChanged,
+        &NetworkService::domainsConfigChanged,
+        &NetworkService::proxyChanged,
+        &NetworkService::proxyConfigChanged,
+        &NetworkService::ethernetChanged,
+        &NetworkService::typeChanged,
+        &NetworkService::roamingChanged,
+        &NetworkService::timeserversChanged,
+        &NetworkService::timeserversConfigChanged,
+        &NetworkService::connectedChanged,
+        &NetworkService::bssidChanged,
+        &NetworkService::maxRateChanged,
+        &NetworkService::frequencyChanged,
+        &NetworkService::encryptionModeChanged,
+        &NetworkService::hiddenChanged,
+        &NetworkService::managedChanged,
+        &NetworkService::passphraseChanged,
+        &NetworkService::passphraseAvailableChanged,
+        &NetworkService::identityChanged,
+        &NetworkService::identityAvailableChanged,
+        &NetworkService::securityTypeChanged,
+        &NetworkService::eapMethodChanged,
+        &NetworkService::eapMethodAvailableChanged,
+        &NetworkService::availableChanged,
+        &NetworkService::savedChanged,
+        &NetworkService::connectingChanged,
+        &NetworkService::lastConnectErrorChanged
+    };
+
+    Q_STATIC_ASSERT(COUNT(emitSignal) == SignalCount);
+    if (m_queuedSignals) {
+        NetworkService *obj = service();
+        for (int i = m_firstQueuedSignal; i < SignalCount && m_queuedSignals; i++) {
+            const quint64 signalBit = (Q_UINT64_C(1) << i);
+            if (m_queuedSignals & signalBit) {
+                m_queuedSignals &= ~signalBit;
+                Q_EMIT (obj->*(emitSignal[i]))();
+            }
+        }
+    }
 }
 
 void NetworkService::Private::deleteProxy()
@@ -310,16 +471,18 @@ void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher* cal
         DBG_(watcher->m_name << reply.error());
     } else {
         DBG_(watcher->m_name << "=" << reply.value());
-        service()->emitPropertyChange(watcher->m_name, reply.value());
+        service()->updatePropertyCache(watcher->m_name, reply.value());
+        emitQueuedSignals();
     }
 }
 
 void NetworkService::Private::onCheckAccessFinished(QDBusPendingCallWatcher* call)
 {
     QDBusPendingReply<uint,uint,uint> reply = *call;
+    NetworkService *obj = service();
     call->deleteLater();
     if (reply.isError()) {
-        DBG_(reply.error());
+        DBG_(obj->path() << reply.error());
     } else {
         const uint get_props = reply.argumentAt<0>();
         const uint set_props = reply.argumentAt<1>();
@@ -327,34 +490,35 @@ void NetworkService::Private::onCheckAccessFinished(QDBusPendingCallWatcher* cal
 
         DBG_(get_props << set_props << calls);
 
-        NetworkService *obj = service();
         const uint prev = m_propGetFlags;
         const bool wasManaged = obj->managed();
         m_propGetFlags = get_props;
         m_propSetFlags = set_props;
         m_callFlags = calls;
 
-        for (int i=0; i<NUM_PROPERTIES; i++) {
-            const PropertyInfo* p = Properties[i];
-            if ((m_propGetFlags & p->flag) != (prev & p->flag) && p->notify) {
-                Q_EMIT (obj->*(p->notify))();
+        for (uint i=0; i<COUNT(Properties); i++) {
+            const PropertyAccessInfo* p = Properties[i];
+            if ((m_propGetFlags & p->flag) != (prev & p->flag)) {
+                queueSignal(p->sig);
             }
         }
 
         if (obj->managed() != wasManaged) {
             DBG_(obj->path() << "managed:" << obj->managed());
-            Q_EMIT obj->managedChanged();
+            queueSignal(SignalManagedChanged);
         }
+
+        emitQueuedSignals();
     }
 }
 
-bool NetworkService::Private::updateSecurityType()
+void NetworkService::Private::updateSecurityType()
 {
     SecurityType type = SecurityUnknown;
     const QStringList security = service()->security();
     if (!security.isEmpty()) {
         // Start with 1 because 0 is SecurityUnknown
-        for (int i=1; i<NUM_SECURITY_TYPES; i++) {
+        for (uint i=1; i<COUNT(SecurityTypeName); i++) {
             if (security.contains(SecurityTypeName[i])) {
                 type = (SecurityType)i;
                 break;
@@ -363,9 +527,7 @@ bool NetworkService::Private::updateSecurityType()
     }
     if (m_securityType != type) {
         m_securityType = type;
-        return true;
-    } else {
-        return false;
+        queueSignal(SignalSecurityTypeChanged);
     }
 }
 
@@ -376,7 +538,7 @@ NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
     if (m_eapMethodMapRef.isNull()) {
         EapMethodMap* map = new EapMethodMap;
         // Start with 1 because 0 is EapNone
-        for (int i=1; i<NUM_EAP_METHODS; i++) {
+        for (uint i=1; i<COUNT(EapMethodName); i++) {
             const QString name = EapMethodName[i];
             map->insert(name.toLower(), (EapMethod)i);
             map->insert(name.toUpper(), (EapMethod)i);
@@ -398,7 +560,7 @@ NetworkService::EapMethod NetworkService::Private::eapMethod()
 
 void NetworkService::Private::setEapMethod(EapMethod method)
 {
-    if (method >= EapNone && method < NUM_EAP_METHODS) {
+    if (method >= EapNone && method < COUNT(EapMethodName)) {
         setProperty(EAP, EapMethodName[method]);
     }
 }
@@ -407,6 +569,65 @@ void NetworkService::Private::setProperty(QString name, QVariant value)
 {
     if (m_proxy) {
         m_proxy->SetProperty(name, value);
+    }
+}
+
+void NetworkService::Private::setLastConnectError(QString error)
+{
+    if (m_lastConnectError != error) {
+        m_lastConnectError = error;
+        queueSignal(SignalLastConnectErrorChanged);
+    }
+}
+
+void NetworkService::Private::updateConnecting(QString state)
+{
+    bool connecting = m_connectWatcher || ConnmanState::connecting(state);
+    if (m_connecting != connecting) {
+        m_connecting = connecting;
+        queueSignal(SignalConnectingChanged);
+    }
+}
+
+void NetworkService::Private::updateConnecting()
+{
+    updateConnecting(service()->m_propertiesCache.value(NetworkService::State).toString());
+}
+
+void NetworkService::Private::updateConnected(QString state)
+{
+    bool connected = !m_connectWatcher && ConnmanState::connected(state);
+    NetworkService *obj = service();
+    if (obj->m_connected != connected) {
+        obj->m_connected = connected;
+        queueSignal(SignalConnectedChanged);
+    }
+}
+
+void NetworkService::Private::updateConnected()
+{
+    updateConnected(service()->m_propertiesCache.value(NetworkService::State).toString());
+}
+
+void NetworkService::Private::updateState()
+{
+    NetworkService *obj = service();
+    QString state(obj->m_propertiesCache.value(NetworkService::State).toString());
+    if (m_state != state) {
+        m_state = state;
+        queueSignal(SignalStateChanged);
+        updateConnecting(state);
+        updateConnected(state);
+    }
+}
+
+void NetworkService::Private::updateManaged()
+{
+    // This defines the criteria of being "managed"
+    bool managed = !(m_callFlags & Private::CallRemove) && service()->saved();
+    if (m_managed != managed) {
+        m_managed = managed;
+        queueSignal(SignalManagedChanged);
     }
 }
 
@@ -432,21 +653,17 @@ QVariantMap NetworkService::Private::adaptToConnmanProperties(const QVariantMap 
     return buffer;
 }
 
-void NetworkService::Private::setPropertyAvailable(const PropertyInfo* prop, bool available)
+void NetworkService::Private::setPropertyAvailable(const PropertyAccessInfo* prop, bool available)
 {
     if (available) {
         if (!(m_propGetFlags & prop->flag)) {
             m_propGetFlags |= prop->flag;
-            if (prop->notify) {
-                Q_EMIT (service()->*(prop->notify))();
-            }
+            queueSignal(prop->sig);
         }
     } else {
         if (m_propGetFlags & prop->flag) {
             m_propGetFlags &= ~prop->flag;
-            if (prop->notify) {
-                Q_EMIT (service()->*(prop->notify))();
-            }
+            queueSignal(prop->sig);
         }
     }
 }
@@ -493,8 +710,8 @@ void NetworkService::Private::policyCheck(QString rules)
                 }
             }
             // Properties (assume that they are disabled by default)
-            for (int i=0; i<NUM_PROPERTIES; i++) {
-                const PropertyInfo* p = Properties[i];
+            for (uint i=0; i<COUNT(Properties); i++) {
+                const PropertyAccessInfo* p = Properties[i];
                 if (da_policy_check(policy, cred, CallGetProperty,
                     qPrintable(p->name), DA_ACCESS_DENY) == DA_ACCESS_ALLOW) {
                     m_propGetFlags |= p->flag;
@@ -542,11 +759,8 @@ const QString NetworkService::Proxy("Proxy");
 const QString NetworkService::ProxyConfig("Proxy.Configuration");
 const QString NetworkService::Ethernet("Ethernet");
 const QString NetworkService::Roaming("Roaming");
-//const QString NetworkService::Immutable("Immutable");
-//const QString NetworkService::Privacy("Privacy");
 const QString NetworkService::Timeservers("Timeservers");
 const QString NetworkService::TimeserversConfig("Timeservers.Configuration");
-//const QString NetworkService::Provider("Provider");
 
 const QString NetworkService::BSSID("BSSID");
 const QString NetworkService::MaxRate("MaxRate");
@@ -574,8 +788,8 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 
     // If the property is present in GetProperties output, it means that it's
     // at least gettable for us
-    for (int i=0; i<Private::NUM_PROPERTIES; i++) {
-        const Private::PropertyInfo* prop = Private::Properties[i];
+    for (uint i=0; i<COUNT(Private::Properties); i++) {
+        const Private::PropertyAccessInfo* prop = Private::Properties[i];
         if (m_propertiesCache.contains(prop->name)) {
             m_priv->m_propGetFlags |= prop->flag;
         }
@@ -603,6 +817,7 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 
     reconnectServiceInterface();
     DBG_(path << "managed:" << managed());
+    m_priv->dropQueuedSignals();
 }
 
 NetworkService::NetworkService(QObject* parent)
@@ -751,30 +966,32 @@ bool NetworkService::hidden() const
 void NetworkService::requestConnect()
 {
     Private::InterfaceProxy* service = m_priv->m_proxy;
+    if (service) {
+        // If the service is in the failure state clear the Error property
+        // so that we get notified of errors on subsequent connection attempts.
+        if (state() == ConnmanState::Failure) {
+            service->ClearProperty(Error);
+        }
 
-    if (!service) {
-        return;
-    }
-    if (connected()) {
-        Q_EMIT connectRequestFailed("Already connected");
-        return;
-    }
+        int old_timeout = service->timeout();
+        service->setTimeout(NetworkManager::instance()->inputRequestTimeout());
+        QDBusPendingCall call = service->Connect();
+        service->setTimeout(old_timeout);
 
-    Q_EMIT serviceConnectionStarted();
+        delete m_priv->m_connectWatcher;
+        m_priv->m_connectWatcher = new QDBusPendingCallWatcher(call, service);
 
-    // If the service is in the failure state clear the Error property so that we get notified of
-    // errors on subsequent connection attempts.
-    if (state() == QLatin1String("failure"))
-        service->ClearProperty(QLatin1String("Error"));
+        m_priv->setLastConnectError(QString());
+        m_priv->updateConnecting();
+        m_priv->updateConnected();
 
-    int old_timeout = service->timeout();
-    service->setTimeout(NetworkManager::instance()->inputRequestTimeout());
-    QDBusPendingCall conn_reply = service->Connect();
-    service->setTimeout(old_timeout);
-
-    connect(new QDBusPendingCallWatcher(conn_reply, service),
+        connect(m_priv->m_connectWatcher,
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             SLOT(handleConnectReply(QDBusPendingCallWatcher*)));
+
+        m_priv->emitQueuedSignals();
+        Q_EMIT serviceConnectionStarted();
+    }
 }
 
 void NetworkService::requestDisconnect()
@@ -849,24 +1066,34 @@ void NetworkService::resetCounters()
 
 void NetworkService::handleConnectReply(QDBusPendingCallWatcher *call)
 {
-    Q_ASSERT(call);
     QDBusPendingReply<> reply = *call;
 
-    if (!reply.isFinished()) {
-       DBG_("connect() not finished yet");
-    }
     if (reply.isError()) {
-        DBG_("Reply from service.connect(): " << reply.error().message());
-        Q_EMIT connectRequestFailed(reply.error().message());
+        QDBusError error(reply.error());
+        QString errorName(error.name());
+        DBG_(error);
+
+        // InProgress means that somebody has already asked this service
+        // to get connected. That's fine, we will keep watching the status.
+        m_priv->setLastConnectError((errorName == ConnmanError::InProgress) ?
+            QString() : errorName);
+
+        Q_EMIT connectRequestFailed(error.message());
+    } else {
+        // Reset the last error on success
+        m_priv->setLastConnectError(QString());
     }
 
+    m_priv->m_connectWatcher = NULL;
+    m_priv->updateConnecting();
+    m_priv->updateConnected();
+    m_priv->emitQueuedSignals();
     call->deleteLater();
 }
 
 void NetworkService::resetProperties()
 {
     QMutableMapIterator<QString, QVariant> i(m_propertiesCache);
-    const bool wasManaged = managed();
     while (i.hasNext()) {
         i.next();
 
@@ -875,89 +1102,91 @@ void NetworkService::resetProperties()
         i.remove();
 
         if (key == Name) {
-            Q_EMIT nameChanged(name());
+            m_priv->queueSignal(Private::SignalNameChanged);
         } else if (key == Error) {
-            Q_EMIT errorChanged(error());
+            m_priv->queueSignal(Private::SignalErrorChanged);
         } else if (key == State) {
-            Q_EMIT stateChanged(state());
-            if (m_connected != connected()) {
-                m_connected = connected();
-                Q_EMIT connectedChanged(m_connected);
-            }
+            m_priv->updateState();
         } else if (key == Security) {
-            Q_EMIT securityChanged(security());
-            if (m_priv->updateSecurityType()) {
-                Q_EMIT securityTypeChanged();
-            }
+            m_priv->queueSignal(Private::SignalSecurityChanged);
+            m_priv->updateSecurityType();
         } else if (key == Strength) {
-            Q_EMIT strengthChanged(strength());
+            m_priv->queueSignal(Private::SignalStrengthChanged);
         } else if (key == Favorite) {
-            Q_EMIT favoriteChanged(favorite());
+            if (value.toBool()) {
+                m_priv->queueSignal(Private::SignalFavoriteChanged);
+            }
         } else if (key == AutoConnect) {
-            Q_EMIT autoConnectChanged(autoConnect());
+            if (value.toBool()) {
+                m_priv->queueSignal(Private::SignalAutoConnectChanged);
+            }
         } else if (key == IPv4) {
-            Q_EMIT ipv4Changed(ipv4());
+            m_priv->queueSignal(Private::SignalIpv4Changed);
         } else if (key == IPv4Config) {
-            Q_EMIT ipv4ConfigChanged(ipv4Config());
+            m_priv->queueSignal(Private::SignalIpv4ConfigChanged);
         } else if (key == IPv6) {
-            Q_EMIT ipv6Changed(ipv6());
+            m_priv->queueSignal(Private::SignalIpv6Changed);
         } else if (key == IPv6Config) {
-            Q_EMIT ipv6ConfigChanged(ipv6Config());
+            m_priv->queueSignal(Private::SignalIpv6ConfigChanged);
         } else if (key == Nameservers) {
-            Q_EMIT nameserversChanged(nameservers());
+            m_priv->queueSignal(Private::SignalNameserversChanged);
         } else if (key == NameserversConfig) {
-            Q_EMIT nameserversConfigChanged(nameserversConfig());
+            m_priv->queueSignal(Private::SignalNameserversConfigChanged);
         } else if (key == Domains) {
-            Q_EMIT domainsChanged(domains());
+            m_priv->queueSignal(Private::SignalDomainsChanged);
         } else if (key == DomainsConfig) {
-            Q_EMIT domainsConfigChanged(domainsConfig());
+            m_priv->queueSignal(Private::SignalDomainsConfigChanged);
         } else if (key == Proxy) {
-            Q_EMIT proxyChanged(proxy());
+            m_priv->queueSignal(Private::SignalProxyChanged);
         } else if (key == ProxyConfig) {
-            Q_EMIT proxyConfigChanged(proxyConfig());
+            m_priv->queueSignal(Private::SignalProxyConfigChanged);
         } else if (key == Ethernet) {
-            Q_EMIT ethernetChanged(ethernet());
+            m_priv->queueSignal(Private::SignalEthernetChanged);
         } else if (key == Type) {
-            Q_EMIT typeChanged(type());
+            m_priv->queueSignal(Private::SignalTypeChanged);
         } else if (key == Roaming) {
-            Q_EMIT roamingChanged(roaming());
+            if (value.toBool()) {
+                m_priv->queueSignal(Private::SignalRoamingChanged);
+            }
         } else if (key == Timeservers) {
-            Q_EMIT timeserversChanged(timeservers());
+            m_priv->queueSignal(Private::SignalTimeserversChanged);
         } else if (key == TimeserversConfig) {
-            Q_EMIT timeserversConfigChanged(timeserversConfig());
+            m_priv->queueSignal(Private::SignalTimeserversConfigChanged);
         } else if (key == BSSID) {
-            Q_EMIT bssidChanged(bssid());
+            m_priv->queueSignal(Private::SignalBssidChanged);
         } else if (key == MaxRate) {
-            Q_EMIT maxRateChanged(maxRate());
+            m_priv->queueSignal(Private::SignalMaxRateChanged);
         } else if (key == Frequency) {
-            Q_EMIT frequencyChanged(frequency());
+            m_priv->queueSignal(Private::SignalFrequencyChanged);
         } else if (key == EncryptionMode) {
-            Q_EMIT encryptionModeChanged(encryptionMode());
+            m_priv->queueSignal(Private::SignalEncryptionModeChanged);
         } else if (key == Hidden) {
-            Q_EMIT hiddenChanged(hidden());
+            m_priv->queueSignal(Private::SignalHiddenChanged);
         } else if (key == Private::Available) {
             if (value.toBool()) {
-                Q_EMIT availableChanged();
+                m_priv->queueSignal(Private::SignalAvailableChanged);
             }
         } else if (key == Private::Saved) {
             if (value.toBool()) {
-                Q_EMIT savedChanged();
+                m_priv->queueSignal(Private::SignalSavedChanged);
             }
         } else if (key == Private::Access) {
             m_priv->setPropertyAvailable(&Private::PropAccess, false);
         } else if (key == Private::DefaultAccess) {
             m_priv->setPropertyAvailable(&Private::PropDefaultAccess, false);
         } else if (key == Private::Passphrase) {
+            m_priv->queueSignal(Private::SignalPassphraseChanged);
             m_priv->setPropertyAvailable(&Private::PropPassphrase, false);
         } else if (key == Private::Identity) {
+            m_priv->queueSignal(Private::SignalIdentityChanged);
             m_priv->setPropertyAvailable(&Private::PropIdentity, false);
         } else if (key == Private::EAP) {
+            m_priv->queueSignal(Private::SignalEapMethodChanged);
             m_priv->setPropertyAvailable(&Private::PropEAP, false);
         }
     }
-    if (wasManaged != managed()) {
-        Q_EMIT managedChanged();
-    }
+    m_priv->updateManaged();
+    m_priv->emitQueuedSignals();
 }
 
 void NetworkService::reconnectServiceInterface()
@@ -980,98 +1209,90 @@ void NetworkService::reconnectServiceInterface()
     }
 }
 
-void NetworkService::emitPropertyChange(const QString &name, const QVariant &value)
+void NetworkService::updatePropertyCache(const QString &name, const QVariant &value)
 {
     if (m_propertiesCache.value(name) == value)
         return;
 
-    const bool wasManaged = managed();
-    m_propertiesCache[name] = value;
+    m_propertiesCache.insert(name, value);
 
     if (name == Name) {
-        Q_EMIT nameChanged(value.toString());
+        m_priv->queueSignal(Private::SignalNameChanged);
     } else if (name == Error) {
-        Q_EMIT errorChanged(value.toString());
+        m_priv->queueSignal(Private::SignalErrorChanged);
     } else if (name == State) {
-        Q_EMIT stateChanged(value.toString());
-        if (m_connected != connected()) {
-            m_connected = connected();
-            Q_EMIT connectedChanged(m_connected);
-        }
+        m_priv->updateState();
     } else if (name == Security) {
-        Q_EMIT securityChanged(value.toStringList());
-        if (m_priv->updateSecurityType()) {
-            Q_EMIT securityTypeChanged();
-        }
+        m_priv->queueSignal(Private::SignalSecurityChanged);
+        m_priv->updateSecurityType();
     } else if (name == Strength) {
-        Q_EMIT strengthChanged(value.toUInt());
+        m_priv->queueSignal(Private::SignalStrengthChanged);
     } else if (name == Favorite) {
-        Q_EMIT favoriteChanged(value.toBool());
+        m_priv->queueSignal(Private::SignalFavoriteChanged);
     } else if (name == AutoConnect) {
-        Q_EMIT autoConnectChanged(value.toBool());
+        m_priv->queueSignal(Private::SignalAutoConnectChanged);
     } else if (name == IPv4) {
-        Q_EMIT ipv4Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4)));
+        m_priv->queueSignal(Private::SignalIpv4Changed);
     } else if (name == IPv4Config) {
-        Q_EMIT ipv4ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config)));
+        m_priv->queueSignal(Private::SignalIpv4ConfigChanged);
     } else if (name == IPv6) {
-        Q_EMIT ipv6Changed(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6)));
+        m_priv->queueSignal(Private::SignalIpv6Changed);
     } else if (name == IPv6Config) {
-        Q_EMIT ipv6ConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config)));
+        m_priv->queueSignal(Private::SignalIpv6ConfigChanged);
     } else if (name == Nameservers) {
-        Q_EMIT nameserversChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalNameserversChanged);
     } else if (name == NameserversConfig) {
-        Q_EMIT nameserversConfigChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalNameserversConfigChanged);
     } else if (name == Domains) {
-        Q_EMIT domainsChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalDomainsChanged);
     } else if (name == DomainsConfig) {
-        Q_EMIT domainsConfigChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalDomainsConfigChanged);
     } else if (name == Proxy) {
-        Q_EMIT proxyChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy)));
+        m_priv->queueSignal(Private::SignalProxyChanged);
     } else if (name == ProxyConfig) {
-        Q_EMIT proxyConfigChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig)));
+        m_priv->queueSignal(Private::SignalProxyConfigChanged);
     } else if (name == Ethernet) {
-        Q_EMIT ethernetChanged(qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet)));
-    } else if (name == QLatin1String("Type")) {
-        Q_EMIT typeChanged(value.toString());
+        m_priv->queueSignal(Private::SignalEthernetChanged);
+    } else if (name == Type) {
+        m_priv->queueSignal(Private::SignalTypeChanged);
     } else if (name == Roaming) {
-        Q_EMIT roamingChanged(value.toBool());
+        m_priv->queueSignal(Private::SignalRoamingChanged);
     } else if (name == Timeservers) {
-        Q_EMIT timeserversChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalTimeserversChanged);
     } else if (name == TimeserversConfig) {
-        Q_EMIT timeserversConfigChanged(value.toStringList());
+        m_priv->queueSignal(Private::SignalTimeserversConfigChanged);
     } else if (name == BSSID) {
-        Q_EMIT bssidChanged(value.toString());
+        m_priv->queueSignal(Private::SignalBssidChanged);
     } else if (name == MaxRate) {
-        Q_EMIT maxRateChanged(value.toUInt());
+        m_priv->queueSignal(Private::SignalMaxRateChanged);
     } else if (name == Frequency) {
-        Q_EMIT frequencyChanged(value.toUInt());
+        m_priv->queueSignal(Private::SignalFrequencyChanged);
     } else if (name == EncryptionMode) {
-        Q_EMIT encryptionModeChanged(value.toString());
+        m_priv->queueSignal(Private::SignalEncryptionModeChanged);
     } else if (name == Hidden) {
-        Q_EMIT hiddenChanged(value.toBool());
+        m_priv->queueSignal(Private::SignalHiddenChanged);
     } else if (name == Private::Available) {
         // We need to signal both, see NetworkService::strength()
-        Q_EMIT availableChanged();
-        Q_EMIT strengthChanged(strength());
+        m_priv->queueSignal(Private::SignalAvailableChanged);
+        m_priv->queueSignal(Private::SignalStrengthChanged);
     } else if (name == Private::Saved) {
-        Q_EMIT savedChanged();
+        m_priv->queueSignal(Private::SignalSavedChanged);
     } else if (name == Private::Access) {
         m_priv->setPropertyAvailable(&Private::PropAccess, true);
     } else if (name == Private::DefaultAccess) {
         m_priv->setPropertyAvailable(&Private::PropDefaultAccess, true);
     } else if (name == Private::Passphrase) {
-        Q_EMIT passphraseChanged(value.toString());
+        m_priv->queueSignal(Private::SignalPassphraseChanged);
         m_priv->setPropertyAvailable(&Private::PropPassphrase, true);
     } else if (name == Private::Identity) {
-        Q_EMIT identityChanged(value.toString());
+        m_priv->queueSignal(Private::SignalIdentityChanged);
         m_priv->setPropertyAvailable(&Private::PropIdentity, true);
     } else if (name == Private::EAP) {
-        Q_EMIT eapMethodChanged();
+        m_priv->queueSignal(Private::SignalEapMethodChanged);
         m_priv->setPropertyAvailable(&Private::PropEAP, true);
     }
-    if (wasManaged != managed()) {
-        Q_EMIT managedChanged();
-    }
+
+    m_priv->updateManaged();
 }
 
 void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
@@ -1082,22 +1303,23 @@ void NetworkService::getPropertiesFinished(QDBusPendingCallWatcher *call)
     if (!reply.isError()) {
         updateProperties(reply.value());
     } else {
-        DBG_(m_path << reply.error().message());
+        DBG_(m_path << reply.error());
     }
-    Q_EMIT propertiesReady();
 }
 
 void NetworkService::updateProperty(const QString &name, const QDBusVariant &value)
 {
-    emitPropertyChange(name, value.variant());
+    updatePropertyCache(name, value.variant());
+    m_priv->emitQueuedSignals();
 }
 
 void NetworkService::updateProperties(const QVariantMap &properties)
 {
     QVariantMap::const_iterator it = properties.constBegin(), end = properties.constEnd();
     for ( ; it != end; ++it) {
-        emitPropertyChange(it.key(), it.value());
+        updatePropertyCache(it.key(), it.value());
     }
+    m_priv->emitQueuedSignals();
     Q_EMIT propertiesReady();
 }
 
@@ -1115,14 +1337,22 @@ void NetworkService::setPath(const QString &path)
 
 bool NetworkService::connected()
 {
-    const NetworkService* self = this;
-    return self->connected();
+    return m_connected;
 }
 
 bool NetworkService::connected() const
 {
-    QString s = state();
-    return (s == "online" || s == "ready");
+    return m_connected;
+}
+
+bool NetworkService::connecting() const
+{
+    return m_priv->m_connecting;
+}
+
+QString NetworkService::lastConnectError() const
+{
+    return m_priv->m_lastConnectError;
 }
 
 bool NetworkService::managed() const

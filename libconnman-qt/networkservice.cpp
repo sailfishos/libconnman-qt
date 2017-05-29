@@ -10,6 +10,7 @@
 
 #include <QSettings>
 
+#include "networkmanager.h"
 #include "networkservice.h"
 #include "libconnman_p.h"
 
@@ -562,6 +563,15 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
 {
     m_priv->updateSecurityType();
 
+    // Make (reasonably) sure that NetworkManager is up to date when
+    // we need to pull inputRequestTimeout out of it. By checking the
+    // path for "/" we avoid infinite recursion - this path is passed
+    // to some sort of special NetworkService created by NetworkManager
+    // constructor itself.
+    if (path != "/") {
+        NetworkManagerFactory::createInstance();
+    }
+
     // If the property is present in GetProperties output, it means that it's
     // at least gettable for us
     for (int i=0; i<Private::NUM_PROPERTIES; i++) {
@@ -757,18 +767,8 @@ void NetworkService::requestConnect()
     if (state() == QLatin1String("failure"))
         service->ClearProperty(QLatin1String("Error"));
 
-    // This is wrong, it should be somehow fetched over D-Bus
-    QSettings connmanConfig("/etc/connman/main.conf", QSettings::IniFormat);
-    int configTimeout = connmanConfig.value("InputRequestTimeout").toInt() * 1000;
-    if (configTimeout == 0)
-        configTimeout = CONNECT_TIMEOUT;
-
-    // increase reply timeout when connecting
-    int timeout = CONNECT_TIMEOUT_FAVORITE;
     int old_timeout = service->timeout();
-    timeout = configTimeout;
-
-    service->setTimeout(timeout);
+    service->setTimeout(NetworkManager::instance()->inputRequestTimeout());
     QDBusPendingCall conn_reply = service->Connect();
     service->setTimeout(old_timeout);
 

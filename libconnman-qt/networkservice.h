@@ -13,9 +13,6 @@
 
 #include <QtDBus>
 
-#define CONNECT_TIMEOUT 300000 // user is supposed to provide input for unconfigured networks
-#define CONNECT_TIMEOUT_FAVORITE 60000
-
 class NetworkService : public QObject
 {
     Q_OBJECT

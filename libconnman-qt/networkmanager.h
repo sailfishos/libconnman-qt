@@ -17,7 +17,6 @@
 #include "networkservice.h"
 #include <QtDBus>
 
-class NetConnmanManagerInterface;
 class NetworkManager;
 
 class NetworkManagerFactory : public QObject
@@ -41,6 +40,7 @@ class NetworkManager : public QObject
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
+    Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)
 
     Q_PROPERTY(bool servicesEnabled READ servicesEnabled WRITE setServicesEnabled NOTIFY servicesEnabledChanged)
     Q_PROPERTY(bool technologiesEnabled READ technologiesEnabled WRITE setTechnologiesEnabled NOTIFY technologiesEnabledChanged)
@@ -51,6 +51,8 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
 
 public:
+    static NetworkManager* instance();
+
     NetworkManager(QObject *parent = 0);
     virtual ~NetworkManager();
 
@@ -75,6 +77,7 @@ public:
     NetworkService* defaultRoute() const;
 
     bool sessionMode() const;
+    uint inputRequestTimeout() const;
 
     bool servicesEnabled() const;
     void setServicesEnabled(bool enabled);
@@ -104,6 +107,7 @@ Q_SIGNALS:
 
     void stateChanged(const QString &state);
     void offlineModeChanged(bool offlineMode);
+    void inputRequestTimeoutChanged();
     void technologiesChanged();
     void servicesChanged();
     void savedServicesChanged();

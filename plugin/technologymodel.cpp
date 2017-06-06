@@ -353,13 +353,12 @@ void TechnologyModel::finishedScan()
 
 void TechnologyModel::networkServiceDestroyed(QObject *service)
 {
-    // Should this trigger an assert so that m_services is only changed
-    // via updateServiceList ?
     int ind = m_services.indexOf(static_cast<NetworkService*>(service));
     if (ind>=0) {
         qWarning() << "out-of-band removal of network service" << service;
         beginRemoveRows(QModelIndex(), ind, ind);
         m_services.remove(ind);
         endRemoveRows();
+        Q_EMIT countChanged();
     }
 }

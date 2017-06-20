@@ -68,9 +68,7 @@ public:
 
     Q_INVOKABLE int indexOf(const QString &dbusObjectPath) const;
     Q_INVOKABLE NetworkService *get(int index) const;
-
-public Q_SLOTS:
-    void requestScan();
+    Q_INVOKABLE void requestScan();
 
 Q_SIGNALS:
     void nameChanged(const QString &name);
@@ -82,7 +80,6 @@ Q_SIGNALS:
     void technologiesChanged();
     void countChanged();
     void filterChanged();
-
     void scanRequestFinished();
 
 private:

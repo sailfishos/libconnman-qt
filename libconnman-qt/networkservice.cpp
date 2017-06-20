@@ -262,10 +262,8 @@ NetworkService::Private::Private(NetworkService* parent) :
 
 void NetworkService::Private::deleteProxy()
 {
-    if (m_proxy) {
-        delete m_proxy;
-        m_proxy = NULL;
-    }
+    delete m_proxy;
+    m_proxy = 0;
 }
 
 NetworkService::Private::InterfaceProxy*
@@ -604,7 +602,9 @@ NetworkService::NetworkService(QObject* parent)
 {
 }
 
-NetworkService::~NetworkService() {}
+NetworkService::~NetworkService()
+{
+}
 
 const QString NetworkService::name() const
 {

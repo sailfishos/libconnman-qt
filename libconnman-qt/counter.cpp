@@ -47,7 +47,7 @@ Counter::~Counter()
         m_manager->unregisterCounter(counterPath);
 }
 
-void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming)
+void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters, bool roaming)
 {
     Q_EMIT counterChanged(servicePath, counters, roaming);
 

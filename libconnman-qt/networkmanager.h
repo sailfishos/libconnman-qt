@@ -51,7 +51,7 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
 
 public:
-    NetworkManager(QObject* parent=0);
+    NetworkManager(QObject *parent = 0);
     virtual ~NetworkManager();
 
     bool isAvailable() const;
@@ -93,7 +93,7 @@ public Q_SLOTS:
     void setOfflineMode(const bool &offlineMode);
     void registerAgent(const QString &path);
     void unregisterAgent(const QString &path);
-    void registerCounter(const QString &path, quint32 accuracy,quint32 period);
+    void registerCounter(const QString &path, quint32 accuracy, quint32 period);
     void unregisterCounter(const QString &path);
     QDBusObjectPath createSession(const QVariantMap &settings, const QString &sessionNotifierPath);
     void destroySession(const QString &sessionAgentPath);

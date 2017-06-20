@@ -45,10 +45,8 @@ void NetworkTechnology::init(const QString &path)
     if (path != m_path) {
         m_path = path;
 
-        if (m_technology) {
-            delete m_technology;
-            m_technology = 0;
-        }
+        delete m_technology;
+        m_technology = 0;
 
         // Clear the property cache (only) if the path is becoming empty.
         if (m_path.isEmpty()) {

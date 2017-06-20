@@ -36,9 +36,9 @@ class Counter : public QObject
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 
     Q_DISABLE_COPY(Counter)
-public:
-      explicit Counter(QObject *parent = 0);
 
+public:
+    explicit Counter(QObject *parent = 0);
     virtual ~Counter();
 
     quint64 bytesReceived() const;
@@ -74,7 +74,7 @@ private:
 
     friend class CounterAdaptor;
 
-    void serviceUsage(const QString &servicePath, const QVariantMap &counters,  bool roaming);
+    void serviceUsage(const QString &servicePath, const QVariantMap &counters, bool roaming);
     void release();
 
     quint64 bytesInHome;

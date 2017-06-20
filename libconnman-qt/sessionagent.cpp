@@ -117,16 +117,16 @@ void SessionAgent::update(const QVariantMap &settings)
 
 void SessionAgent::onConnectFinished(QDBusPendingCallWatcher *call)
 {
-  QDBusPendingReply<> reply = *call;
-  if (reply.isError())
-    qDebug() << reply.error().message();
+    QDBusPendingReply<> reply = *call;
+    if (reply.isError())
+        qDebug() << reply.error().message();
 
-  call->deleteLater();
+    call->deleteLater();
 }
 
 SessionNotificationAdaptor::SessionNotificationAdaptor(SessionAgent* parent)
-  : QDBusAbstractAdaptor(parent),
-    m_sessionAgent(parent)
+    : QDBusAbstractAdaptor(parent),
+      m_sessionAgent(parent)
 {
 }
 

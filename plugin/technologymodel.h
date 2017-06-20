@@ -56,6 +56,7 @@ public:
     const QString name() const;
     bool isAvailable() const;
     bool isConnected() const;
+    void setPowered(bool powered);
     bool isPowered() const;
     bool isScanning() const;
     bool changesInhibited() const;
@@ -69,7 +70,6 @@ public:
     Q_INVOKABLE NetworkService *get(int index) const;
 
 public Q_SLOTS:
-    void setPowered(const bool &powered);
     void requestScan();
 
 Q_SIGNALS:

@@ -123,7 +123,7 @@ void TechnologyModel::setFilter(ServiceFilter filter)
     }
 }
 
-void TechnologyModel::setPowered(const bool &powered)
+void TechnologyModel::setPowered(bool powered)
 {
     if (m_tech) {
         m_tech->setPowered(powered);

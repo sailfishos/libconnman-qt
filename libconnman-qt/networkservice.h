@@ -88,27 +88,27 @@ public:
 
     virtual ~NetworkService();
 
-    const QString name() const;
-    const QString type() const;
-    const QString state() const;
-    const QString error() const;
-    const QStringList security() const;
+    QString name() const;
+    QString type() const;
+    QString state() const;
+    QString error() const;
+    QStringList security() const;
     SecurityType securityType() const;
     bool autoConnect() const;
     uint strength() const;
     bool favorite() const;
-    const QString path() const;
-    const QVariantMap ipv4() const;
-    const QVariantMap ipv4Config() const;
-    const QVariantMap ipv6() const;
-    const QVariantMap ipv6Config() const;
-    const QStringList nameservers() const;
-    const QStringList nameserversConfig() const;
-    const QStringList domains() const;
-    const QStringList domainsConfig() const;
-    const QVariantMap proxy() const;
-    const QVariantMap proxyConfig() const;
-    const QVariantMap ethernet() const;
+    QString path() const;
+    QVariantMap ipv4() const;
+    QVariantMap ipv4Config() const;
+    QVariantMap ipv6() const;
+    QVariantMap ipv6Config() const;
+    QStringList nameservers() const;
+    QStringList nameserversConfig() const;
+    QStringList domains() const;
+    QStringList domainsConfig() const;
+    QVariantMap proxy() const;
+    QVariantMap proxyConfig() const;
+    QVariantMap ethernet() const;
     bool roaming() const;
 
     void setPath(const QString &path);
@@ -123,13 +123,7 @@ public:
     QStringList timeserversConfig() const;
     void setTimeserversConfig(const QStringList &servers);
 
-    const QString bssid();
-    quint32 maxRate();
-    quint16 frequency();
-    const QString encryptionMode();
     bool hidden() const;
-
-    // Canonical variants of the above with const in the right place
     QString bssid() const;
     quint32 maxRate() const;
     quint16 frequency() const;
@@ -152,8 +146,8 @@ Q_SIGNALS:
     void stateChanged(const QString &state);
     void errorChanged(const QString &error);
     void securityChanged(const QStringList &security);
-    void strengthChanged(const uint strength);
-    void favoriteChanged(const bool &favorite);
+    void strengthChanged(uint strength);
+    void favoriteChanged(bool favorite);
     void autoConnectChanged(bool autoconnect);
     void pathChanged(const QString &path);
     void ipv4Changed(const QVariantMap &ipv4);
@@ -201,7 +195,7 @@ public Q_SLOTS:
     void requestDisconnect();
     void remove();
 
-    void setAutoConnect(const bool autoconnect);
+    void setAutoConnect(bool autoconnect);
     void setIpv4Config(const QVariantMap &ipv4);
     void setIpv6Config(const QVariantMap &ipv6);
     void setNameserversConfig(const QStringList &nameservers);

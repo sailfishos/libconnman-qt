@@ -101,12 +101,12 @@ QString NetworkTechnology::path() const
     return m_path;
 }
 
-const QString NetworkTechnology::name() const
+QString NetworkTechnology::name() const
 {
     return m_propertiesCache.value(Name).toString();
 }
 
-const QString NetworkTechnology::type() const
+QString NetworkTechnology::type() const
 {
     return m_propertiesCache.value(Type).toString();
 }
@@ -121,7 +121,7 @@ bool NetworkTechnology::connected() const
     return m_propertiesCache.value(Connected).toBool();
 }
 
-const QString NetworkTechnology::objPath() const
+QString NetworkTechnology::objPath() const
 {
     if (m_technology)
         return m_technology->path();

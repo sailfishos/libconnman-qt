@@ -69,7 +69,7 @@ int TechnologyModel::count() const
     return rowCount();
 }
 
-const QString TechnologyModel::name() const
+QString TechnologyModel::name() const
 {
     return m_techname;
 }

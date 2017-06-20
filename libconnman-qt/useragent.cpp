@@ -150,7 +150,7 @@ QString UserAgent::path() const
     return agentPath;
 }
 
-void UserAgent::setAgentPath(QString &path)
+void UserAgent::setAgentPath(const QString &path)
 {
     if (path.isEmpty())
         return;

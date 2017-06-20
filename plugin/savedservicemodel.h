@@ -41,7 +41,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
-    const QString name() const;
+    QString name() const;
     void setName(const QString &name);
 
     bool sort() const;

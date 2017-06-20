@@ -601,7 +601,7 @@ bool NetworkManager::isAvailable() const
 }
 
 
-const QString NetworkManager::state() const
+QString NetworkManager::state() const
 {
     return m_propertiesCache[State].toString();
 }
@@ -621,7 +621,7 @@ NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
     return m_technologiesCache.value(type);
 }
 
-const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
+QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
 {
     QVector<NetworkTechnology *> techs;
 
@@ -632,7 +632,7 @@ const QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
     return techs;
 }
 
-const QVector<NetworkService*> NetworkManager::selectServices(const QString &tech,
+QVector<NetworkService*> NetworkManager::selectServices(const QString &tech,
     ServiceSelector selector) const
 {
     QVector<NetworkService *> services;
@@ -649,17 +649,17 @@ const QVector<NetworkService*> NetworkManager::selectServices(const QString &tec
     return services;
 }
 
-const QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
+QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
 {
     return selectServices(tech, Private::selectAll);
 }
 
-const QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) const
+QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) const
 {
     return selectServices(tech, Private::selectSaved);
 }
 
-const QVector<NetworkService*> NetworkManager::getAvailableServices(const QString &tech) const
+QVector<NetworkService*> NetworkManager::getAvailableServices(const QString &tech) const
 {
     return selectServices(tech, Private::selectAvailable);
 }
@@ -671,7 +671,7 @@ void NetworkManager::removeSavedService(const QString &) const
 
 // Setters
 
-void NetworkManager::setOfflineMode(const bool &offline)
+void NetworkManager::setOfflineMode(bool offline)
 {
     if (m_proxy) {
         m_proxy->SetProperty(OfflineMode, offline);
@@ -723,7 +723,7 @@ void NetworkManager::destroySession(const QString &path)
     }
 }
 
-void NetworkManager::setSessionMode(const bool &sessionMode)
+void NetworkManager::setSessionMode(bool sessionMode)
 {
     if (m_proxy) {
         m_proxy->SetProperty(SessionMode, sessionMode);

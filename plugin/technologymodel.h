@@ -52,8 +52,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
     int count() const;
-
-    const QString name() const;
+    QString name() const;
     bool isAvailable() const;
     bool isConnected() const;
     void setPowered(bool powered);

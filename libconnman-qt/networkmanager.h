@@ -57,10 +57,10 @@ public:
     bool isAvailable() const;
 
     Q_INVOKABLE NetworkTechnology* getTechnology(const QString &type) const;
-    const QVector<NetworkTechnology *> getTechnologies() const;
-    const QVector<NetworkService*> getServices(const QString &tech = QString()) const;
-    const QVector<NetworkService*> getSavedServices(const QString &tech = QString()) const;
-    const QVector<NetworkService*> getAvailableServices(const QString &tech = QString()) const;
+    QVector<NetworkTechnology *> getTechnologies() const;
+    QVector<NetworkService*> getServices(const QString &tech = QString()) const;
+    QVector<NetworkService*> getSavedServices(const QString &tech = QString()) const;
+    QVector<NetworkService*> getAvailableServices(const QString &tech = QString()) const;
     void removeSavedService(const QString &identifier) const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
@@ -70,7 +70,7 @@ public:
     Q_INVOKABLE QString technologyPathForService(const QString &path);
     Q_INVOKABLE QString technologyPathForType(const QString &type);
 
-    const QString state() const;
+    QString state() const;
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
 
@@ -90,14 +90,14 @@ public:
     QString gpsTechnologyPath() const;
 
 public Q_SLOTS:
-    void setOfflineMode(const bool &offlineMode);
+    void setOfflineMode(bool offlineMode);
     void registerAgent(const QString &path);
     void unregisterAgent(const QString &path);
     void registerCounter(const QString &path, quint32 accuracy, quint32 period);
     void unregisterCounter(const QString &path);
     QDBusObjectPath createSession(const QVariantMap &settings, const QString &sessionNotifierPath);
     void destroySession(const QString &sessionAgentPath);
-    void setSessionMode(const bool &sessionMode);
+    void setSessionMode(bool sessionMode);
 
 Q_SIGNALS:
     void availabilityChanged(bool available);
@@ -125,7 +125,7 @@ private:
     void setConnmanAvailable(bool available);
     bool connectToConnman();
     void disconnectFromConnman();
-    const QVector<NetworkService*> selectServices(const QString &tech, ServiceSelector selector) const;
+    QVector<NetworkService*> selectServices(const QString &tech, ServiceSelector selector) const;
     QStringList selectServiceList(const QString &tech, ServiceSelector selector) const;
 
     InterfaceProxy *m_proxy;

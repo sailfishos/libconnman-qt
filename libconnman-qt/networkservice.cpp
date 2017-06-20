@@ -606,27 +606,27 @@ NetworkService::~NetworkService()
 {
 }
 
-const QString NetworkService::name() const
+QString NetworkService::name() const
 {
     return m_propertiesCache.value(Name).toString();
 }
 
-const QString NetworkService::state() const
+QString NetworkService::state() const
 {
     return m_propertiesCache.value(State).toString();
 }
 
-const QString NetworkService::error() const
+QString NetworkService::error() const
 {
     return m_propertiesCache.value(Error).toString();
 }
 
-const QString NetworkService::type() const
+QString NetworkService::type() const
 {
     return m_propertiesCache.value(Type).toString();
 }
 
-const QStringList NetworkService::security() const
+QStringList NetworkService::security() const
 {
     return m_propertiesCache.value(Security).toStringList();
 }
@@ -647,12 +647,12 @@ bool NetworkService::autoConnect() const
     return m_propertiesCache.value(AutoConnect).toBool();
 }
 
-const QString NetworkService::path() const
+QString NetworkService::path() const
 {
     return m_path;
 }
 
-const QVariantMap NetworkService::ipv4() const
+QVariantMap NetworkService::ipv4() const
 {
     if (m_propertiesCache.contains(IPv4)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4));
@@ -660,7 +660,7 @@ const QVariantMap NetworkService::ipv4() const
     return QVariantMap();
 }
 
-const QVariantMap NetworkService::ipv4Config() const
+QVariantMap NetworkService::ipv4Config() const
 {
     if (m_propertiesCache.contains(IPv4Config)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv4Config));
@@ -668,7 +668,7 @@ const QVariantMap NetworkService::ipv4Config() const
     return QVariantMap();
 }
 
-const QVariantMap NetworkService::ipv6() const
+QVariantMap NetworkService::ipv6() const
 {
     if (m_propertiesCache.contains(IPv6)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6));
@@ -676,7 +676,7 @@ const QVariantMap NetworkService::ipv6() const
     return QVariantMap();
 }
 
-const QVariantMap NetworkService::ipv6Config() const
+QVariantMap NetworkService::ipv6Config() const
 {
     if (m_propertiesCache.contains(IPv6Config)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(IPv6Config));
@@ -684,27 +684,27 @@ const QVariantMap NetworkService::ipv6Config() const
     return QVariantMap();
 }
 
-const QStringList NetworkService::nameservers() const
+QStringList NetworkService::nameservers() const
 {
     return m_propertiesCache.value(Nameservers).toStringList();
 }
 
-const QStringList NetworkService::nameserversConfig() const
+QStringList NetworkService::nameserversConfig() const
 {
     return m_propertiesCache.value(NameserversConfig).toStringList();
 }
 
-const QStringList NetworkService::domains() const
+QStringList NetworkService::domains() const
 {
     return m_propertiesCache.value(Domains).toStringList();
 }
 
-const QStringList NetworkService::domainsConfig() const
+QStringList NetworkService::domainsConfig() const
 {
     return m_propertiesCache.value(DomainsConfig).toStringList();
 }
 
-const QVariantMap NetworkService::proxy() const
+QVariantMap NetworkService::proxy() const
 {
     if (m_propertiesCache.contains(Proxy)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(Proxy));
@@ -712,7 +712,7 @@ const QVariantMap NetworkService::proxy() const
     return QVariantMap();
 }
 
-const QVariantMap NetworkService::proxyConfig() const
+QVariantMap NetworkService::proxyConfig() const
 {
     if (m_propertiesCache.contains(ProxyConfig)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(ProxyConfig));
@@ -720,7 +720,7 @@ const QVariantMap NetworkService::proxyConfig() const
     return QVariantMap();
 }
 
-const QVariantMap NetworkService::ethernet() const
+QVariantMap NetworkService::ethernet() const
 {
     if (m_propertiesCache.contains(Ethernet)) {
         return qdbus_cast<QVariantMap>(m_propertiesCache.value(Ethernet));
@@ -1156,26 +1156,6 @@ QStringList NetworkService::timeserversConfig() const
 void NetworkService::setTimeserversConfig(const QStringList &servers)
 {
     m_priv->setProperty(TimeserversConfig, servers);
-}
-
-const QString NetworkService::bssid()
-{
-    return m_propertiesCache.value(BSSID).toString();
-}
-
-quint32 NetworkService::maxRate()
-{
-    return m_propertiesCache.value(MaxRate).toUInt();
-}
-
-quint16 NetworkService::frequency()
-{
-    return m_propertiesCache.value(Frequency).toUInt();
-}
-
-const QString NetworkService::encryptionMode()
-{
-    return m_propertiesCache.value(EncryptionMode).toString();
 }
 
 QString NetworkService::bssid() const

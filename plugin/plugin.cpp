@@ -15,7 +15,6 @@
 
 #include <networkservice.h>
 #include <clockmodel.h>
-#include "networkingmodel.h"
 #include "technologymodel.h"
 #include "savedservicemodel.h"
 #include "useragent.h"
@@ -38,7 +37,6 @@ void ConnmanPlugin::registerTypes(const char *uri)
     // @uri MeeGo.Connman
 
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
-    qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
     qmlRegisterType<SavedServiceModel>(uri,0,2,"SavedServiceModel");
     qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");

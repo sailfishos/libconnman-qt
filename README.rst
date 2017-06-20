@@ -13,11 +13,6 @@ services of a given technology.
 
 `UserAgent` is a QML component providing `net.connman.Agent` D-Bus interface.
 
-The class `NetworkingModel` is a QML component adapting a static instance of
-`NetworkManager`. Also it provides the D-Bus interface `net.connman.Agent`.
-
-.. warning:: `NetworkingModel` is going to be deprecated.
-
 These classes are written to be re-usable in the qml environment, by setting the
 path property to that of an appropriate dbus path, will re-initialize the object to be used for the path given.
 

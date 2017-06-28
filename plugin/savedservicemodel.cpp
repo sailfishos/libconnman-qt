@@ -80,7 +80,7 @@ int SavedServiceModel::rowCount(const QModelIndex &parent) const
     return m_services.count();
 }
 
-const QString SavedServiceModel::name() const
+QString SavedServiceModel::name() const
 {
     return m_techname;
 }

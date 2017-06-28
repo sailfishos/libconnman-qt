@@ -6,8 +6,7 @@
  * Apache License, version 2.0.  The full text of the Apache License is at
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * WARNING: this class is experimetal and is about to be refactored in order
- *          to deprecate NetworkingModel.
+ * WARNING: this class is experimental and is about to be refactored
  */
 
 #ifndef SAVEDSERVICEMODEL_H
@@ -41,7 +40,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
-    const QString name() const;
+    QString name() const;
     void setName(const QString &name);
 
     bool sort() const;

@@ -69,7 +69,7 @@ int TechnologyModel::count() const
     return rowCount();
 }
 
-const QString TechnologyModel::name() const
+QString TechnologyModel::name() const
 {
     return m_techname;
 }
@@ -123,7 +123,7 @@ void TechnologyModel::setFilter(ServiceFilter filter)
     }
 }
 
-void TechnologyModel::setPowered(const bool &powered)
+void TechnologyModel::setPowered(bool powered)
 {
     if (m_tech) {
         m_tech->setPowered(powered);

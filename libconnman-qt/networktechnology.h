@@ -35,11 +35,11 @@ public:
 
     virtual ~NetworkTechnology();
 
-    const QString name() const;
-    const QString type() const;
+    QString name() const;
+    QString type() const;
     bool powered() const;
     bool connected() const;
-    const QString objPath() const;
+    QString objPath() const;
 
     QString path() const;
 

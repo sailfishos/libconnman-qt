@@ -51,9 +51,6 @@ public Q_SLOTS:
     void setDate(QDate date);
     void setTime(QTime time);
 
-    // helper function for Timepicker
-    QTime time(QString h, QString m) { return QTime(h.toInt(), m.toInt()); }
-
 Q_SIGNALS:
     void timezoneChanged();
     void timezoneUpdatesChanged();

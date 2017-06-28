@@ -7,23 +7,36 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-#include "components.h"
+#include <QtPlugin>
+
+#include <QtQml>
+#include <QQmlEngine>
+#include <QQmlExtensionPlugin>
 
 #include <networkservice.h>
 #include <clockmodel.h>
-#include "networkingmodel.h"
 #include "technologymodel.h"
 #include "savedservicemodel.h"
 #include "useragent.h"
 #include "networksession.h"
 #include "counter.h"
 
-void Components::registerTypes(const char *uri)
+class ConnmanPlugin: public QQmlExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "MeeGo.Connman")
+
+public:
+    void registerTypes(const char *uri);
+
+    void initializeEngine(QQmlEngine *engine, const char *uri);
+};
+
+void ConnmanPlugin::registerTypes(const char *uri)
 {
     // @uri MeeGo.Connman
 
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
-    qmlRegisterType<NetworkingModel>(uri,0,2,"NetworkingModel");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");
     qmlRegisterType<SavedServiceModel>(uri,0,2,"SavedServiceModel");
     qmlRegisterType<UserAgent>(uri,0,2,"UserAgent");
@@ -35,8 +48,10 @@ void Components::registerTypes(const char *uri)
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
 }
 
-void Components::initializeEngine(QQmlEngine *engine, const char *uri)
+void ConnmanPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(uri);
     Q_UNUSED(engine);
 }
+
+#include "plugin.moc"

@@ -26,10 +26,8 @@ void NetworkSession::createSession()
 {
     if (m_path.isEmpty())
         return;
-    if (m_sessionAgent) {
-        delete m_sessionAgent;
-        m_sessionAgent = 0;
-    }
+
+    delete m_sessionAgent;
     m_sessionAgent = new SessionAgent(m_path ,this);
     connect(m_sessionAgent,SIGNAL(settingsUpdated(QVariantMap)),
             this,SLOT(sessionSettingsUpdated(QVariantMap)));

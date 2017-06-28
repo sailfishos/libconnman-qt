@@ -51,7 +51,7 @@ public Q_SLOTS:
     QString connectionRequestType() const;
 
     QString path() const;
-    void setAgentPath(QString &path);
+    void setAgentPath(const QString &path);
 
 Q_SIGNALS:
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);

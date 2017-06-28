@@ -45,10 +45,8 @@ void NetworkTechnology::init(const QString &path)
     if (path != m_path) {
         m_path = path;
 
-        if (m_technology) {
-            delete m_technology;
-            m_technology = 0;
-        }
+        delete m_technology;
+        m_technology = 0;
 
         // Clear the property cache (only) if the path is becoming empty.
         if (m_path.isEmpty()) {
@@ -103,12 +101,12 @@ QString NetworkTechnology::path() const
     return m_path;
 }
 
-const QString NetworkTechnology::name() const
+QString NetworkTechnology::name() const
 {
     return m_propertiesCache.value(Name).toString();
 }
 
-const QString NetworkTechnology::type() const
+QString NetworkTechnology::type() const
 {
     return m_propertiesCache.value(Type).toString();
 }
@@ -123,7 +121,7 @@ bool NetworkTechnology::connected() const
     return m_propertiesCache.value(Connected).toBool();
 }
 
-const QString NetworkTechnology::objPath() const
+QString NetworkTechnology::objPath() const
 {
     if (m_technology)
         return m_technology->path();

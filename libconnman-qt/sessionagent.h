@@ -19,7 +19,7 @@ class SessionAgent : public QObject
     Q_OBJECT
 
 public:
-    explicit SessionAgent(const QString &path,QObject* parent = 0);
+    explicit SessionAgent(const QString &path, QObject *parent = 0);
     virtual ~SessionAgent();
 
     void setAllowedBearers(const QStringList &bearers);

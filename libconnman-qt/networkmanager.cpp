@@ -41,7 +41,9 @@ class NetworkManager::Private : QObject
     Q_OBJECT
 
 public:
-    static const QString Ethernet;
+    static const QString InputRequestTimeout;
+    static const uint DefaultInputRequestTimeout;
+
     static const QString WifiTechnology;
     static const QString CellularTechnology;
     static const QString BluetoothTechnology;
@@ -65,7 +67,9 @@ public Q_SLOTS:
     void maybeCreateInterfaceProxy();
 };
 
-const QString NetworkManager::Private::Ethernet("ethernet");
+const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
+const uint NetworkManager::Private::DefaultInputRequestTimeout(300000);
+
 const QString NetworkManager::Private::WifiTechnology("/net/connman/technology/wifi");
 const QString NetworkManager::Private::CellularTechnology("/net/connman/technology/cellular");
 const QString NetworkManager::Private::BluetoothTechnology("/net/connman/technology/bluetooth");
@@ -231,6 +235,11 @@ NetworkManager::NetworkManager(QObject* parent)
 
 NetworkManager::~NetworkManager()
 {
+}
+
+NetworkManager* NetworkManager::instance()
+{
+    return NetworkManagerFactory::createInstance();
 }
 
 void NetworkManager::onConnmanRegistered()
@@ -744,12 +753,21 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
         Q_EMIT offlineModeChanged(value.toBool());
     } else if (name == SessionMode) {
         Q_EMIT sessionModeChanged(value.toBool());
+    } else if (name == Private::InputRequestTimeout) {
+        Q_EMIT inputRequestTimeoutChanged();
     }
 }
 
 bool NetworkManager::sessionMode() const
 {
-    return m_propertiesCache[SessionMode].toBool();
+    return m_propertiesCache.value(SessionMode).toBool();
+}
+
+uint NetworkManager::inputRequestTimeout() const
+{
+    bool ok = false;
+    uint value = m_propertiesCache.value(Private::InputRequestTimeout).toUInt(&ok);
+    return (ok && value) ? value : Private::DefaultInputRequestTimeout;
 }
 
 bool NetworkManager::servicesEnabled() const

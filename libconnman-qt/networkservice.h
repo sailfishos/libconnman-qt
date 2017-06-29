@@ -13,9 +13,6 @@
 
 #include <QtDBus>
 
-#define CONNECT_TIMEOUT 300000 // user is supposed to provide input for unconfigured networks
-#define CONNECT_TIMEOUT_FAVORITE 60000
-
 class NetworkService : public QObject
 {
     Q_OBJECT
@@ -63,6 +60,8 @@ class NetworkService : public QObject
     Q_PROPERTY(bool available READ available NOTIFY availableChanged)
     Q_PROPERTY(bool managed READ managed NOTIFY managedChanged)
     Q_PROPERTY(bool saved READ saved NOTIFY savedChanged)
+    Q_PROPERTY(bool connecting READ connecting NOTIFY connectingChanged)
+    Q_PROPERTY(QString lastConnectError READ lastConnectError NOTIFY lastConnectErrorChanged)
 
     class Private;
     friend class Private;
@@ -118,6 +117,8 @@ public:
     bool available() const;
     bool managed() const;
     bool saved() const;
+    bool connecting() const;
+    QString lastConnectError() const;
 
     QStringList timeservers() const;
     QStringList timeserversConfig() const;
@@ -189,6 +190,8 @@ Q_SIGNALS:
     void eapMethodAvailableChanged();
     void availableChanged();
     void savedChanged();
+    void connectingChanged();
+    void lastConnectErrorChanged();
 
 public Q_SLOTS:
     void requestConnect();
@@ -242,15 +245,49 @@ private:
 
 private Q_SLOTS:
     void updateProperty(const QString &name, const QDBusVariant &value);
-    void emitPropertyChange(const QString &name, const QVariant &value);
     void getPropertiesFinished(QDBusPendingCallWatcher *call);
 
     void handleConnectReply(QDBusPendingCallWatcher *call);
     void handleAutoConnectReply(QDBusPendingCallWatcher*);
 
 private:
+    // Wrappers for signal emitters, without redundant parameters
+    void nameChanged() { nameChanged(name()); }
+    void stateChanged() { stateChanged(state()); }
+    void errorChanged() { errorChanged(error()); }
+    void securityChanged() { securityChanged(security()); }
+    void strengthChanged() { strengthChanged(strength()); }
+    void favoriteChanged() { favoriteChanged(favorite()); }
+    void autoConnectChanged() { autoConnectChanged(autoConnect()); }
+    void pathChanged() { pathChanged(path()); }
+    void ipv4Changed() { ipv4Changed(ipv4()); }
+    void ipv4ConfigChanged() { ipv4ConfigChanged(ipv4Config()); }
+    void ipv6Changed() { ipv6Changed(ipv6()); }
+    void ipv6ConfigChanged() { ipv6ConfigChanged(ipv6Config()); }
+    void nameserversChanged() { nameserversChanged(nameservers()); }
+    void nameserversConfigChanged() { nameserversConfigChanged(nameserversConfig()); }
+    void domainsChanged() { domainsChanged(domains()); }
+    void domainsConfigChanged() { domainsConfigChanged(domainsConfig()); }
+    void proxyChanged() { proxyChanged(proxy()); }
+    void proxyConfigChanged() { proxyConfigChanged(proxyConfig()); }
+    void ethernetChanged() { ethernetChanged(ethernet()); }
+    void typeChanged() { typeChanged(type()); }
+    void roamingChanged() { roamingChanged(roaming()); }
+    void timeserversChanged() { timeserversChanged(timeservers()); }
+    void timeserversConfigChanged() { timeserversConfigChanged(timeserversConfig()); }
+    void connectedChanged() { connectedChanged(connected()); }
+    void bssidChanged() { bssidChanged(bssid()); }
+    void maxRateChanged() { maxRateChanged(maxRate()); }
+    void frequencyChanged() { frequencyChanged(frequency()); }
+    void encryptionModeChanged() { encryptionModeChanged(encryptionMode()); }
+    void hiddenChanged() { hiddenChanged(hidden()); }
+    void passphraseChanged() { passphraseChanged(passphrase()); }
+    void identityChanged() { identityChanged(identity()); }
+
+private:
     void resetProperties();
     void reconnectServiceInterface();
+    void updatePropertyCache(const QString &name, const QVariant &value);
 
     Q_DISABLE_COPY(NetworkService)
 };

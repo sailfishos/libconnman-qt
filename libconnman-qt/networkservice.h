@@ -11,7 +11,8 @@
 #ifndef NETWORKSERVICE_H
 #define NETWORKSERVICE_H
 
-#include <QtDBus>
+#include <QObject>
+#include <QVariant>
 
 class NetworkService : public QObject
 {
@@ -112,7 +113,7 @@ public:
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
-    bool connected();
+
     bool connected() const;
     bool available() const;
     bool managed() const;
@@ -209,86 +210,8 @@ public Q_SLOTS:
 
 private:
     Private *m_priv;
-    QString m_path;
-    QVariantMap m_propertiesCache;
-
-    static const QString Name;
-    static const QString State;
-    static const QString Type;
-    static const QString Security;
-    static const QString Strength;
-    static const QString Error;
-    static const QString Favorite;
-    static const QString AutoConnect;
-    static const QString IPv4;
-    static const QString IPv4Config;
-    static const QString IPv6;
-    static const QString IPv6Config;
-    static const QString Nameservers;
-    static const QString NameserversConfig;
-    static const QString Domains;
-    static const QString DomainsConfig;
-    static const QString Proxy;
-    static const QString ProxyConfig;
-    static const QString Ethernet;
-    static const QString Roaming;
-    static const QString Timeservers;
-    static const QString TimeserversConfig;
-
-    static const QString BSSID;
-    static const QString MaxRate;
-    static const QString Frequency;
-    static const QString EncryptionMode;
-    static const QString Hidden;
-
-    bool m_connected;
-
-private Q_SLOTS:
-    void updateProperty(const QString &name, const QDBusVariant &value);
-    void getPropertiesFinished(QDBusPendingCallWatcher *call);
-
-    void handleConnectReply(QDBusPendingCallWatcher *call);
-    void handleAutoConnectReply(QDBusPendingCallWatcher*);
 
 private:
-    // Wrappers for signal emitters, without redundant parameters
-    void nameChanged() { nameChanged(name()); }
-    void stateChanged() { stateChanged(state()); }
-    void errorChanged() { errorChanged(error()); }
-    void securityChanged() { securityChanged(security()); }
-    void strengthChanged() { strengthChanged(strength()); }
-    void favoriteChanged() { favoriteChanged(favorite()); }
-    void autoConnectChanged() { autoConnectChanged(autoConnect()); }
-    void pathChanged() { pathChanged(path()); }
-    void ipv4Changed() { ipv4Changed(ipv4()); }
-    void ipv4ConfigChanged() { ipv4ConfigChanged(ipv4Config()); }
-    void ipv6Changed() { ipv6Changed(ipv6()); }
-    void ipv6ConfigChanged() { ipv6ConfigChanged(ipv6Config()); }
-    void nameserversChanged() { nameserversChanged(nameservers()); }
-    void nameserversConfigChanged() { nameserversConfigChanged(nameserversConfig()); }
-    void domainsChanged() { domainsChanged(domains()); }
-    void domainsConfigChanged() { domainsConfigChanged(domainsConfig()); }
-    void proxyChanged() { proxyChanged(proxy()); }
-    void proxyConfigChanged() { proxyConfigChanged(proxyConfig()); }
-    void ethernetChanged() { ethernetChanged(ethernet()); }
-    void typeChanged() { typeChanged(type()); }
-    void roamingChanged() { roamingChanged(roaming()); }
-    void timeserversChanged() { timeserversChanged(timeservers()); }
-    void timeserversConfigChanged() { timeserversConfigChanged(timeserversConfig()); }
-    void connectedChanged() { connectedChanged(connected()); }
-    void bssidChanged() { bssidChanged(bssid()); }
-    void maxRateChanged() { maxRateChanged(maxRate()); }
-    void frequencyChanged() { frequencyChanged(frequency()); }
-    void encryptionModeChanged() { encryptionModeChanged(encryptionMode()); }
-    void hiddenChanged() { hiddenChanged(hidden()); }
-    void passphraseChanged() { passphraseChanged(passphrase()); }
-    void identityChanged() { identityChanged(identity()); }
-
-private:
-    void resetProperties();
-    void reconnectServiceInterface();
-    void updatePropertyCache(const QString &name, const QVariant &value);
-
     Q_DISABLE_COPY(NetworkService)
 };
 

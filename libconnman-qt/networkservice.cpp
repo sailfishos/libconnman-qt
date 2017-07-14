@@ -468,7 +468,7 @@ void NetworkService::Private::setPath(const QString &path)
 {
     if (m_path != path) {
         m_path = path;
-        queueSignal(SignalNameChanged);
+        queueSignal(SignalPathChanged);
         resetProperties();
         reconnectServiceInterface();
         emitQueuedSignals();

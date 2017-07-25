@@ -10,6 +10,8 @@
 #ifndef USERAGENT_H
 #define USERAGENT_H
 
+#include "libconnman_qt.h"
+
 #include <QDBusMessage>
 #include <QDBusObjectPath>
 #include <QDBusAbstractAdaptor>
@@ -26,7 +28,7 @@ struct ServiceRequestData
     QDBusMessage msg;
 };
 
-class UserAgent : public QObject
+class LIBCONNMAN_QT_EXPORT UserAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString connectionRequestType READ connectionRequestType WRITE setConnectionRequestType)
@@ -85,7 +87,7 @@ private:
     QDBusMessage requestMessage;
 };
 
-class AgentAdaptor : public QDBusAbstractAdaptor
+class LIBCONNMAN_QT_EXPORT AgentAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "net.connman.Agent")

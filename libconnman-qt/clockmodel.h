@@ -10,6 +10,8 @@
 #ifndef CLOCKMODEL_H
 #define CLOCKMODEL_H
 
+#include "libconnman_qt.h"
+
 #include <QtCore/QDate>
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
@@ -24,7 +26,7 @@ namespace Tests {
     class UtClock;
 }
 
-class ClockModel : public QObject
+class LIBCONNMAN_QT_EXPORT ClockModel : public QObject
 {
     Q_OBJECT
 

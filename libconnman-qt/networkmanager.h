@@ -11,6 +11,8 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
+#include "libconnman_qt.h"
+
 #include "commondbustypes.h"
 
 #include "networktechnology.h"
@@ -19,7 +21,7 @@
 
 class NetworkManager;
 
-class NetworkManagerFactory : public QObject
+class LIBCONNMAN_QT_EXPORT NetworkManagerFactory : public QObject
 {
     Q_OBJECT
 

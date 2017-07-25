@@ -10,6 +10,8 @@
 #ifndef COUNTER_H
 #define COUNTER_H
 
+#include "libconnman_qt.h"
+
 #include <QObject>
 #include <QVariantMap>
 #include <QtDBus/QDBusAbstractAdaptor>
@@ -22,7 +24,7 @@ class NetworkManager;
  */
 //  static const char counterPath[] = "/ConnectivityCounter";
 
-class Counter : public QObject
+class LIBCONNMAN_QT_EXPORT Counter : public QObject
 {
     Q_OBJECT
 

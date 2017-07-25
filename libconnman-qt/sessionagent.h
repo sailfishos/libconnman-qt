@@ -10,11 +10,13 @@
 #ifndef SESSIONAGENT_H
 #define SESSIONAGENT_H
 
+#include "libconnman_qt.h"
+
 #include "networkmanager.h"
 
 class NetConnmanSessionInterface;
 
-class SessionAgent : public QObject
+class LIBCONNMAN_QT_EXPORT SessionAgent : public QObject
 {
     Q_OBJECT
 
@@ -49,7 +51,7 @@ private:
     friend class SessionNotificationAdaptor;
 };
 
-class SessionNotificationAdaptor : public QDBusAbstractAdaptor
+class LIBCONNMAN_QT_EXPORT SessionNotificationAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "net.connman.Notification")

@@ -11,10 +11,12 @@
 #ifndef NETWORKSERVICE_H
 #define NETWORKSERVICE_H
 
+#include "libconnman_qt.h"
+
 #include <QObject>
 #include <QVariant>
 
-class NetworkService : public QObject
+class LIBCONNMAN_QT_EXPORT NetworkService : public QObject
 {
     Q_OBJECT
 

@@ -11,6 +11,8 @@
 #ifndef SESSIONSERVICE_H
 #define SESSIONSERVICE_H
 
+#include "libconnman_qt.h"
+
 #include <QObject>
 #include <QtDBus>
 
@@ -20,7 +22,7 @@ namespace Tests {
 
 class SessionAgent;
 
-class NetworkSession : public QObject
+class LIBCONNMAN_QT_EXPORT NetworkSession : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)

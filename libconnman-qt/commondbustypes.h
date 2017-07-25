@@ -10,6 +10,8 @@
 #ifndef COMMONDBUSTYPES_H
 #define COMMONDBUSTYPES_H
 
+#include "libconnman_qt.h"
+
 #include <QtCore/QMap>
 #include <QtCore/QList>
 #include <QtCore/QString>
@@ -26,8 +28,8 @@ struct ConnmanObject {
     QVariantMap properties;
 };
 Q_DECLARE_METATYPE ( ConnmanObject )
-QDBusArgument &operator<<(QDBusArgument &argument, const ConnmanObject &obj);
-const QDBusArgument &operator>>(const QDBusArgument &argument, ConnmanObject &obj);
+QDBusArgument &operator<<(QDBusArgument &argument, const ConnmanObject &obj) LIBCONNMAN_QT_EXPORT;
+const QDBusArgument &operator>>(const QDBusArgument &argument, ConnmanObject &obj) LIBCONNMAN_QT_EXPORT;
 
 typedef QList<ConnmanObject> ConnmanObjectList;
 Q_DECLARE_METATYPE ( ConnmanObjectList )

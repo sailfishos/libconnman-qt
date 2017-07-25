@@ -2,6 +2,7 @@ TEMPLATE     = lib
 QT          += core dbus network
 QT          -= gui
 CONFIG      += qt create_pc create_prl link_pkgconfig
+DEFINES     += LIBCONNMAN_QT_LIBRARY_BUILD
 
 isEmpty(VERSION) {
     VERSION = 1.2.3
@@ -44,6 +45,7 @@ DBUS_INTERFACES = \
     connman_technology.xml \
 
 PUBLIC_HEADERS += \
+    libconnman_qt.h \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \

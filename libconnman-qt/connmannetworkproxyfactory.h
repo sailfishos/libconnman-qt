@@ -10,13 +10,15 @@
 #ifndef CONNMANNETWORKPROXYFACTORY_H
 #define CONNMANNETWORKPROXYFACTORY_H
 
+#include "libconnman_qt.h"
+
 #include <QtCore/QPointer>
 #include <QtCore/QVariantMap>
 #include <QtNetwork/QNetworkProxyFactory>
 
 class NetworkService;
 
-class ConnmanNetworkProxyFactory : public QObject, public QNetworkProxyFactory
+class LIBCONNMAN_QT_EXPORT ConnmanNetworkProxyFactory : public QObject, public QNetworkProxyFactory
 {
     Q_OBJECT
 

@@ -10,11 +10,13 @@
 #ifndef NETWORKTECHNOLOGY_H
 #define NETWORKTECHNOLOGY_H
 
+#include "libconnman_qt.h"
+
 #include <QtDBus>
 
 class NetConnmanTechnologyInterface;
 
-class NetworkTechnology : public QObject
+class LIBCONNMAN_QT_EXPORT NetworkTechnology : public QObject
 {
     Q_OBJECT
 

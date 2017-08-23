@@ -100,6 +100,16 @@ public Q_SLOTS:
     void unregisterCounter(const QString &path);
     QDBusObjectPath createSession(const QVariantMap &settings, const QString &sessionNotifierPath);
     void destroySession(const QString &sessionAgentPath);
+    bool createService(
+            const QVariantMap &settings,
+            const QString &tech = QString(),
+            const QString &service = QString(),
+            const QString &device = QString());
+    QString createServiceSync(
+            const QVariantMap &settings,
+            const QString &tech = QString(),
+            const QString &service = QString(),
+            const QString &device = QString());
     void setSessionMode(bool sessionMode);
 
 Q_SIGNALS:
@@ -116,6 +126,9 @@ Q_SIGNALS:
     void servicesListChanged(const QStringList &list);
     void serviceAdded(const QString &servicePath);
     void serviceRemoved(const QString &servicePath);
+
+    void serviceCreated(const QString &servicePath);
+    void serviceCreationFailed(const QString &error);
 
     void servicesEnabledChanged();
     void technologiesEnabledChanged();

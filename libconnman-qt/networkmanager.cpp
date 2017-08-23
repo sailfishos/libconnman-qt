@@ -147,6 +147,13 @@ void NetworkManager::Private::maybeCreateInterfaceProxy()
 //   <method name="DestroySession">
 //     <arg name="session" type="o"/>
 //   </method>
+//   <method name="CreateService">
+//     <arg name="service_type" type="s"/>
+//     <arg name="device_ident" type="s"/>
+//     <arg name="network_ident" type="s"/>
+//     <arg name="settings" type="a(ss)"/>
+//     <arg name="service" type="o"/>
+//   </method>
 //   <signal name="TechnologyAdded">
 //     <arg name="technology" type="o"/>
 //     <arg name="properties" type="a{sv}"/>
@@ -198,6 +205,8 @@ public:
         { return asyncCall("CreateSession", settings, qVariantFromValue(QDBusObjectPath(path))); }
     QDBusPendingCall DestroySession(const QString &path)
         { return asyncCall("DestroySession", qVariantFromValue(QDBusObjectPath(path))); }
+    QDBusPendingReply<QDBusObjectPath> CreateService(const QString &type, const QString &device, const QString &network, const StringPairArray &settings)
+        { return asyncCall("CreateService", type, device, network, qVariantFromValue(settings)); }
 
 Q_SIGNALS:
     void PropertyChanged(const QString &name, const QDBusVariant &value);
@@ -729,6 +738,59 @@ void NetworkManager::destroySession(const QString &path)
 {
     if (m_proxy) {
         m_proxy->DestroySession(path);
+    }
+}
+
+bool NetworkManager::createService(
+        const QVariantMap &settings, const QString &tech, const QString &service, const QString &device)
+{
+    if (m_proxy) {
+        // The public type is QVariantMap for QML's benefit, covert to a string map now.
+        StringPairArray settingsStrings;
+        for (QVariantMap::const_iterator it = settings.begin(); it != settings.end(); ++it) {
+            settingsStrings.append(qMakePair(it.key(), it.value().toString()));
+        }
+
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(
+                    m_proxy->CreateService(tech, service, device, settingsStrings), this);
+
+        connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher) {
+            watcher->deleteLater();
+
+            QDBusReply<QDBusObjectPath> reply = *watcher;
+
+            if (!reply.isValid()) {
+                qWarning() << "NetworkManager: Failed to create service." << reply.error().name() << reply.error().message();
+                emit serviceCreationFailed(reply.error().name());
+            } else {
+                emit serviceCreated(reply.value().path());
+            }
+        });
+        return true;
+    } else {
+        return false;
+    }
+}
+
+QString NetworkManager::createServiceSync(
+        const QVariantMap &settings, const QString &tech, const QString &service, const QString &device)
+{
+    if (m_proxy) {
+        // The public type is QVariantMap for QML's benefit, covert to a string map now.
+        StringPairArray settingsStrings;
+        for (QVariantMap::const_iterator it = settings.begin(); it != settings.end(); ++it) {
+            settingsStrings.append(qMakePair(it.key(), it.value().toString()));
+        }
+        QDBusPendingReply<QDBusObjectPath> reply = m_proxy->CreateService(tech, service, device, settingsStrings);
+        reply.waitForFinished();
+
+        if (reply.isError()) {
+            qWarning() << "NetworkManager: Failed to create service." << reply.error().name() << reply.error().message();
+        }
+
+        return reply.value().path();
+    } else {
+        return QString();
     }
 }
 

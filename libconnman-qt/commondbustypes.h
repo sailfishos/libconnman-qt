@@ -20,6 +20,12 @@
 typedef QMap<QString, QString> StringMap;
 Q_DECLARE_METATYPE ( StringMap )
 
+typedef QPair<QString, QString> StringPair;
+Q_DECLARE_METATYPE(StringPair)
+
+typedef QVector<StringPair> StringPairArray;
+Q_DECLARE_METATYPE(StringPairArray)
+
 // TODO: re-implement with better interface i.e. "const QString path() const" instead of objpath
 struct ConnmanObject {
     QDBusObjectPath objpath;
@@ -34,6 +40,8 @@ Q_DECLARE_METATYPE ( ConnmanObjectList )
 
 inline void registerCommonDataTypes() {
   qDBusRegisterMetaType<StringMap>();
+  qDBusRegisterMetaType<StringPair>();
+  qDBusRegisterMetaType<StringPairArray>();
   qDBusRegisterMetaType<ConnmanObject>();
   qDBusRegisterMetaType<ConnmanObjectList>();
   qRegisterMetaType<ConnmanObjectList>("ConnmanObjectList");

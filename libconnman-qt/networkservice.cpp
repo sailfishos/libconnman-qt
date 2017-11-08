@@ -415,6 +415,7 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
 
     reconnectServiceInterface();
     updateManaged();
+    updateConnected();
     DBG_(m_path << "managed:" << m_managed);
 
     // Reset the signal mask (the above calls may have set some bits)

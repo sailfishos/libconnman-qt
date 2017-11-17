@@ -201,7 +201,7 @@ public:
     QString m_path;
     QVariantMap m_propertiesCache;
     InterfaceProxy *m_proxy;
-    QDBusPendingCallWatcher *m_connectWatcher;
+    QPointer<QDBusPendingCallWatcher> m_connectWatcher;
     EapMethodMapRef m_eapMethodMapRef;
     SecurityType m_securityType;
     uint m_propGetFlags;
@@ -361,7 +361,6 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
     m_path(path),
     m_propertiesCache(props),
     m_proxy(NULL),
-    m_connectWatcher(NULL),
     m_securityType(SecurityNone),
     m_propGetFlags(PropertyEAP),
     m_propSetFlags(PropertyNone),
@@ -805,7 +804,7 @@ bool NetworkService::Private::requestConnect()
         QDBusPendingCall call = m_proxy->Connect();
         m_proxy->setTimeout(old_timeout);
 
-        delete m_connectWatcher;
+        delete m_connectWatcher.data();
         m_connectWatcher = new QDBusPendingCallWatcher(call, m_proxy);
 
         setLastConnectError(QString());
@@ -826,7 +825,7 @@ bool NetworkService::Private::requestConnect()
 void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)
 {
     QDBusPendingReply<> reply = *call;
-    m_connectWatcher = NULL;
+    m_connectWatcher.clear();
     call->deleteLater();
 
     if (reply.isError()) {

@@ -752,7 +752,7 @@ bool NetworkManager::createService(
         }
 
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(
-                    m_proxy->CreateService(tech, service, device, settingsStrings), this);
+                    m_proxy->CreateService(tech, device, service, settingsStrings), this);
 
         connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher) {
             watcher->deleteLater();
@@ -781,7 +781,7 @@ QString NetworkManager::createServiceSync(
         for (QVariantMap::const_iterator it = settings.begin(); it != settings.end(); ++it) {
             settingsStrings.append(qMakePair(it.key(), it.value().toString()));
         }
-        QDBusPendingReply<QDBusObjectPath> reply = m_proxy->CreateService(tech, service, device, settingsStrings);
+        QDBusPendingReply<QDBusObjectPath> reply = m_proxy->CreateService(tech, device, service, settingsStrings);
         reply.waitForFinished();
 
         if (reply.isError()) {

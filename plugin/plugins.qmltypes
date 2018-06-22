@@ -17,6 +17,14 @@ Module {
         Property { name: "timezoneUpdates"; type: "string" }
         Property { name: "timeUpdates"; type: "string" }
         Property { name: "timeservers"; type: "QStringList" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "timezoneChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "timezoneUpdatesChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "timeUpdatesChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "timeserversChanged" }
         Method { name: "timezone"; type: "string" }
         Method {
             name: "setTimezone"
@@ -122,6 +130,8 @@ Module {
             name: "offlineModeChanged"
             Parameter { name: "offlineMode"; type: "bool" }
         }
+        // sdk-make-qmltypes:keep
+        Signal { name: "inputRequestTimeoutChanged" }
         Signal { name: "technologiesChanged" }
         Signal { name: "servicesChanged" }
         Signal { name: "savedServicesChanged" }
@@ -153,6 +163,10 @@ Module {
             name: "serviceCreationFailed"
             Parameter { name: "error"; type: "string" }
         }
+        // sdk-make-qmltypes:keep
+        Signal { name: "serviceEnabledChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "technologiesEnabledChanged" }
         Method {
             name: "setOfflineMode"
             Parameter { name: "offlineMode"; type: "bool" }
@@ -482,6 +496,22 @@ Module {
             name: "identityChanged"
             Parameter { type: "string" }
         }
+        // sdk-make-qmltypes:keep
+        Signal { name: "identityAvailableChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "securityTypeChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "eapMethodChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "eapMethodAvailableChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "availableChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "savedChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "connectingChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "lastConnectErrorChanged" }
         Method { name: "requestConnect" }
         Method { name: "requestDisconnect" }
         Method { name: "remove" }
@@ -969,6 +999,10 @@ Module {
             Parameter { name: "changesInhibited"; type: "bool" }
         }
         Signal { name: "technologiesChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "countChanged" }
+        // sdk-make-qmltypes:keep
+        Signal { name: "filterChanged" }
         Signal { name: "scanRequestFinished" }
         Method {
             name: "indexOf"

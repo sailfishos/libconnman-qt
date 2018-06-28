@@ -335,7 +335,7 @@ void NetworkManager::disconnectTechnologies()
                    this, SLOT(technologyRemoved(QDBusObjectPath)));
     }
 
-    Q_FOREACH (NetworkTechnology *tech, m_technologiesCache) {
+    for (NetworkTechnology *tech : m_technologiesCache) {
         tech->deleteLater();
     }
 
@@ -352,7 +352,7 @@ void NetworkManager::disconnectServices()
                    this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
     }
 
-    Q_FOREACH (NetworkService *service, m_servicesCache) {
+    for (NetworkService *service : m_servicesCache) {
         service->deleteLater();
     }
 
@@ -399,27 +399,25 @@ void NetworkManager::setupServices()
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
-    ConnmanObject connmanobj;
     int order = -1;
-    NetworkService *service = NULL;
 
     m_servicesOrder.clear();
     m_savedServicesOrder.clear();
 
-    Q_FOREACH (connmanobj, changed) {
+    for (const ConnmanObject &connmanobj : changed) {
         order++;
         bool addedService = false;
 
         const QString svcPath(connmanobj.objpath.path());
 
-        if (!m_servicesCache.contains(svcPath)) {
+        NetworkService *service = m_servicesCache.value(svcPath, nullptr);
+        if (service) {
+            service->updateProperties(connmanobj.properties);
+        } else {
             service = new NetworkService(svcPath, connmanobj.properties, this);
             connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
             m_servicesCache.insert(svcPath, service);
             addedService = true;
-        } else {
-            service = m_servicesCache.value(svcPath);
-            service->updateProperties(connmanobj.properties);
         }
 
         if (!m_servicesOrder.contains(svcPath)) {
@@ -437,10 +435,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         }
     }
 
-    Q_FOREACH (QDBusObjectPath obj, removed) {
+    for (const QDBusObjectPath &obj : removed) {
         const QString svcPath(obj.path());
 
-        NetworkService *service = m_servicesCache.value(svcPath);
+        NetworkService *service = m_servicesCache.value(svcPath, nullptr);
         if (service) {
             service->deleteLater();
             m_servicesCache.remove(svcPath);
@@ -504,7 +502,8 @@ void NetworkManager::updateDefaultRoute()
          }
     }
 
-    Q_FOREACH (NetworkService *service, m_servicesCache) {
+    for (NetworkService *service : m_servicesCache) {
+
         if (service->state() == "online" || service->state() == "ready") {
             if (defaultNetDev == service->ethernet().value("Interface")) {
                 if (m_defaultRoute != service) {
@@ -531,10 +530,9 @@ void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
 
 void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
 {
-    NetworkTechnology *net;
     // if we weren't storing by type() this loop would be unecessary
     // but since this function will be triggered rarely that's fine
-    Q_FOREACH (net, m_technologiesCache) {
+    for (NetworkTechnology *net : m_technologiesCache) {
         if (net->objPath() == technology.path()) {
             m_technologiesCache.remove(net->type());
             net->deleteLater();
@@ -571,7 +569,7 @@ void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
     watcher->deleteLater();
     if (reply.isError())
         return;
-    Q_FOREACH (const ConnmanObject &object, reply.value()) {
+    for (const ConnmanObject &object : reply.value()) {
         NetworkTechnology *tech = new NetworkTechnology(object.objpath.path(),
                                                         object.properties, this);
         m_technologiesCache.insert(tech->type(), tech);
@@ -588,10 +586,10 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
         return;
     m_servicesOrder.clear();
 
-    Q_FOREACH (const ConnmanObject &object, reply.value()) {
+    for (const ConnmanObject &object : reply.value()) {
         const QString servicePath = object.objpath.path();
 
-        NetworkService *service = m_servicesCache.value(servicePath);
+        NetworkService *service = m_servicesCache.value(servicePath, nullptr);
         if (service) {
             service->updateProperties(object.properties);
         } else {
@@ -643,7 +641,7 @@ QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
 {
     QVector<NetworkTechnology *> techs;
 
-    Q_FOREACH (NetworkTechnology *tech, m_technologiesCache) {
+    for (NetworkTechnology *tech : m_technologiesCache) {
         techs.push_back(tech);
     }
 
@@ -655,11 +653,10 @@ QVector<NetworkService*> NetworkManager::selectServices(const QString &tech,
 {
     QVector<NetworkService *> services;
 
-    // this Q_FOREACH is based on the m_servicesOrder to keep connman's sort
-    // of services.
-    Q_FOREACH (const QString &servicePath, m_servicesOrder) {
-        NetworkService *service = m_servicesCache.value(servicePath);
-        if (selector(service) && (tech.isEmpty() || service->type() == tech)) {
+    // this is based on the m_servicesOrder to keep connman's sort of services.
+    for (const QString &servicePath : m_servicesOrder) {
+        NetworkService *service = m_servicesCache.value(servicePath, nullptr);
+        if (service && selector(service) && (tech.isEmpty() || service->type() == tech)) {
             services.push_back(service);
         }
     }
@@ -893,9 +890,9 @@ QStringList NetworkManager::selectServiceList(const QString &tech, ServiceSelect
 {
     QStringList services;
     if (!m_servicesOrder.isEmpty()) {
-        Q_FOREACH (const QString &servicePath, m_servicesOrder) {
-            NetworkService *service = m_servicesCache.value(servicePath);
-            if (selector(service) && (tech.isEmpty() || service->type() == tech)) {
+        for (const QString &servicePath : m_servicesOrder) {
+            NetworkService *service = m_servicesCache.value(servicePath, nullptr);
+            if (service && selector(service) && (tech.isEmpty() || service->type() == tech)) {
                 services.push_back(servicePath);
             }
         }
@@ -929,7 +926,7 @@ QStringList NetworkManager::availableServices(const QString &tech)
 
 QString NetworkManager::technologyPathForService(const QString &servicePath)
 {
-    NetworkService *service = m_servicesCache.value(servicePath);
+    NetworkService *service = m_servicesCache.value(servicePath, nullptr);
     if (!service)
         return QString();
 
@@ -938,9 +935,10 @@ QString NetworkManager::technologyPathForService(const QString &servicePath)
 
 QString NetworkManager::technologyPathForType(const QString &techType)
 {
-    Q_FOREACH (NetworkTechnology *tech, m_technologiesCache) {
-        if (tech->type() == techType)
-            return tech->path();
+    QHash<QString, NetworkTechnology *>::const_iterator i = m_technologiesCache.constFind(techType);
+
+    if (i != m_technologiesCache.constEnd()) {
+        return i.value()->path();
     }
     return QString();
 }
@@ -948,7 +946,7 @@ QString NetworkManager::technologyPathForType(const QString &techType)
 QStringList NetworkManager::technologiesList()
 {
     QStringList techList;
-    Q_FOREACH (NetworkTechnology *tech, m_technologiesCache) {
+    for (NetworkTechnology *tech : m_technologiesCache) {
         techList << tech->type();
     }
     return techList;

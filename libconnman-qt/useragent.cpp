@@ -205,7 +205,7 @@ void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
                                        const QDBusMessage &message)
 {
     QVariantMap json;
-    Q_FOREACH (const QString &key, fields.keys()){
+    for (const QString &key : fields.keys()){
         QVariantMap payload = qdbus_cast<QVariantMap>(fields[key]);
         json.insert(key, payload);
     }

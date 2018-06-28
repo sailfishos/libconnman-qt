@@ -82,7 +82,7 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
 
     if (!reply.isError()) {
         QVariantMap tmpCache = reply.value();
-        Q_FOREACH(const QString &name, tmpCache.keys()) {
+        for (const QString &name : tmpCache.keys()) {
             m_propertiesCache.insert(name, tmpCache[name]);
             emitPropertyChange(name, tmpCache[name]);
         }

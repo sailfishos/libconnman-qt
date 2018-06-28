@@ -722,10 +722,10 @@ void NetworkService::Private::updateManaged()
 QVariantMap NetworkService::Private::adaptToConnmanProperties(const QVariantMap &map)
 {
     QVariantMap buffer;
-    Q_FOREACH (const QString &key, map.keys()) {
+    for (const QString &key : map.keys()) {
         if (map.value(key).type() == QVariant::List) {
             QStringList strList;
-            Q_FOREACH (const QVariant &value, map.value(key).toList()) {
+            for (const QVariant &value : map.value(key).toList()) {
                 strList.append(value.toString());
             }
             buffer.insert(key, strList);

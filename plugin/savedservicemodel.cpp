@@ -148,7 +148,7 @@ int SavedServiceModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);
 
-    Q_FOREACH (NetworkService *service, m_services) {
+    for (NetworkService *service : m_services) {
         idx++;
         if (service->path() == dbusObjectPath) return idx;
     }

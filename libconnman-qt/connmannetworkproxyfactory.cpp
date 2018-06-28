@@ -59,12 +59,12 @@ void ConnmanNetworkProxyFactory::onProxyChanged(const QVariantMap &proxy)
         }
     } else if (proxy.value("Method").toString() == QLatin1String("manual")) {
         const QStringList proxyUrlStrings = proxy.value("Servers").toStringList();
-        Q_FOREACH (const QString &proxyUrlString, proxyUrlStrings) {
+        for (const QString &proxyUrlString : proxyUrlStrings) {
             proxyUrls.append(QUrl(proxyUrlString));
         }
     }
 
-    Q_FOREACH (const QUrl &url, proxyUrls) {
+    for (const QUrl &url : proxyUrls) {
         if (url.scheme() == QLatin1String("socks5")) {
             QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, url.host(),
                     url.port() ? url.port() : 1080, url.userName(), url.password());

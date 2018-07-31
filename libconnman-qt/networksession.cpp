@@ -102,7 +102,7 @@ void NetworkSession::requestDisconnect()
 
 void NetworkSession::sessionSettingsUpdated(const QVariantMap &settings)
 {
-    Q_FOREACH(const QString &name, settings.keys()) {
+    for (const QString &name : settings.keys()) {
         settingsMap.insert(name,settings[name]);
 
         if (name == QLatin1String("State")) {

@@ -247,7 +247,7 @@ int TechnologyModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);
 
-    Q_FOREACH (NetworkService *service, m_services) {
+    for (const NetworkService *service : m_services) {
         idx++;
         if (service->path() == dbusObjectPath) return idx;
     }

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2017 Jolla Ltd.
+ * Copyright © 2012-2018 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
@@ -41,19 +41,28 @@ class NetworkManager::Private : QObject
     Q_OBJECT
 
 public:
+    class ListUpdate;
+
     static const QString InputRequestTimeout;
     static const uint DefaultInputRequestTimeout;
 
-    static const QString WifiTechnology;
-    static const QString CellularTechnology;
-    static const QString BluetoothTechnology;
-    static const QString GpsTechnology;
+    static const QString WifiType;
+    static const QString CellularType;
 
-    static bool selectAll(NetworkService *service);
-    static bool selectSaved(NetworkService *service);
-    static bool selectAvailable(NetworkService *service);
+    static const QString WifiTechnologyPath;
+    static const QString CellularTechnologyPath;
+    static const QString BluetoothTechnologyPath;
+    static const QString GpsTechnologyPath;
 
     bool m_registered;
+
+    QStringList m_availableServicesOrder;
+    QStringList m_wifiServicesOrder;
+    QStringList m_cellularServicesOrder;
+
+public:
+    static bool selectSaved(NetworkService *service);
+    static bool selectAvailable(NetworkService *service);
 
 public:
     Private(NetworkManager *parent) :
@@ -70,15 +79,13 @@ public Q_SLOTS:
 const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
 const uint NetworkManager::Private::DefaultInputRequestTimeout(300000);
 
-const QString NetworkManager::Private::WifiTechnology("/net/connman/technology/wifi");
-const QString NetworkManager::Private::CellularTechnology("/net/connman/technology/cellular");
-const QString NetworkManager::Private::BluetoothTechnology("/net/connman/technology/bluetooth");
-const QString NetworkManager::Private::GpsTechnology("/net/connman/technology/gps");
+const QString NetworkManager::Private::WifiType("wifi");
+const QString NetworkManager::Private::CellularType("cellular");
 
-bool NetworkManager::Private::selectAll(NetworkService *service)
-{
-    return service != NULL;
-}
+const QString NetworkManager::Private::WifiTechnologyPath("/net/connman/technology/wifi");
+const QString NetworkManager::Private::CellularTechnologyPath("/net/connman/technology/cellular");
+const QString NetworkManager::Private::BluetoothTechnologyPath("/net/connman/technology/bluetooth");
+const QString NetworkManager::Private::GpsTechnologyPath("/net/connman/technology/gps");
 
 bool NetworkManager::Private::selectSaved(NetworkService *service)
 {
@@ -397,64 +404,149 @@ void NetworkManager::setupServices()
     }
 }
 
+class NetworkManager::Private::ListUpdate {
+public:
+    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+
+    void add(const QString& str) {
+        if (storage->count() == count) {
+            storage->append(str);
+            changed = true;
+        } else if (storage->at(count) != str) {
+            while (storage->count() > count) {
+                storage->removeLast();
+            }
+            storage->append(str);
+            changed = true;
+        }
+        count++;
+    }
+
+    void done() {
+        while (storage->count() > count) {
+            storage->removeLast();
+            changed = true;
+        }
+    }
+
+public:
+    QStringList* storage;
+    bool changed;
+    int count;
+};
+
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
-    int order = -1;
+    Private::ListUpdate services(&m_servicesOrder);
+    Private::ListUpdate savedServices(&m_savedServicesOrder);
+    Private::ListUpdate availableServices(&m_priv->m_availableServicesOrder);
+    Private::ListUpdate wifiServices(&m_priv->m_wifiServicesOrder);
+    Private::ListUpdate cellularServices(&m_priv->m_cellularServicesOrder);
 
-    m_servicesOrder.clear();
-    m_savedServicesOrder.clear();
+    QStringList addedServices;
+    QStringList removedServices;
 
-    for (const ConnmanObject &connmanobj : changed) {
-        order++;
-        bool addedService = false;
+    for (const ConnmanObject &obj : changed) {
+        const QString path(obj.objpath.path());
 
-        const QString svcPath(connmanobj.objpath.path());
-
-        NetworkService *service = m_servicesCache.value(svcPath, nullptr);
+        NetworkService *service = m_servicesCache.value(path);
         if (service) {
-            service->updateProperties(connmanobj.properties);
+            service->updateProperties(obj.properties);
         } else {
-            service = new NetworkService(svcPath, connmanobj.properties, this);
+            service = new NetworkService(path, obj.properties, this);
             connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
-            m_servicesCache.insert(svcPath, service);
-            addedService = true;
+            m_servicesCache.insert(path, service);
+            addedServices.append(path);
         }
 
-        if (!m_servicesOrder.contains(svcPath)) {
-            m_servicesOrder.append(svcPath);
-            if (service->saved()) {
-                m_savedServicesOrder.append(svcPath);
-            }
+        // Full list
+        services.add(path);
+
+        // Saved services
+        if (Private::selectSaved(service)) {
+            savedServices.add(path);
         }
 
-        if (order == 0)
-            updateDefaultRoute();
+        // Available services
+        if (Private::selectAvailable(service)) {
+            availableServices.add(path);
+        }
 
-        if (addedService) { //Q_EMIT this after m_servicesOrder is updated
-            Q_EMIT serviceAdded(svcPath);
+        // Per-technology lists
+        const QString type(service->type());
+        if (type == Private::WifiType) {
+            wifiServices.add(path);
+        } else if (type == Private::CellularType) {
+            cellularServices.add(path);
         }
     }
 
-    for (const QDBusObjectPath &obj : removed) {
-        const QString svcPath(obj.path());
+    // Cut the tails
+    services.done();
+    savedServices.done();
+    availableServices.done();
+    wifiServices.done();
+    cellularServices.done();
 
-        NetworkService *service = m_servicesCache.value(svcPath, nullptr);
+    // Removed services
+    for (const QDBusObjectPath &obj : removed) {
+        const QString path(obj.path());
+        NetworkService *service = m_servicesCache.value(path);
         if (service) {
             service->deleteLater();
-            m_servicesCache.remove(svcPath);
-            Q_EMIT serviceRemoved(svcPath);
+            m_servicesCache.remove(path);
+            removedServices.append(path);
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init
-            DBG_("attempted to remove non-existing service" << svcPath);
+            DBG_("attempted to remove non-existing service" << path);
         }
     }
 
-    if (order == -1)
-        updateDefaultRoute();
+    // Make sure that m_servicesCache doesn't contain stale elements.
+    // Hopefully that won't happen too often (if at all)
+    if (m_servicesCache.count() > m_servicesOrder.count()) {
+        QStringList keys = m_servicesCache.keys();
+        for (const QString &path: keys) {
+            if (!m_servicesOrder.contains(path)) {
+                m_servicesCache.value(path)->deleteLater();
+                m_servicesCache.remove(path);
+                removedServices.append(path);
+                if (m_servicesCache.count() == m_servicesOrder.count()) {
+                    break;
+                }
+            }
+        }
+    }
 
-    Q_EMIT servicesChanged();
-    Q_EMIT savedServicesChanged();
-    Q_EMIT servicesListChanged(m_servicesOrder);
+    // Added services
+    for (const QString &path: addedServices) {
+        Q_EMIT serviceAdded(path);
+    }
+
+    // Removed services
+    for (const QString &path: removedServices) {
+        Q_EMIT serviceRemoved(path);
+    }
+
+    updateDefaultRoute();
+
+    if (services.changed) {
+        Q_EMIT servicesChanged();
+        // This one is probably unnecessary:
+        Q_EMIT servicesListChanged(m_servicesOrder);
+    }
+    if (savedServices.changed) {
+        Q_EMIT savedServicesChanged();
+    }
+    if (availableServices.changed) {
+        Q_EMIT availableServicesChanged();
+    }
+    if (wifiServices.changed) {
+        Q_EMIT wifiServicesChanged();
+    }
+    if (cellularServices.changed) {
+        Q_EMIT cellularServicesChanged();
+    }
 }
 
 void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &value)
@@ -503,8 +595,7 @@ void NetworkManager::updateDefaultRoute()
     }
 
     for (NetworkService *service : m_servicesCache) {
-
-        if (service->state() == "online" || service->state() == "ready") {
+        if (service->connected()) {
             if (defaultNetDev == service->ethernet().value("Interface")) {
                 if (m_defaultRoute != service) {
                     m_defaultRoute = service;
@@ -514,8 +605,11 @@ void NetworkManager::updateDefaultRoute()
             }
         }
     }
-    m_defaultRoute = m_invalidDefaultRoute;
-    Q_EMIT defaultRouteChanged(m_defaultRoute);
+
+    if (m_defaultRoute != m_invalidDefaultRoute) {
+        m_defaultRoute = m_invalidDefaultRoute;
+        Q_EMIT defaultRouteChanged(m_defaultRoute);
+    }
 }
 
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
@@ -581,29 +675,14 @@ void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
 void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
 {
     QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+    ConnmanObjectList services;
     watcher->deleteLater();
-    if (reply.isError())
-        return;
-    m_servicesOrder.clear();
-
-    for (const ConnmanObject &object : reply.value()) {
-        const QString servicePath = object.objpath.path();
-
-        NetworkService *service = m_servicesCache.value(servicePath, nullptr);
-        if (service) {
-            service->updateProperties(object.properties);
-        } else {
-            service = new NetworkService(servicePath, object.properties, this);
-            connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
-            m_servicesCache.insert(servicePath, service);
-        }
-        if (!m_servicesOrder.contains(servicePath))
-            m_servicesOrder.append(servicePath);
+    if (reply.isError()) {
+        WARN_(reply.error());
+    } else {
+        services = reply.value();
     }
-
-    updateDefaultRoute();
-    Q_EMIT servicesChanged();
-    Q_EMIT servicesListChanged(m_servicesCache.keys());
+    updateServices(services, QList<QDBusObjectPath>());
 }
 
 // Public API /////////////
@@ -648,35 +727,147 @@ QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
     return techs;
 }
 
-QVector<NetworkService*> NetworkManager::selectServices(const QString &tech,
+QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list,
     ServiceSelector selector) const
 {
     QVector<NetworkService *> services;
-
-    // this is based on the m_servicesOrder to keep connman's sort of services.
-    for (const QString &servicePath : m_servicesOrder) {
-        NetworkService *service = m_servicesCache.value(servicePath, nullptr);
-        if (service && selector(service) && (tech.isEmpty() || service->type() == tech)) {
-            services.push_back(service);
+    for (const QString &path : list) {
+        NetworkService *service = m_servicesCache.value(path);
+        if (selector(service)) {
+            services.append(m_servicesCache.value(path));
         }
     }
-
     return services;
+}
+
+QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list,
+    const QString &tech) const
+{
+    QVector<NetworkService*> services;
+    if (tech.isEmpty()) {
+        for (const QString &path : list) {
+            services.append(m_servicesCache.value(path));
+        }
+    } else {
+        for (const QString &path : list) {
+            NetworkService *service = m_servicesCache.value(path);
+            if (service->type() == tech) {
+                services.append(service);
+            }
+        }
+    }
+    return services;
+}
+
+QStringList NetworkManager::selectServiceList(const QStringList &list,
+    ServiceSelector selector) const
+{
+    QStringList services;
+    for (const QString &path : list) {
+        if (selector(m_servicesCache.value(path))) {
+            services.append(path);
+        }
+    }
+    return services;
+}
+
+QStringList NetworkManager::selectServiceList(const QStringList &list,
+    const QString &tech) const
+{
+    if (tech.isEmpty()) {
+        return list;
+    } else {
+        QStringList services;
+        for (const QString &path : list) {
+            NetworkService *service = m_servicesCache.value(path);
+            if (service->type() == tech) {
+                services.append(path);
+            }
+        }
+        return services;
+    }
 }
 
 QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
 {
-    return selectServices(tech, Private::selectAll);
+    if (tech == Private::WifiType) {
+        return selectServices(m_priv->m_wifiServicesOrder, QString());
+    } else if (tech == Private::CellularType) {
+        return selectServices(m_priv->m_cellularServicesOrder, QString());
+    } else {
+        return selectServices(m_servicesOrder, tech);
+    }
 }
 
 QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) const
 {
-    return selectServices(tech, Private::selectSaved);
+    // Choose smaller list to scan
+    if (tech == Private::WifiType) {
+        if (m_priv->m_wifiServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServices(m_priv->m_wifiServicesOrder, Private::selectSaved);
+        }
+    } else if (tech == Private::CellularType) {
+        if (m_priv->m_cellularServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServices(m_priv->m_cellularServicesOrder, Private::selectSaved);
+        }
+    }
+    return selectServices(m_savedServicesOrder, tech);
 }
 
 QVector<NetworkService*> NetworkManager::getAvailableServices(const QString &tech) const
 {
-    return selectServices(tech, Private::selectAvailable);
+    // Choose smaller list to scan
+    if (tech == Private::WifiType) {
+        if (m_priv->m_wifiServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServices(m_priv->m_wifiServicesOrder, Private::selectAvailable);
+        }
+    } else if (tech == Private::CellularType) {
+        if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServices(m_priv->m_cellularServicesOrder, Private::selectAvailable);
+        }
+    }
+    return selectServices(m_priv->m_availableServicesOrder, tech);
+}
+
+QStringList NetworkManager::servicesList(const QString &tech)
+{
+    if (tech == Private::WifiType) {
+        return m_priv->m_wifiServicesOrder;
+    } else if (tech == Private::CellularType) {
+        return m_priv->m_cellularServicesOrder;
+    } else {
+        return selectServiceList(m_servicesOrder, tech);
+    }
+}
+
+QStringList NetworkManager::savedServicesList(const QString &tech)
+{
+    // Choose smaller list to scan
+    if (tech == Private::WifiType) {
+        if (m_priv->m_wifiServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServiceList(m_priv->m_wifiServicesOrder, Private::selectSaved);
+        }
+    } else if (tech == Private::CellularType) {
+        if (m_priv->m_cellularServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServiceList(m_priv->m_cellularServicesOrder, Private::selectSaved);
+        }
+    }
+    return selectServiceList(m_savedServicesOrder, tech);
+}
+
+QStringList NetworkManager::availableServices(const QString &tech)
+{
+    // Choose smaller list to scan
+    if (tech == Private::WifiType) {
+        if (m_priv->m_wifiServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServiceList(m_priv->m_wifiServicesOrder, Private::selectAvailable);
+        }
+    } else if (tech == Private::CellularType) {
+        if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServiceList(m_priv->m_cellularServicesOrder, Private::selectAvailable);
+        }
+    }
+    return selectServiceList(m_priv->m_availableServicesOrder, tech);
 }
 
 void NetworkManager::removeSavedService(const QString &) const
@@ -886,44 +1077,6 @@ void NetworkManager::resetCountersForType(const QString &type)
     }
 }
 
-QStringList NetworkManager::selectServiceList(const QString &tech, ServiceSelector selector) const
-{
-    QStringList services;
-    if (!m_servicesOrder.isEmpty()) {
-        for (const QString &servicePath : m_servicesOrder) {
-            NetworkService *service = m_servicesCache.value(servicePath, nullptr);
-            if (service && selector(service) && (tech.isEmpty() || service->type() == tech)) {
-                services.push_back(servicePath);
-            }
-        }
-    } else {
-        QHash<QString, NetworkService *>::const_iterator i = m_servicesCache.constBegin();
-        while (i != m_servicesCache.constEnd()) {
-            NetworkService *service = i.value();
-            if (selector(service) && (tech.isEmpty() || service->type() == tech)) {
-                services.push_back(i.key());
-            }
-            ++i;
-        }
-    }
-    return services;
-}
-
-QStringList NetworkManager::servicesList(const QString &tech)
-{
-    return selectServiceList(tech, Private::selectAll);
-}
-
-QStringList NetworkManager::savedServicesList(const QString &tech)
-{
-    return servicesList(tech);
-}
-
-QStringList NetworkManager::availableServices(const QString &tech)
-{
-    return selectServiceList(tech, Private::selectAvailable);
-}
-
 QString NetworkManager::technologyPathForService(const QString &servicePath)
 {
     NetworkService *service = m_servicesCache.value(servicePath, nullptr);
@@ -954,22 +1107,22 @@ QStringList NetworkManager::technologiesList()
 
 QString NetworkManager::wifiTechnologyPath() const
 {
-    return NetworkManager::Private::WifiTechnology;
+    return NetworkManager::Private::WifiTechnologyPath;
 }
 
 QString NetworkManager::cellularTechnologyPath() const
 {
-    return NetworkManager::Private::CellularTechnology;
+    return NetworkManager::Private::CellularTechnologyPath;
 }
 
 QString NetworkManager::bluetoothTechnologyPath() const
 {
-    return NetworkManager::Private::BluetoothTechnology;
+    return NetworkManager::Private::BluetoothTechnologyPath;
 }
 
 QString NetworkManager::gpsTechnologyPath() const
 {
-    return NetworkManager::Private::GpsTechnology;
+    return NetworkManager::Private::GpsTechnologyPath;
 }
 
 #include "networkmanager.moc"

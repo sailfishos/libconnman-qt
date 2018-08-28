@@ -1,6 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2017 Jolla Ltd.
+ * Copyright © 2012-2018 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
@@ -114,13 +114,15 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void availabilityChanged(bool available);
-
     void stateChanged(const QString &state);
     void offlineModeChanged(bool offlineMode);
     void inputRequestTimeoutChanged();
     void technologiesChanged();
     void servicesChanged();
     void savedServicesChanged();
+    void wifiServicesChanged();
+    void cellularServicesChanged();
+    void availableServicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
     void sessionModeChanged(bool);
     void servicesListChanged(const QStringList &list);
@@ -134,16 +136,20 @@ Q_SIGNALS:
     void technologiesEnabledChanged();
 
 private:
-    class Private;
-    class InterfaceProxy;
-    friend class Private;
     typedef bool (*ServiceSelector)(NetworkService*);
     void propertyChanged(const QString &name, const QVariant &value);
     void setConnmanAvailable(bool available);
     bool connectToConnman();
     void disconnectFromConnman();
-    QVector<NetworkService*> selectServices(const QString &tech, ServiceSelector selector) const;
-    QStringList selectServiceList(const QString &tech, ServiceSelector selector) const;
+    QVector<NetworkService*> selectServices(const QStringList &list, const QString &tech) const;
+    QVector<NetworkService*> selectServices(const QStringList &list, ServiceSelector selector) const;
+    QStringList selectServiceList(const QStringList &list, const QString &tech) const;
+    QStringList selectServiceList(const QStringList &list, ServiceSelector selector) const;
+
+private:
+    class Private;
+    class InterfaceProxy;
+    friend class Private;
 
     InterfaceProxy *m_proxy;
 

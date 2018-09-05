@@ -354,6 +354,11 @@ void NetworkManager::disconnectTechnologies()
 
 void NetworkManager::disconnectServices()
 {
+    if (m_defaultRoute != m_invalidDefaultRoute) {
+        m_defaultRoute = m_invalidDefaultRoute;
+        Q_EMIT defaultRouteChanged(m_defaultRoute);
+    }
+
     if (m_proxy) {
         disconnect(m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
                    this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
@@ -365,15 +370,55 @@ void NetworkManager::disconnectServices()
 
     m_servicesCache.clear();
 
-    if (m_defaultRoute != m_invalidDefaultRoute) {
-        m_defaultRoute = m_invalidDefaultRoute;
-        Q_EMIT defaultRouteChanged(m_defaultRoute);
+    // Clear all lists before emitting the signals
+
+    bool emitSavedServicesChanged = false;
+    if (!m_savedServicesOrder.isEmpty()) {
+        m_savedServicesOrder.clear();
+        emitSavedServicesChanged = true;
+    }
+
+    bool emitAvailableServicesChanged = false;
+    if (!m_priv->m_availableServicesOrder.isEmpty()) {
+        m_priv->m_availableServicesOrder.clear();
+        emitAvailableServicesChanged = true;
+    }
+
+    bool emitWifiServicesChanged = false;
+    if (!m_priv->m_wifiServicesOrder.isEmpty()) {
+        m_priv->m_wifiServicesOrder.clear();
+        emitWifiServicesChanged = true;
+    }
+
+    bool emitCellularServicesChanged = false;
+    if (!m_priv->m_cellularServicesOrder.isEmpty()) {
+        m_priv->m_cellularServicesOrder.clear();
+        emitCellularServicesChanged = true;
     }
 
     if (!m_servicesOrder.isEmpty()) {
         m_servicesOrder.clear();
         Q_EMIT servicesChanged();
+    }
+
+    if (emitSavedServicesChanged) {
         Q_EMIT savedServicesChanged();
+    }
+
+    if (emitSavedServicesChanged) {
+        Q_EMIT savedServicesChanged();
+    }
+
+    if (emitAvailableServicesChanged) {
+        Q_EMIT availableServicesChanged();
+    }
+
+    if (emitWifiServicesChanged) {
+        Q_EMIT wifiServicesChanged();
+    }
+
+    if (emitCellularServicesChanged) {
+        Q_EMIT cellularServicesChanged();
     }
 }
 

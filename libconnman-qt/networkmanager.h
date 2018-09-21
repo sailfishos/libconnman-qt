@@ -38,6 +38,7 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
+    Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)
@@ -75,6 +76,7 @@ public:
     QString state() const;
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
+    NetworkService* connectedWifi() const;
 
     bool sessionMode() const;
     uint inputRequestTimeout() const;
@@ -124,6 +126,7 @@ Q_SIGNALS:
     void cellularServicesChanged();
     void availableServicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
+    void connectedWifiChanged();
     void sessionModeChanged(bool);
     void servicesListChanged(const QStringList &list);
     void serviceAdded(const QString &servicePath);

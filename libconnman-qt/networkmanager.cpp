@@ -36,7 +36,7 @@ NetworkManager* NetworkManagerFactory::instance()
 // NetworkManager::Private
 // ==========================================================================
 
-class NetworkManager::Private : QObject
+class NetworkManager::Private : public QObject
 {
     Q_OBJECT
 
@@ -59,14 +59,16 @@ public:
     QStringList m_availableServicesOrder;
     QStringList m_wifiServicesOrder;
     QStringList m_cellularServicesOrder;
+    NetworkService* m_connectedWifi;
 
 public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
+    bool updateWifiConnected(NetworkService *service);
 
 public:
     Private(NetworkManager *parent) :
-        QObject(parent), m_registered(false) {}
+        QObject(parent), m_registered(false), m_connectedWifi(NULL) {}
     NetworkManager* manager()
         { return (NetworkManager*)parent(); }
     void maybeCreateInterfaceProxyLater()
@@ -74,6 +76,7 @@ public:
 
 public Q_SLOTS:
     void maybeCreateInterfaceProxy();
+    void onWifiConnectedChanged();
 };
 
 const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
@@ -106,6 +109,35 @@ void NetworkManager::Private::maybeCreateInterfaceProxy()
         if (!mgr->m_available) {
             mgr->setConnmanAvailable(true);
         }
+    }
+}
+
+bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
+{
+    if (service->connected()) {
+        if (!m_connectedWifi) {
+            m_connectedWifi = service;
+            return true;
+        }
+    } else if (m_connectedWifi == service) {
+        QVector<NetworkService*> availableWifi = manager()->getAvailableServices(WifiType);
+        m_connectedWifi = NULL;
+        for (NetworkService *wifi: availableWifi) {
+            if (wifi->connected()) {
+                m_connectedWifi = wifi;
+                break;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+void NetworkManager::Private::onWifiConnectedChanged()
+{
+    NetworkService *service = qobject_cast<NetworkService*>(sender());
+    if (service && updateWifiConnected(service)) {
+        Q_EMIT manager()->connectedWifiChanged();
     }
 }
 
@@ -490,19 +522,29 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
 
     QStringList addedServices;
     QStringList removedServices;
+    NetworkService* prevConnectedWifi = m_priv->m_connectedWifi;
 
     for (const ConnmanObject &obj : changed) {
         const QString path(obj.objpath.path());
 
         NetworkService *service = m_servicesCache.value(path);
         if (service) {
+            // We don't want to emit signals at this point. Those will
+            // be emitted later, after internal state is fully updated
+            disconnect(service, SIGNAL(connectedChanged(bool)),
+                this, SLOT(updateDefaultRoute()));
+            disconnect(service, SIGNAL(connectedChanged(bool)),
+                m_priv, SLOT(onWifiConnectedChanged()));
             service->updateProperties(obj.properties);
         } else {
             service = new NetworkService(path, obj.properties, this);
-            connect(service,SIGNAL(connectedChanged(bool)),this,SLOT(updateDefaultRoute()));
             m_servicesCache.insert(path, service);
             addedServices.append(path);
         }
+
+        // Re-connect updateDefaultRoute slot
+        connect(service, SIGNAL(connectedChanged(bool)),
+            this, SLOT(updateDefaultRoute()));
 
         // Full list
         services.add(path);
@@ -521,6 +563,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         const QString type(service->type());
         if (type == Private::WifiType) {
             wifiServices.add(path);
+            // Some special treatment for WiFi services
+            m_priv->updateWifiConnected(service);
+            connect(service, SIGNAL(connectedChanged(bool)),
+                m_priv, SLOT(onWifiConnectedChanged()));
         } else if (type == Private::CellularType) {
             cellularServices.add(path);
         }
@@ -538,6 +584,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         const QString path(obj.path());
         NetworkService *service = m_servicesCache.value(path);
         if (service) {
+            if (service == m_priv->m_connectedWifi) {
+                m_priv->m_connectedWifi = NULL;
+            }
             service->deleteLater();
             m_servicesCache.remove(path);
             removedServices.append(path);
@@ -561,6 +610,11 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 }
             }
         }
+    }
+
+    // Emit signals
+    if (m_priv->m_connectedWifi != prevConnectedWifi) {
+        Q_EMIT connectedWifiChanged();
     }
 
     // Added services
@@ -754,6 +808,11 @@ bool NetworkManager::offlineMode() const
 NetworkService* NetworkManager::defaultRoute() const
 {
     return m_defaultRoute;
+}
+
+NetworkService* NetworkManager::connectedWifi() const
+{
+    return m_priv->m_connectedWifi;
 }
 
 NetworkTechnology* NetworkManager::getTechnology(const QString &type) const

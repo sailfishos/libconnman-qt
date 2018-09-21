@@ -4,7 +4,7 @@ QT          -= gui
 CONFIG      += qt create_pc create_prl link_pkgconfig
 
 isEmpty(VERSION) {
-    VERSION = 1.2.11
+    VERSION = 1.2.12
     message("VERSION is unset, assuming $$VERSION")
 }
 

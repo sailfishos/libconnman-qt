@@ -50,6 +50,8 @@ public:
     static const QString CellularType;
 
     bool m_registered;
+    bool m_servicesAvailable;
+    bool m_technologiesAvailable;
 
     QStringList m_availableServicesOrder;
     QStringList m_wifiServicesOrder;
@@ -60,10 +62,13 @@ public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
     bool updateWifiConnected(NetworkService *service);
+    void setServicesAvailable(bool servicesAvailable);
+    void setTechnologiesAvailable(bool technologiesAvailable);
 
 public:
     Private(NetworkManager *parent) :
-        QObject(parent), m_registered(false), m_connectedWifi(NULL) {}
+        QObject(parent), m_registered(false), m_servicesAvailable(false),
+        m_technologiesAvailable(false), m_connectedWifi(NULL) {}
     NetworkManager* manager()
         { return (NetworkManager*)parent(); }
     void maybeCreateInterfaceProxyLater()
@@ -362,6 +367,10 @@ void NetworkManager::disconnectFromConnman()
 
 void NetworkManager::disconnectTechnologies()
 {
+    // Update availability and check whether validity changed
+    bool wasValid = isValid();
+    m_priv->setTechnologiesAvailable(false);
+
     if (m_proxy) {
         disconnect(m_proxy, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
                    this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
@@ -377,10 +386,18 @@ void NetworkManager::disconnectTechnologies()
         m_technologiesCache.clear();
         Q_EMIT technologiesChanged();
     }
+
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
+    }
 }
 
 void NetworkManager::disconnectServices()
 {
+    // Update availability and check whether validity changed
+    bool wasValid = isValid();
+    m_priv->setServicesAvailable(false);
+
     if (m_defaultRoute != m_invalidDefaultRoute) {
         m_defaultRoute = m_invalidDefaultRoute;
         Q_EMIT defaultRouteChanged(m_defaultRoute);
@@ -446,6 +463,10 @@ void NetworkManager::disconnectServices()
 
     if (emitCellularServicesChanged) {
         Q_EMIT cellularServicesChanged();
+    }
+
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
     }
 }
 
@@ -607,6 +628,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         }
     }
 
+    // Update availability and check whether validity changed
+    bool wasValid = isValid();
+    m_priv->setServicesAvailable(true);
+
     // Emit signals
     if (m_priv->m_connectedWifi != prevConnectedWifi) {
         Q_EMIT connectedWifiChanged();
@@ -640,6 +665,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     }
     if (cellularServices.changed) {
         Q_EMIT cellularServicesChanged();
+    }
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
     }
 }
 
@@ -763,7 +791,15 @@ void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
         m_technologiesCache.insert(tech->type(), tech);
     }
 
+    // Update availability and check whether validity changed
+    bool wasValid = isValid();
+    m_priv->setTechnologiesAvailable(true);
+
     Q_EMIT technologiesChanged();
+
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
+    }
 }
 
 void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
@@ -1134,6 +1170,8 @@ void NetworkManager::setServicesEnabled(bool enabled)
         return;
     }
 
+    bool wasValid = isValid();
+
     m_servicesEnabled = enabled;
 
     if (m_servicesEnabled)
@@ -1142,6 +1180,10 @@ void NetworkManager::setServicesEnabled(bool enabled)
         disconnectServices();
 
     Q_EMIT servicesEnabledChanged();
+
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
+    }
 }
 
 bool NetworkManager::technologiesEnabled() const
@@ -1159,6 +1201,8 @@ void NetworkManager::setTechnologiesEnabled(bool enabled)
         return;
     }
 
+    bool wasValid = isValid();
+
     m_technologiesEnabled = enabled;
 
     if (m_technologiesEnabled)
@@ -1167,6 +1211,26 @@ void NetworkManager::setTechnologiesEnabled(bool enabled)
         disconnectTechnologies();
 
     Q_EMIT technologiesEnabledChanged();
+
+    if (wasValid != isValid()) {
+        Q_EMIT validChanged();
+    }
+}
+
+bool NetworkManager::isValid() const
+{
+    return (!m_servicesEnabled || m_priv->m_servicesAvailable)
+            && (!m_technologiesEnabled || m_priv->m_technologiesAvailable);
+}
+
+void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
+{
+    m_servicesAvailable = servicesAvailable;
+}
+
+void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
+{
+    m_technologiesAvailable = technologiesAvailable;
 }
 
 void NetworkManager::resetCountersForType(const QString &type)

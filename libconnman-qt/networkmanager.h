@@ -52,6 +52,11 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
 
 public:
+    static const QString WifiTechnologyPath;
+    static const QString CellularTechnologyPath;
+    static const QString BluetoothTechnologyPath;
+    static const QString GpsTechnologyPath;
+
     static NetworkManager* instance();
 
     NetworkManager(QObject *parent = 0);

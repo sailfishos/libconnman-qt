@@ -49,11 +49,6 @@ public:
     static const QString WifiType;
     static const QString CellularType;
 
-    static const QString WifiTechnologyPath;
-    static const QString CellularTechnologyPath;
-    static const QString BluetoothTechnologyPath;
-    static const QString GpsTechnologyPath;
-
     bool m_registered;
 
     QStringList m_availableServicesOrder;
@@ -84,11 +79,6 @@ const uint NetworkManager::Private::DefaultInputRequestTimeout(300000);
 
 const QString NetworkManager::Private::WifiType("wifi");
 const QString NetworkManager::Private::CellularType("cellular");
-
-const QString NetworkManager::Private::WifiTechnologyPath("/net/connman/technology/wifi");
-const QString NetworkManager::Private::CellularTechnologyPath("/net/connman/technology/cellular");
-const QString NetworkManager::Private::BluetoothTechnologyPath("/net/connman/technology/bluetooth");
-const QString NetworkManager::Private::GpsTechnologyPath("/net/connman/technology/gps");
 
 bool NetworkManager::Private::selectSaved(NetworkService *service)
 {
@@ -261,6 +251,11 @@ Q_SIGNALS:
 const QString NetworkManager::State("State");
 const QString NetworkManager::OfflineMode("OfflineMode");
 const QString NetworkManager::SessionMode("SessionMode");
+
+const QString NetworkManager::WifiTechnologyPath("/net/connman/technology/wifi");
+const QString NetworkManager::CellularTechnologyPath("/net/connman/technology/cellular");
+const QString NetworkManager::BluetoothTechnologyPath("/net/connman/technology/bluetooth");
+const QString NetworkManager::GpsTechnologyPath("/net/connman/technology/gps");
 
 NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
@@ -1211,22 +1206,22 @@ QStringList NetworkManager::technologiesList()
 
 QString NetworkManager::wifiTechnologyPath() const
 {
-    return NetworkManager::Private::WifiTechnologyPath;
+    return WifiTechnologyPath;
 }
 
 QString NetworkManager::cellularTechnologyPath() const
 {
-    return NetworkManager::Private::CellularTechnologyPath;
+    return CellularTechnologyPath;
 }
 
 QString NetworkManager::bluetoothTechnologyPath() const
 {
-    return NetworkManager::Private::BluetoothTechnologyPath;
+    return BluetoothTechnologyPath;
 }
 
 QString NetworkManager::gpsTechnologyPath() const
 {
-    return NetworkManager::Private::GpsTechnologyPath;
+    return GpsTechnologyPath;
 }
 
 #include "networkmanager.moc"

@@ -45,6 +45,7 @@ class NetworkManager : public QObject
 
     Q_PROPERTY(bool servicesEnabled READ servicesEnabled WRITE setServicesEnabled NOTIFY servicesEnabledChanged)
     Q_PROPERTY(bool technologiesEnabled READ technologiesEnabled WRITE setTechnologiesEnabled NOTIFY technologiesEnabledChanged)
+    Q_PROPERTY(bool valid READ isValid NOTIFY validChanged)
 
     Q_PROPERTY(QString WifiTechnology READ wifiTechnologyPath CONSTANT)
     Q_PROPERTY(QString CellularTechnology READ cellularTechnologyPath CONSTANT)
@@ -91,6 +92,8 @@ public:
 
     bool technologiesEnabled() const;
     void setTechnologiesEnabled(bool enabled);
+
+    bool isValid() const;
 
     Q_INVOKABLE void resetCountersForType(const QString &type);
 
@@ -142,6 +145,7 @@ Q_SIGNALS:
 
     void servicesEnabledChanged();
     void technologiesEnabledChanged();
+    void validChanged();
 
 private:
     typedef bool (*ServiceSelector)(NetworkService*);

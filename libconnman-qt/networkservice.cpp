@@ -1,6 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2017 Jolla Ltd.
+ * Copyright © 2012-2019 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
@@ -55,7 +55,8 @@
     ConnmanArg("Passphrase",Passphrase,passphrase) \
     ConnmanArg("Identity",Identity,identity) \
     ConnmanNoArg("Available",Available,available) \
-    ConnmanNoArg("Saved",Saved,saved)
+    ConnmanNoArg("Saved",Saved,saved) \
+    ClassNoArg(Valid,valid)
 
 #define NETWORK_SERVICE_PROPERTIES2(Connman,Class) \
     NETWORK_SERVICE_PROPERTIES(Connman,Connman,Class,Class)
@@ -198,6 +199,7 @@ NETWORK_SERVICE_PROPERTIES(DEFINE_EMITTER_CONNMAN_ARG,\
     DEFINE_EMITTER_NO_ARG)
 
 public:
+    bool m_valid;
     QString m_path;
     QVariantMap m_propertiesCache;
     InterfaceProxy *m_proxy;
@@ -358,6 +360,7 @@ const QString NetworkService::Private::SecurityTypeName[] = {
 
 NetworkService::Private::Private(const QString &path, const QVariantMap &props, NetworkService *parent) :
     QObject(parent),
+    m_valid(!props.isEmpty()),
     m_path(path),
     m_propertiesCache(props),
     m_proxy(NULL),
@@ -854,6 +857,10 @@ void NetworkService::Private::updateProperties(QVariantMap properties)
         it.next();
         updatePropertyCache(it.key(), it.value());
     }
+    if (!m_valid) {
+        m_valid = true;
+        queueSignal(SignalValidChanged);
+    }
 }
 
 void NetworkService::Private::resetProperties()
@@ -950,7 +957,10 @@ void NetworkService::Private::resetProperties()
         }
     }
     updateManaged();
-    emitQueuedSignals();
+    if (m_valid) {
+        m_valid = false;
+        queueSignal(SignalValidChanged);
+    }
 }
 
 void NetworkService::Private::updatePropertyCache(const QString &name, const QVariant& value)
@@ -1310,6 +1320,11 @@ void NetworkService::updateProperties(const QVariantMap &properties)
 void NetworkService::setPath(const QString &path)
 {
     m_priv->setPath(path);
+}
+
+bool NetworkService::isValid() const
+{
+    return m_priv->m_valid;
 }
 
 bool NetworkService::connected() const

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2017 Jolla Ltd.
+ * Copyright © 2012-2019 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * This program is licensed under the terms and conditions of the
@@ -21,6 +21,7 @@ class NetworkService : public QObject
     Q_ENUMS(EapMethod)
     Q_ENUMS(SecurityType)
 
+    Q_PROPERTY(bool valid READ isValid NOTIFY validChanged)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
@@ -114,6 +115,7 @@ public:
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
 
+    bool isValid() const;
     bool connected() const;
     bool available() const;
     bool managed() const;
@@ -144,6 +146,7 @@ public:
     bool eapMethodAvailable() const;
 
 Q_SIGNALS:
+    void validChanged();
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
     void errorChanged(const QString &error);

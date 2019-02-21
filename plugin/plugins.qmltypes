@@ -115,6 +115,7 @@ Module {
         Property { name: "inputRequestTimeout"; type: "uint"; isReadonly: true }
         Property { name: "servicesEnabled"; type: "bool" }
         Property { name: "technologiesEnabled"; type: "bool" }
+        Property { name: "valid"; type: "bool"; isReadonly: true }
         Property { name: "WifiTechnology"; type: "string"; isReadonly: true }
         Property { name: "CellularTechnology"; type: "string"; isReadonly: true }
         Property { name: "BluetoothTechnology"; type: "string"; isReadonly: true }
@@ -328,6 +329,7 @@ Module {
                 "EapTLS": 3
             }
         }
+        Property { name: "valid"; type: "bool"; isReadonly: true }
         Property { name: "name"; type: "string"; isReadonly: true }
         Property { name: "state"; type: "string"; isReadonly: true }
         Property { name: "type"; type: "string"; isReadonly: true }

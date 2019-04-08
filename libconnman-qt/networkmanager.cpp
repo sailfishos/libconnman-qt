@@ -53,6 +53,9 @@ public:
     bool m_servicesAvailable;
     bool m_technologiesAvailable;
 
+    bool m_connecting;
+    bool m_connected;
+
     QStringList m_availableServicesOrder;
     QStringList m_wifiServicesOrder;
     QStringList m_cellularServicesOrder;
@@ -65,10 +68,17 @@ public:
     void setServicesAvailable(bool servicesAvailable);
     void setTechnologiesAvailable(bool technologiesAvailable);
 
+    void updateState(const QString &newState);
+
 public:
-    Private(NetworkManager *parent) :
-        QObject(parent), m_registered(false), m_servicesAvailable(false),
-        m_technologiesAvailable(false), m_connectedWifi(NULL) {}
+    Private(NetworkManager *parent)
+        : QObject(parent)
+        , m_registered(false)
+        , m_servicesAvailable(false)
+        , m_technologiesAvailable(false)
+        , m_connecting(false)
+        , m_connected(false)
+        , m_connectedWifi(NULL) {}
     NetworkManager* manager()
         { return (NetworkManager*)parent(); }
     void maybeCreateInterfaceProxyLater()
@@ -1126,20 +1136,21 @@ void NetworkManager::setSessionMode(bool sessionMode)
 
 void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 {
-    if (m_propertiesCache.value(name) == value)
-        return;
-
-    m_propertiesCache[name] = value;
-
     if (name == State) {
-        Q_EMIT stateChanged(value.toString());
-        updateDefaultRoute();
-    } else if (name == OfflineMode) {
-        Q_EMIT offlineModeChanged(value.toBool());
-    } else if (name == SessionMode) {
-        Q_EMIT sessionModeChanged(value.toBool());
-    } else if (name == Private::InputRequestTimeout) {
-        Q_EMIT inputRequestTimeoutChanged();
+        m_priv->updateState(value.toString());
+    } else {
+        if (m_propertiesCache.value(name) == value)
+            return;
+
+        m_propertiesCache[name] = value;
+
+        if (name == OfflineMode) {
+            Q_EMIT offlineModeChanged(value.toBool());
+        } else if (name == SessionMode) {
+            Q_EMIT sessionModeChanged(value.toBool());
+        } else if (name == Private::InputRequestTimeout) {
+            Q_EMIT inputRequestTimeoutChanged();
+        }
     }
 }
 
@@ -1223,6 +1234,16 @@ bool NetworkManager::isValid() const
             && (!m_technologiesEnabled || m_priv->m_technologiesAvailable);
 }
 
+bool NetworkManager::connected() const
+{
+    return m_priv->m_connected;
+}
+
+bool NetworkManager::connecting() const
+{
+    return m_priv->m_connecting;
+}
+
 void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
 {
     m_servicesAvailable = servicesAvailable;
@@ -1231,6 +1252,29 @@ void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
 void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
 {
     m_technologiesAvailable = technologiesAvailable;
+}
+
+void NetworkManager::Private::updateState(const QString &newState)
+{
+    if (manager()->state() == newState)
+        return;
+
+    manager()->m_propertiesCache[State] = newState;
+    Q_EMIT manager()->stateChanged(newState);
+
+    bool value = ConnmanState::connected(newState);
+    if (m_connected != value) {
+        m_connected = value;
+        Q_EMIT manager()->connectedChanged();
+    }
+
+    value = ConnmanState::connecting(newState);
+    if (m_connecting != value) {
+        m_connecting = value;
+        Q_EMIT manager()->connectingChanged();
+    }
+
+    manager()->updateDefaultRoute();
 }
 
 void NetworkManager::resetCountersForType(const QString &type)

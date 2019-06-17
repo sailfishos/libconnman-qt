@@ -165,6 +165,7 @@ public:
     void updateManaged();
     void queueSignal(Signal sig);
     void emitQueuedSignals();
+    void remove();
 
 #if HAVE_LIBDBUSACCESS
     void policyCheck(const QString &rules);
@@ -1265,9 +1266,15 @@ void NetworkService::requestDisconnect()
 
 void NetworkService::remove()
 {
-    Private::InterfaceProxy *service = m_priv->m_proxy;
-    if (service) {
-        service->Remove();
+    m_priv->remove();
+}
+
+void NetworkService::Private::remove()
+{
+    if (m_proxy) {
+        m_proxy->Remove();
+        updatePropertyCache(Private::Saved, false);
+        emitQueuedSignals();
     }
 }
 

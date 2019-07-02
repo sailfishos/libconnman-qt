@@ -49,11 +49,19 @@ class NetworkService : public QObject
     Q_PROPERTY(QStringList timeserversConfig READ timeserversConfig WRITE setTimeserversConfig NOTIFY timeserversConfigChanged)
 
     Q_PROPERTY(EapMethod eapMethod READ eapMethod WRITE setEapMethod NOTIFY eapMethodChanged)
+    Q_PROPERTY(int peapVersion READ peapVersion WRITE setPeapVersion NOTIFY peapVersionChanged)
     Q_PROPERTY(QString identity READ identity WRITE setIdentity NOTIFY identityChanged)
     Q_PROPERTY(QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
     Q_PROPERTY(bool eapMethodAvailable READ eapMethodAvailable NOTIFY eapMethodAvailableChanged)
     Q_PROPERTY(bool identityAvailable READ identityAvailable NOTIFY identityAvailableChanged)
     Q_PROPERTY(bool passphraseAvailable READ passphraseAvailable NOTIFY passphraseAvailableChanged)
+    Q_PROPERTY(bool phase2Available READ phase2Available NOTIFY phase2AvailableChanged)
+    Q_PROPERTY(bool caCertAvailable READ caCertAvailable NOTIFY caCertAvailableChanged)
+    Q_PROPERTY(bool caCertFileAvailable READ caCertFileAvailable NOTIFY caCertFileAvailableChanged)
+    Q_PROPERTY(bool domainSuffixMatchAvailable READ domainSuffixMatchAvailable NOTIFY domainSuffixMatchAvailableChanged)
+    Q_PROPERTY(bool privateKeyAvailable READ privateKeyAvailable NOTIFY privateKeyAvailableChanged)
+    Q_PROPERTY(bool privateKeyFileAvailable READ privateKeyFileAvailable NOTIFY privateKeyFileAvailableChanged)
+    Q_PROPERTY(bool privateKeyPassphraseAvailable READ privateKeyPassphraseAvailable NOTIFY privateKeyPassphraseAvailableChanged)
     Q_PROPERTY(QString bssid READ bssid NOTIFY bssidChanged)
     Q_PROPERTY(quint32 maxRate READ maxRate NOTIFY maxRateChanged)
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
@@ -64,6 +72,15 @@ class NetworkService : public QObject
     Q_PROPERTY(bool saved READ saved NOTIFY savedChanged)
     Q_PROPERTY(bool connecting READ connecting NOTIFY connectingChanged)
     Q_PROPERTY(QString lastConnectError READ lastConnectError NOTIFY lastConnectErrorChanged)
+    Q_PROPERTY(QString caCert READ caCert WRITE setCACert NOTIFY caCertChanged)
+    Q_PROPERTY(QString caCertFile READ caCertFile WRITE setCACertFile NOTIFY caCertFileChanged)
+    Q_PROPERTY(QString clientCert READ clientCert WRITE setClientCert NOTIFY clientCertChanged)
+    Q_PROPERTY(QString clientCertFile READ clientCertFile WRITE setClientCertFile NOTIFY clientCertFileChanged)
+    Q_PROPERTY(QString privateKey READ privateKey WRITE setPrivateKey NOTIFY privateKeyChanged)
+    Q_PROPERTY(QString privateKeyFile READ privateKeyFile WRITE setPrivateKeyFile NOTIFY privateKeyFileChanged)
+    Q_PROPERTY(QString privateKeyPassphrase READ privateKeyPassphrase WRITE setPrivateKeyPassphrase NOTIFY privateKeyPassphraseChanged)
+    Q_PROPERTY(QString domainSuffixMatch READ domainSuffixMatch WRITE setDomainSuffixMatch NOTIFY domainSuffixMatchChanged)
+    Q_PROPERTY(QString phase2 READ phase2 WRITE setPhase2 NOTIFY phase2Changed)
 
     class Private;
     friend class Private;
@@ -111,6 +128,12 @@ public:
     QVariantMap proxyConfig() const;
     QVariantMap ethernet() const;
     bool roaming() const;
+    QString caCert() const;
+    QString caCertFile() const;
+    QString clientCert() const;
+    QString clientCertFile() const;
+    QString domainSuffixMatch() const;
+    QString phase2() const;
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -137,6 +160,18 @@ public:
     void setPassphrase(QString passphrase);
     bool passphraseAvailable() const;
 
+    QString privateKey() const;
+    void setPrivateKey(const QString &privateKey);
+    bool privateKeyAvailable() const;
+
+    QString privateKeyFile() const;
+    void setPrivateKeyFile(const QString &privateKeyFile);
+    bool privateKeyFileAvailable() const;
+
+    QString privateKeyPassphrase() const;
+    void setPrivateKeyPassphrase(const QString &passphrase);
+    bool privateKeyPassphraseAvailable() const;
+
     QString identity() const;
     void setIdentity(QString identity);
     bool identityAvailable() const;
@@ -144,6 +179,13 @@ public:
     EapMethod eapMethod() const;
     void setEapMethod(EapMethod method);
     bool eapMethodAvailable() const;
+    bool phase2Available() const;
+    bool caCertAvailable() const;
+    bool caCertFileAvailable() const;
+    bool domainSuffixMatchAvailable() const;
+
+    int peapVersion() const;
+    void setPeapVersion(int version);
 
 Q_SIGNALS:
     void validChanged();
@@ -165,6 +207,15 @@ Q_SIGNALS:
     void domainsConfigChanged(const QStringList &domains);
     void proxyChanged(const QVariantMap &proxy);
     void proxyConfigChanged(const QVariantMap &proxy);
+    void caCertChanged(const QString &caCert);
+    void caCertFileChanged(const QString &caCertFile);
+    void clientCertChanged(const QString &clientCert);
+    void clientCertFileChanged(const QString &clientCertFile);
+    void privateKeyChanged(const QString &privateKey);
+    void privateKeyFileChanged(const QString &privateKeyFile);
+    void privateKeyPassphraseChanged(const QString &privateKeyFile);
+    void domainSuffixMatchChanged(const QString &domainSuffixMatch);
+    void phase2Changed(const QString &phase2);
     void ethernetChanged(const QVariantMap &ethernet);
     void connectRequestFailed(const QString &error);
     void typeChanged(const QString &type);
@@ -191,7 +242,15 @@ Q_SIGNALS:
     void identityAvailableChanged();
     void securityTypeChanged();
     void eapMethodChanged();
+    void peapVersionChanged();
     void eapMethodAvailableChanged();
+    void phase2AvailableChanged();
+    void privateKeyAvailableChanged();
+    void privateKeyFileAvailableChanged();
+    void privateKeyPassphraseAvailableChanged();
+    void caCertAvailableChanged();
+    void caCertFileAvailableChanged();
+    void domainSuffixMatchAvailableChanged();
     void availableChanged();
     void savedChanged();
     void connectingChanged();
@@ -208,6 +267,12 @@ public Q_SLOTS:
     void setNameserversConfig(const QStringList &nameservers);
     void setDomainsConfig(const QStringList &domains);
     void setProxyConfig(const QVariantMap &proxy);
+    void setCACert(const QString &caCert);
+    void setCACertFile(const QString &caCertFile);
+    void setClientCert(const QString &clientCert);
+    void setClientCertFile(const QString &clientCertFile);
+    void setDomainSuffixMatch(const QString &domainSuffixMatch);
+    void setPhase2(const QString &phase2);
 
     void resetCounters();
 

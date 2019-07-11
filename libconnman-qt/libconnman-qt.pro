@@ -38,10 +38,17 @@ CONFIG(debug, debug|release) {
 TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
+custom_dbus_interface.files = \
+    connman_service.xml \
+    connman_vpn_manager.xml \
+    connman_vpn_connection.xml
+custom_dbus_interface.header_flags = -i qdbusxml2cpp_dbus_types.h
+
 DBUS_INTERFACES = \
     connman_clock.xml \
     connman_session.xml \
     connman_technology.xml \
+    custom_dbus_interface
 
 PUBLIC_HEADERS += \
     networkmanager.h \
@@ -53,13 +60,24 @@ PUBLIC_HEADERS += \
     useragent.h \
     sessionagent.h \
     networksession.h \
-    counter.h
+    counter.h \
+    vpnconnection.h \
+    vpnconnection_p.h \
+    vpnmanager.h \
+    vpnmanager_p.h \
+    vpncoremodel.h \
+    vpncoremodel_p.h
 
 HEADERS += \
     $$PUBLIC_HEADERS \
     libconnman_p.h \
+    marshalutils.h \
+    qdbusxml2cpp_dbus_types.h \
+    connman_vpn_manager_interface.h \
+    connman_vpn_connection_interface.h
 
 SOURCES += \
+    marshalutils.cpp \
     networkmanager.cpp \
     networktechnology.cpp \
     networkservice.cpp \
@@ -69,7 +87,10 @@ SOURCES += \
     useragent.cpp \
     sessionagent.cpp \
     networksession.cpp \
-    counter.cpp
+    counter.cpp \
+    vpnconnection.cpp \
+    vpnmanager.cpp \
+    vpncoremodel.cpp
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 
@@ -81,8 +102,5 @@ QMAKE_PKGCONFIG_INCDIR = $$headers.path
 
 INSTALLS += target headers
 
-OTHER_FILES = connman_service.xml \
-    connman_technology.xml \
-    connman_clock.xml \
-    connman_session.xml \
-    connman_notification.xml
+OTHER_FILES = connman_notification.xml \
+    DBUS_INTERFACES

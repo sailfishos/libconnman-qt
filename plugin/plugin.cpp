@@ -1,6 +1,7 @@
 /*
  * Copyright 2011 Intel Corporation.
- * Copyright © 2012, Jolla.
+ * Copyright (c) 2012 - 2019, Jolla.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at 
@@ -20,6 +21,15 @@
 #include "useragent.h"
 #include "networksession.h"
 #include "counter.h"
+#include "vpnmanager.h"
+#include "vpnconnection.h"
+#include "vpncoremodel.h"
+
+template<typename T>
+static QObject *singleton_api_factory(QQmlEngine *, QJSEngine *)
+{
+    return new T;
+}
 
 class ConnmanPlugin: public QQmlExtensionPlugin
 {
@@ -46,6 +56,9 @@ void ConnmanPlugin::registerTypes(const char *uri)
     qmlRegisterType<NetworkManagerFactory>(uri,0,2,"NetworkManagerFactory");
     qmlRegisterType<NetworkTechnology>(uri,0,2,"NetworkTechnology");
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
+    qmlRegisterSingletonType<VpnManager>(uri,0,2,"VpnManager", singleton_api_factory<VpnManager>);
+    qmlRegisterType<VpnConnection>(uri,0,2,"VpnConnection");
+    qmlRegisterSingletonType<VpnCoreModel>(uri, 0, 2, "VpnCoreModel", singleton_api_factory<VpnCoreModel>);
 }
 
 void ConnmanPlugin::initializeEngine(QQmlEngine *engine, const char *uri)

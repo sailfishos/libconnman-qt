@@ -21,9 +21,17 @@
     ClassNoArg(Managed,managed) \
     ClassNoArg(SecurityType,securityType) \
     ClassNoArg(EapMethod,eapMethod) \
+    ClassNoArg(PeapVersion,peapVersion) \
     ClassNoArg(PassphraseAvailable,passphraseAvailable) \
     ClassNoArg(IdentityAvailable,identityAvailable) \
     ClassNoArg(EapMethodAvailable,eapMethodAvailable) \
+    ClassNoArg(Phase2Available,phase2Available) \
+    ClassNoArg(PrivateKeyAvailable,privateKeyAvailable) \
+    ClassNoArg(PrivateKeyFileAvailable,privateKeyFileAvailable) \
+    ClassNoArg(PrivateKeyPassphraseAvailable,privateKeyPassphraseAvailable) \
+    ClassNoArg(CACertAvailable,caCertAvailable) \
+    ClassNoArg(CACertFileAvailable,caCertFileAvailable) \
+    ClassNoArg(DomainSuffixMatchAvailable,domainSuffixMatchAvailable) \
     ClassNoArg(LastConnectError,lastConnectError) \
     ConnmanArg("Type",Type,type) \
     ConnmanArg("Name",Name,name) \
@@ -52,8 +60,17 @@
     ConnmanArg("Frequency",Frequency,frequency) \
     ConnmanArg("EncryptionMode",EncryptionMode,encryptionMode) \
     ConnmanArg("Hidden",Hidden,hidden) \
+    ConnmanArg("Phase2",Phase2,phase2) \
     ConnmanArg("Passphrase",Passphrase,passphrase) \
     ConnmanArg("Identity",Identity,identity) \
+    ConnmanArg("CACert",CACert,caCert) \
+    ConnmanArg("CACertFile",CACertFile,caCertFile) \
+    ConnmanArg("DomainSuffixMatch",DomainSuffixMatch,domainSuffixMatch) \
+    ConnmanArg("ClientCert",ClientCert,clientCert) \
+    ConnmanArg("ClientCertFile",ClientCertFile,clientCertFile) \
+    ConnmanArg("PrivateKey",PrivateKey,privateKey) \
+    ConnmanArg("PrivateKeyFile",PrivateKeyFile,privateKeyFile) \
+    ConnmanArg("PrivateKeyPasshprase",PrivateKeyPassphrase,privateKeyPassphrase) \
     ConnmanNoArg("Available",Available,available) \
     ConnmanNoArg("Saved",Saved,saved) \
     ClassNoArg(Valid,valid)
@@ -76,11 +93,12 @@ class NetworkService::Private: public QObject
 public:
     class InterfaceProxy;
     class GetPropertyWatcher;
-    typedef QHash<QString,EapMethod> EapMethodMap;
+    typedef QHash<QString,QPair<EapMethod,int> > EapMethodMap;
     typedef QSharedPointer<EapMethodMap> EapMethodMapRef;
     typedef void (NetworkService::Private::*SignalEmitter)(NetworkService*);
 
     static const QString EapMethodName[];
+    static const QString PeapMethodName[];
     static const QString SecurityTypeName[];
     static const QString PolicyPrefix;
 
@@ -97,7 +115,14 @@ public:
         PropertyPassphrase    = 0x00000004,
         PropertyIdentity      = 0x00000008,
         PropertyEAP           = 0x00000010,
-        PropertyAll           = 0x0000001f
+        PropertyPhase2        = 0x00000020,
+        PropertyPrivateKey    = 0x00000040,
+        PropertyPrivateKeyFile= 0x00000080,
+        PropertyPrivateKeyPassphrase    = 0x00000100,
+        PropertyCACert        = 0x00000200,
+        PropertyCACertFile    = 0x00000400,
+        PropertyDomainSuffixMatch = 0x00000800,
+        PropertyAll           = 0x00000fff
     };
 
     enum CallFlags {
@@ -134,6 +159,13 @@ public:
     static const PropertyAccessInfo PropIdentity;
     static const PropertyAccessInfo PropPassphrase;
     static const PropertyAccessInfo PropEAP;
+    static const PropertyAccessInfo PropPhase2;
+    static const PropertyAccessInfo PropPrivateKey;
+    static const PropertyAccessInfo PropPrivateKeyFile;
+    static const PropertyAccessInfo PropPrivateKeyPassphrase;
+    static const PropertyAccessInfo PropCACert;
+    static const PropertyAccessInfo PropCACertFile;
+    static const PropertyAccessInfo PropDomainSuffixMatch;
 
     static QVariantMap adaptToConnmanProperties(const QVariantMap &map);
 
@@ -145,6 +177,7 @@ public:
     NetworkService* service();
     EapMethodMapRef eapMethodMap();
     EapMethod eapMethod();
+    int peapVersion();
     uint uintValue(const QString &key);
     bool boolValue(const QString &key, bool defaultValue = false);
     QVariantMap variantMapValue(const QString &key);
@@ -155,6 +188,7 @@ public:
     bool requestConnect();
     void updateSecurityType();
     void setEapMethod(EapMethod method);
+    void setPeapVersion(int version);
     void setProperty(const QString &name, const QVariant &value);
     void setPropertyAvailable(const PropertyAccessInfo *prop, bool available);
     void setLastConnectError(const QString &error);
@@ -215,6 +249,7 @@ public:
     bool m_connected;
     QString m_lastConnectError;
     QString m_state;
+    int m_peapVersion;
 
 private:
     quint64 m_queuedSignals;
@@ -340,18 +375,51 @@ const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropP
 const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropEAP =
     { NetworkService::Private::EAP, NetworkService::Private::PropertyEAP,
       NetworkService::Private::SignalEapMethodAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropPhase2 =
+    { NetworkService::Private::Phase2, NetworkService::Private::PropertyPhase2,
+      NetworkService::Private::SignalPhase2AvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropPrivateKey =
+    { NetworkService::Private::PrivateKey, NetworkService::Private::PropertyPrivateKey,
+      NetworkService::Private::SignalPrivateKeyAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropPrivateKeyFile =
+    { NetworkService::Private::PrivateKeyFile, NetworkService::Private::PropertyPrivateKeyFile,
+      NetworkService::Private::SignalPrivateKeyFileAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropPrivateKeyPassphrase =
+    { NetworkService::Private::PrivateKeyPassphrase, NetworkService::Private::PropertyPrivateKeyPassphrase,
+      NetworkService::Private::SignalPrivateKeyPassphraseAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropCACert =
+    { NetworkService::Private::CACert, NetworkService::Private::PropertyCACert,
+      NetworkService::Private::SignalCACertAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropCACertFile =
+    { NetworkService::Private::CACertFile, NetworkService::Private::PropertyCACertFile,
+      NetworkService::Private::SignalCACertFileAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropDomainSuffixMatch =
+    { NetworkService::Private::DomainSuffixMatch, NetworkService::Private::PropertyDomainSuffixMatch,
+      NetworkService::Private::SignalDomainSuffixMatchAvailableChanged };
 
 const NetworkService::Private::PropertyAccessInfo* NetworkService::Private::Properties[] = {
     &NetworkService::Private::PropAccess,
     &NetworkService::Private::PropDefaultAccess,
     &NetworkService::Private::PropIdentity,
     &NetworkService::Private::PropPassphrase,
-    &NetworkService::Private::PropEAP
+    &NetworkService::Private::PropEAP,
+    &NetworkService::Private::PropPhase2,
+    &NetworkService::Private::PropPrivateKey,
+    &NetworkService::Private::PropPrivateKeyFile,
+    &NetworkService::Private::PropPrivateKeyPassphrase,
+    &NetworkService::Private::PropCACert,
+    &NetworkService::Private::PropCACertFile,
+    &NetworkService::Private::PropDomainSuffixMatch,
 };
 
 // The order must match EapMethod enum
 const QString NetworkService::Private::EapMethodName[] = {
     QString(), "peap", "ttls", "tls"
+};
+
+// Special versions of peap method names
+const QString NetworkService::Private::PeapMethodName[] = {
+    "PEAPv0", "PEAPv1"
 };
 
 // The order must match SecurityType enum
@@ -372,6 +440,7 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
     m_managed(false),
     m_connecting(false),
     m_connected(false),
+    m_peapVersion(-1),
     m_queuedSignals(0),
     m_firstQueuedSignal(0)
 {
@@ -597,8 +666,14 @@ NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
         // Start with 1 because 0 is EapNone
         for (uint i=1; i<COUNT(EapMethodName); i++) {
             const QString name = EapMethodName[i];
-            map->insert(name.toLower(), (EapMethod)i);
-            map->insert(name.toUpper(), (EapMethod)i);
+            map->insert(name.toLower(), QPair<EapMethod, int>((EapMethod)i, -1));
+            map->insert(name.toUpper(), QPair<EapMethod, int>((EapMethod)i, -1));
+        }
+        for (uint i=0; i<COUNT(PeapMethodName); i++) {
+            const QString name = PeapMethodName[i];
+            map->insert(name, QPair<EapMethod, int>(EapPEAP, i));
+            map->insert(name.toLower(), QPair<EapMethod, int>(EapPEAP, i));
+            map->insert(name.toUpper(), QPair<EapMethod, int>(EapPEAP, i));
         }
         m_eapMethodMapRef = EapMethodMapRef(map);
     }
@@ -644,14 +719,45 @@ NetworkService::EapMethod NetworkService::Private::eapMethod()
     if (eap.isEmpty()) {
         return EapNone;
     } else {
-        return eapMethodMap()->value(eap, EapNone);
+        return eapMethodMap()->value(eap, QPair<EapMethod, int>(EapNone, -1)).first;
     }
 }
 
 void NetworkService::Private::setEapMethod(EapMethod method)
 {
-    if (method >= EapNone && method < COUNT(EapMethodName)) {
+    if (method == EapPEAP && m_peapVersion != -1) {
+        setProperty(EAP, PeapMethodName[m_peapVersion]);
+    } else if (method >= EapNone && method < COUNT(EapMethodName)) {
         setProperty(EAP, EapMethodName[method]);
+        m_peapVersion = -1;
+    }
+}
+
+int NetworkService::Private::peapVersion()
+{
+    QString eap = stringValue(EAP);
+    if (m_peapVersion != -1) {
+        return m_peapVersion;
+    } else if (eap.isEmpty()) {
+        return -1;
+    } else {
+        return eapMethodMap()->value(eap, QPair<EapMethod, int>(EapNone, -1)).second;
+    }
+}
+
+void NetworkService::Private::setPeapVersion(int version)
+{
+    if (version >= 0 && static_cast<uint>(version) > COUNT(PeapMethodName))
+        return;
+    if (version < 0)
+        version = -1;
+    if (eapMethod() != EapPEAP) {
+        m_peapVersion = version;
+    } else if (version < 0) {
+        setProperty(EAP, EapMethodName[EapPEAP]);
+    } else {
+        setProperty(EAP, PeapMethodName[version].toLower());
+        m_peapVersion = -1;
     }
 }
 
@@ -769,6 +875,8 @@ void NetworkService::Private::reconnectServiceInterface()
         InterfaceProxy *service = createProxy(m_path);
         connect(service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
             SLOT(onPropertyChanged(QString,QDBusVariant)));
+        connect(service, SIGNAL(RestrictedPropertyChanged(QString)),
+            SLOT(onRestrictedPropertyChanged(QString)));
         connect(new QDBusPendingCallWatcher(service->GetProperties(), service),
             SIGNAL(finished(QDBusPendingCallWatcher*)),
             SLOT(onGetPropertiesFinished(QDBusPendingCallWatcher*)));
@@ -954,7 +1062,33 @@ void NetworkService::Private::resetProperties()
             setPropertyAvailable(&PropIdentity, false);
         } else if (key == EAP) {
             queueSignal(SignalEapMethodChanged);
+            queueSignal(SignalPeapVersionChanged);
             setPropertyAvailable(&PropEAP, false);
+        } else if (key == Phase2) {
+            queueSignal(SignalPhase2Changed);
+            setPropertyAvailable(&PropPhase2, false);
+        } else if (key == PrivateKeyPassphrase) {
+            queueSignal(SignalPrivateKeyPassphraseChanged);
+            setPropertyAvailable(&PropPrivateKeyPassphrase, false);
+        } else if (key == CACert) {
+            queueSignal(SignalCACertChanged);
+            setPropertyAvailable(&PropCACert, false);
+        } else if (key == CACertFile) {
+            queueSignal(SignalCACertFileChanged);
+            setPropertyAvailable(&PropCACertFile, false);
+        } else if (key == DomainSuffixMatch) {
+            queueSignal(SignalDomainSuffixMatchChanged);
+            setPropertyAvailable(&PropDomainSuffixMatch, false);
+        } else if (key == ClientCert) {
+            queueSignal(SignalClientCertChanged);
+        } else if (key == ClientCertFile) {
+            queueSignal(SignalClientCertFileChanged);
+        } else if (key == PrivateKey) {
+            queueSignal(SignalPrivateKeyChanged);
+            setPropertyAvailable(&PropPrivateKey, false);
+        } else if (key == PrivateKeyFile) {
+            queueSignal(SignalPrivateKeyFileChanged);
+            setPropertyAvailable(&PropPrivateKeyFile, false);
         }
     }
     updateManaged();
@@ -1044,7 +1178,33 @@ void NetworkService::Private::updatePropertyCache(const QString &name, const QVa
         setPropertyAvailable(&PropIdentity, true);
     } else if (name == EAP) {
         queueSignal(SignalEapMethodChanged);
+        queueSignal(SignalPeapVersionChanged);
         setPropertyAvailable(&PropEAP, true);
+    } else if (name == Phase2) {
+        queueSignal(SignalPhase2Changed);
+        setPropertyAvailable(&PropPhase2, true);
+    } else if (name == CACert) {
+        queueSignal(SignalCACertChanged);
+        setPropertyAvailable(&PropCACert, true);
+    } else if (name == CACertFile) {
+        queueSignal(SignalCACertFileChanged);
+        setPropertyAvailable(&PropCACertFile, true);
+    } else if (name == ClientCert) {
+        queueSignal(SignalClientCertChanged);
+    } else if (name == ClientCertFile) {
+        queueSignal(SignalClientCertFileChanged);
+    } else if (name == DomainSuffixMatch) {
+        queueSignal(SignalDomainSuffixMatchChanged);
+        setPropertyAvailable(&PropDomainSuffixMatch, true);
+    } else if (name == PrivateKey) {
+        queueSignal(SignalPrivateKeyChanged);
+        setPropertyAvailable(&PropPrivateKey, true);
+    } else if (name == PrivateKeyFile) {
+        queueSignal(SignalPrivateKeyFileChanged);
+        setPropertyAvailable(&PropPrivateKeyFile, true);
+    } else if (name == PrivateKeyPassphrase) {
+        queueSignal(SignalPrivateKeyPassphraseChanged);
+        setPropertyAvailable(&PropPrivateKeyPassphrase, true);
     }
 
     updateManaged();
@@ -1414,6 +1574,21 @@ bool NetworkService::passphraseAvailable() const
     return (m_priv->m_propGetFlags & Private::PropertyPassphrase) != 0;
 }
 
+QString NetworkService::privateKeyPassphrase() const
+{
+    return m_priv->stringValue(Private::PrivateKeyPassphrase);
+}
+
+void NetworkService::setPrivateKeyPassphrase(const QString &passphrase)
+{
+    m_priv->setProperty(Private::PrivateKeyPassphrase, passphrase);
+}
+
+bool NetworkService::privateKeyPassphraseAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyPrivateKeyPassphrase) != 0;
+}
+
 QString NetworkService::identity() const
 {
     return m_priv->stringValue(Private::Identity);
@@ -1444,9 +1619,129 @@ void NetworkService::setEapMethod(EapMethod method)
     m_priv->setEapMethod(method);
 }
 
+int NetworkService::peapVersion() const
+{
+    return m_priv->peapVersion();
+}
+
+void NetworkService::setPeapVersion(int version)
+{
+    m_priv->setPeapVersion(version);
+}
+
 bool NetworkService::eapMethodAvailable() const
 {
     return (m_priv->m_propGetFlags & Private::PropertyEAP) != 0;
+}
+
+QString NetworkService::phase2() const
+{
+    return m_priv->stringValue(Private::Phase2);
+}
+
+void NetworkService::setPhase2(const QString &phase2)
+{
+    m_priv->setProperty(Private::Phase2, phase2);
+}
+
+bool NetworkService::phase2Available() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyPhase2) != 0;
+}
+
+QString NetworkService::caCert() const
+{
+    return m_priv->stringValue(Private::CACert);
+}
+
+void NetworkService::setCACert(const QString &caCert)
+{
+    m_priv->setProperty(Private::CACert, caCert);
+}
+
+bool NetworkService::caCertAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyCACert) != 0;
+}
+
+QString NetworkService::caCertFile() const
+{
+    return m_priv->stringValue(Private::CACertFile);
+}
+
+void NetworkService::setCACertFile(const QString &caCertFile)
+{
+    m_priv->setProperty(Private::CACertFile, caCertFile);
+}
+
+bool NetworkService::caCertFileAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyCACertFile) != 0;
+}
+
+QString NetworkService::domainSuffixMatch() const
+{
+    return m_priv->stringValue(Private::DomainSuffixMatch);
+}
+
+void NetworkService::setDomainSuffixMatch(const QString &domainSuffixMatch)
+{
+    m_priv->setProperty(Private::DomainSuffixMatch, domainSuffixMatch);
+}
+
+bool NetworkService::domainSuffixMatchAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyDomainSuffixMatch) != 0;
+}
+
+QString NetworkService::clientCert() const
+{
+    return m_priv->stringValue(Private::ClientCert);
+}
+
+void NetworkService::setClientCert(const QString &clientCert)
+{
+    m_priv->setProperty(Private::ClientCert, clientCert);
+}
+
+QString NetworkService::clientCertFile() const
+{
+    return m_priv->stringValue(Private::ClientCertFile);
+}
+
+void NetworkService::setClientCertFile(const QString &clientCertFile)
+{
+    m_priv->setProperty(Private::ClientCertFile, clientCertFile);
+}
+
+QString NetworkService::privateKey() const
+{
+    return m_priv->stringValue(Private::PrivateKey);
+}
+
+void NetworkService::setPrivateKey(const QString &privateKey)
+{
+    m_priv->setProperty(Private::PrivateKey, privateKey);
+}
+
+bool NetworkService::privateKeyAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyPrivateKey) != 0;
+}
+
+QString NetworkService::privateKeyFile() const
+{
+    return m_priv->stringValue(Private::PrivateKeyFile);
+}
+
+void NetworkService::setPrivateKeyFile(const QString &privateKeyFile)
+{
+    m_priv->setProperty(Private::PrivateKeyFile, privateKeyFile);
+}
+
+bool NetworkService::privateKeyFileAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyPrivateKeyFile) != 0;
 }
 
 #include "networkservice.moc"

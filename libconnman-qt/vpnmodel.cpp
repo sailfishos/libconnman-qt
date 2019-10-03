@@ -34,66 +34,66 @@
 #include <vpnmanager.h>
 #include <vpnconnection.h>
 
-#include "vpncoremodel.h"
-#include "vpncoremodel_p.h"
+#include "vpnmodel.h"
+#include "vpnmodel_p.h"
 
-const QHash<int, QByteArray> VpnCoreModelPrivate::m_roles({{VpnCoreModel::VpnRole, "vpnService"}});
+const QHash<int, QByteArray> VpnModelPrivate::m_roles({{VpnModel::VpnRole, "vpnService"}});
 
 // ==========================================================================
-// VpnCoreModel
+// VpnModel
 // ==========================================================================
 
-VpnCoreModelPrivate::VpnCoreModelPrivate(VpnCoreModel &qq)
+VpnModelPrivate::VpnModelPrivate(VpnModel &qq)
     : m_manager(nullptr)
     , q_ptr(&qq)
 {
 }
 
-void VpnCoreModelPrivate::init()
+void VpnModelPrivate::init()
 {
-    Q_Q(VpnCoreModel);
+    Q_Q(VpnModel);
 
     m_manager = VpnManagerFactory::createInstance();
 
     emit q->vpnManagerChanged();
 
-    VpnCoreModel::connect(m_manager, &VpnManager::connectionsChanged, q, &VpnCoreModel::connectionsChanged);
-    VpnCoreModel::connect(m_manager, &VpnManager::populatedChanged, q, &VpnCoreModel::populatedChanged);
+    VpnModel::connect(m_manager, &VpnManager::connectionsChanged, q, &VpnModel::connectionsChanged);
+    VpnModel::connect(m_manager, &VpnManager::populatedChanged, q, &VpnModel::populatedChanged);
 
     q->connectionsChanged();
 }
 
-VpnCoreModel::VpnCoreModel(QObject* parent)
+VpnModel::VpnModel(QObject* parent)
     : QAbstractListModel(parent)
-    , d_ptr(new VpnCoreModelPrivate(*this))
+    , d_ptr(new VpnModelPrivate(*this))
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
     d->init();
 }
 
-VpnCoreModel::VpnCoreModel(VpnCoreModelPrivate &dd, QObject *parent)
+VpnModel::VpnModel(VpnModelPrivate &dd, QObject *parent)
     : QAbstractListModel(parent)
     , d_ptr(&dd)
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
     d->init();
 }
 
-VpnCoreModel::~VpnCoreModel()
+VpnModel::~VpnModel()
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
 
-    disconnect(d->m_manager, &VpnManager::connectionsChanged, this, &VpnCoreModel::connectionsChanged);
+    disconnect(d->m_manager, &VpnManager::connectionsChanged, this, &VpnModel::connectionsChanged);
 }
 
-QHash<int, QByteArray> VpnCoreModel::roleNames() const
+QHash<int, QByteArray> VpnModel::roleNames() const
 {
-    return VpnCoreModelPrivate::m_roles;
+    return VpnModelPrivate::m_roles;
 }
 
-QVariant VpnCoreModel::data(const QModelIndex &index, int role) const
+QVariant VpnModel::data(const QModelIndex &index, int role) const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     if (index.isValid() && index.row() >= 0 && index.row() < d->m_connections.count()) {
         switch (role) {
@@ -105,45 +105,45 @@ QVariant VpnCoreModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-int VpnCoreModel::rowCount(const QModelIndex &parent) const
+int VpnModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return d->m_connections.size();
 }
 
-QModelIndex VpnCoreModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex VpnModel::index(int row, int column, const QModelIndex &parent) const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return !parent.isValid() && column == 0 && row >= 0 && row < d->m_connections.count()
             ? createIndex(row, column)
             : QModelIndex();
 }
 
-int VpnCoreModel::count() const
+int VpnModel::count() const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return d->m_connections.size();
 }
 
-bool VpnCoreModel::isConnected() const
+bool VpnModel::isConnected() const
 {
     return false;
 }
 
-void VpnCoreModel::connectionsChanged()
+void VpnModel::connectionsChanged()
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
 
     // Update the connections list
     const int num_old = d->m_connections.size();
 
     for (const VpnConnection *connection: d->m_connections) {
         disconnect(connection, &VpnConnection::destroyed,
-                   this, &VpnCoreModel::connectionDestroyed);
+                   this, &VpnModel::connectionDestroyed);
     }
 
     QVector<VpnConnection *> new_connections(d->m_manager->connections());
@@ -157,7 +157,7 @@ void VpnCoreModel::connectionsChanged()
     // about removed/deleted services, connect destroyed.
     for (const VpnConnection *connection: new_connections) {
         connect(connection, &VpnConnection::destroyed,
-                this, &VpnCoreModel::connectionDestroyed);
+                this, &VpnModel::connectionDestroyed);
     }
 
     for (int i = 0; i < num_new; i++) {
@@ -190,9 +190,9 @@ void VpnCoreModel::connectionsChanged()
         Q_EMIT countChanged();
 }
 
-void VpnCoreModel::connectionDestroyed(QObject *connection)
+void VpnModel::connectionDestroyed(QObject *connection)
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
 
     int ind = d->m_connections.indexOf(dynamic_cast<VpnConnection*>(connection));
     if (ind >= 0) {
@@ -204,23 +204,23 @@ void VpnCoreModel::connectionDestroyed(QObject *connection)
     }
 }
 
-bool VpnCoreModel::populated() const
+bool VpnModel::populated() const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return d->m_manager->populated();
 }
 
-VpnManager * VpnCoreModel::vpnManager() const
+VpnManager * VpnModel::vpnManager() const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return d->m_manager;
 }
 
-QVariantMap VpnCoreModel::connectionSettings(const QString &path) const
+QVariantMap VpnModel::connectionSettings(const QString &path) const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     QVariantMap properties;
     if (VpnConnection *conn = d->m_manager->connection(path)) {
@@ -229,15 +229,15 @@ QVariantMap VpnCoreModel::connectionSettings(const QString &path) const
     return properties;
 }
 
-void VpnCoreModel::orderConnections(QVector<VpnConnection*> &connections)
+void VpnModel::orderConnections(QVector<VpnConnection*> &connections)
 {
     Q_UNUSED(connections)
     // Do nothing - no ordering
 }
 
-void VpnCoreModel::moveItem(int oldIndex, int newIndex)
+void VpnModel::moveItem(int oldIndex, int newIndex)
 {
-    Q_D(VpnCoreModel);
+    Q_D(VpnModel);
 
     if (oldIndex >= 0 && oldIndex < d->m_connections.size() && newIndex >= 0 && newIndex < d->m_connections.size()) {
         beginMoveRows(QModelIndex(), oldIndex, oldIndex, QModelIndex(), (newIndex > oldIndex) ? (newIndex + 1) : newIndex);
@@ -246,9 +246,9 @@ void VpnCoreModel::moveItem(int oldIndex, int newIndex)
     }
 }
 
-QVector<VpnConnection*> VpnCoreModel::connections() const
+QVector<VpnConnection*> VpnModel::connections() const
 {
-    Q_D(const VpnCoreModel);
+    Q_D(const VpnModel);
 
     return d->m_connections;
 }

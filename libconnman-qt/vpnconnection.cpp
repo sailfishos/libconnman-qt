@@ -221,7 +221,7 @@ void VpnConnection::update(const QVariantMap &updateProperties)
         }
     }
 
-    int oldState(d->m_state);
+    ConnectionState oldState(d->m_state);
     QQueue<void(VpnConnection::*)()> emissions;
 
     d->checkChanged(properties, emissions, "name", &VpnConnection::nameChanged);
@@ -296,7 +296,7 @@ void VpnConnection::setAutoConnect(bool autoConnect)
     }
 }
 
-int VpnConnection::state() const
+VpnConnection::ConnectionState VpnConnection::state() const
 {
     Q_D(const VpnConnection);
 

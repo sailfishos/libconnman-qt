@@ -30,23 +30,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef VPNCOREMODEL_H
-#define VPNCOREMODEL_H
+#ifndef VPNMODEL_H
+#define VPNMODEL_H
 
 #include <QAbstractListModel>
 
-class VpnCoreModelPrivate;
+class VpnModelPrivate;
 class VpnManager;
 class VpnConnection;
 
 /*
- * VpnCoreModel is a basic list model for connman VPN services.
+ * VpnModel is a basic list model for connman VPN services.
  */
-class VpnCoreModel : public QAbstractListModel
+class VpnModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(VpnCoreModel)
-    Q_DISABLE_COPY(VpnCoreModel)
+    Q_DECLARE_PRIVATE(VpnModel)
+    Q_DISABLE_COPY(VpnModel)
 
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
@@ -58,9 +58,9 @@ public:
         VpnRole = Qt::UserRole + 1
     };
 
-    explicit VpnCoreModel(QObject* parent = nullptr);
-    explicit VpnCoreModel(VpnCoreModelPrivate &dd, QObject *parent);
-    ~VpnCoreModel() Q_DECL_OVERRIDE;
+    explicit VpnModel(QObject* parent = nullptr);
+    explicit VpnModel(VpnModelPrivate &dd, QObject *parent);
+    ~VpnModel() Q_DECL_OVERRIDE;
 
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
@@ -88,7 +88,7 @@ protected:
     QVector<VpnConnection*> connections() const;
 
 private:
-    QScopedPointer<VpnCoreModelPrivate> d_ptr;
+    QScopedPointer<VpnModelPrivate> d_ptr;
 };
 
-#endif // VPNCOREMODEL_H
+#endif // VPNMODEL_H

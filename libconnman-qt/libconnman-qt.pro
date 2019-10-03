@@ -65,8 +65,8 @@ PUBLIC_HEADERS += \
     vpnconnection_p.h \
     vpnmanager.h \
     vpnmanager_p.h \
-    vpncoremodel.h \
-    vpncoremodel_p.h
+    vpnmodel.h \
+    vpnmodel_p.h
 
 HEADERS += \
     $$PUBLIC_HEADERS \
@@ -90,7 +90,7 @@ SOURCES += \
     counter.cpp \
     vpnconnection.cpp \
     vpnmanager.cpp \
-    vpncoremodel.cpp
+    vpnmodel.cpp
 
 target.path = $$INSTALL_ROOT$$PREFIX/lib
 

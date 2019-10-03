@@ -30,17 +30,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef VPNCOREMODEL_P_H
-#define VPNCOREMODEL_P_H
+#ifndef VPNMODEL_P_H
+#define VPNMODEL_P_H
 
-#include "vpncoremodel.h"
+#include "vpnmodel.h"
 
-class VpnCoreModelPrivate
+class VpnModelPrivate
 {
-    Q_DECLARE_PUBLIC(VpnCoreModel)
+    Q_DECLARE_PUBLIC(VpnModel)
 
 public:
-    VpnCoreModelPrivate(VpnCoreModel &qq);
+    VpnModelPrivate(VpnModel &qq);
     void init();
 
 public:
@@ -48,7 +48,7 @@ public:
     QVector<VpnConnection*> m_connections;
     static const QHash<int, QByteArray> m_roles;
 
-    VpnCoreModel *q_ptr;
+    VpnModel *q_ptr;
 };
 
-#endif // VPNCOREMODEL_P_H
+#endif // VPNMODEL_P_H

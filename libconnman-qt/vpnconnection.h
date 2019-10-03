@@ -50,7 +50,7 @@ class VpnConnection : public QObject
     Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
     Q_PROPERTY(bool autoConnect READ autoConnect WRITE setAutoConnect NOTIFY autoConnectChanged)
     Q_PROPERTY(bool storeCredentials READ storeCredentials WRITE setStoreCredentials NOTIFY storeCredentialsChanged)
-    Q_PROPERTY(int state READ state NOTIFY stateChanged)
+    Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged)
 
     Q_PROPERTY(QString type READ type WRITE setType NOTIFY typeChanged)
     Q_PROPERTY(bool immutable READ immutable WRITE setImmutable NOTIFY immutableChanged)
@@ -103,7 +103,7 @@ public:
     bool storeCredentials() const;
     void setStoreCredentials(bool storeCredentials);
 
-    int state() const;
+    ConnectionState state() const;
 
     QString type() const;
     void setType(const QString &type);

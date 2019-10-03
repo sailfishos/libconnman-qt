@@ -23,7 +23,7 @@
 #include "counter.h"
 #include "vpnmanager.h"
 #include "vpnconnection.h"
-#include "vpncoremodel.h"
+#include "vpnmodel.h"
 
 template<typename T>
 static QObject *singleton_api_factory(QQmlEngine *, QJSEngine *)
@@ -58,7 +58,7 @@ void ConnmanPlugin::registerTypes(const char *uri)
     qmlRegisterType<Counter>(uri,0,2,"NetworkCounter");
     qmlRegisterSingletonType<VpnManager>(uri,0,2,"VpnManager", singleton_api_factory<VpnManager>);
     qmlRegisterType<VpnConnection>(uri,0,2,"VpnConnection");
-    qmlRegisterSingletonType<VpnCoreModel>(uri, 0, 2, "VpnCoreModel", singleton_api_factory<VpnCoreModel>);
+    qmlRegisterSingletonType<VpnModel>(uri, 0, 2, "VpnModel", singleton_api_factory<VpnModel>);
 }
 
 void ConnmanPlugin::initializeEngine(QQmlEngine *engine, const char *uri)

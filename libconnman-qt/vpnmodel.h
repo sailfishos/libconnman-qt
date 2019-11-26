@@ -58,7 +58,7 @@ public:
         VpnRole = Qt::UserRole + 1
     };
 
-    explicit VpnModel(QObject* parent = nullptr);
+    explicit VpnModel(QObject *parent = nullptr);
     explicit VpnModel(VpnModelPrivate &dd, QObject *parent);
     ~VpnModel() Q_DECL_OVERRIDE;
 
@@ -67,7 +67,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent) const Q_DECL_OVERRIDE;
     int count() const;
     bool isConnected() const;
-    VpnManager * vpnManager() const;
+    VpnManager *vpnManager() const;
     bool populated() const;
     Q_INVOKABLE QVariantMap connectionSettings(const QString &path) const;
 

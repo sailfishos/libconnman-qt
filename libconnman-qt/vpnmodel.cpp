@@ -37,6 +37,8 @@
 #include "vpnmodel.h"
 #include "vpnmodel_p.h"
 
+#include "vpnmanager_p.h"
+
 const QHash<int, QByteArray> VpnModelPrivate::m_roles({{VpnModel::VpnRole, "vpnService"}});
 
 // ==========================================================================
@@ -59,6 +61,15 @@ void VpnModelPrivate::init()
 
     VpnModel::connect(m_manager, &VpnManager::connectionsChanged, q, &VpnModel::connectionsChanged);
     VpnModel::connect(m_manager, &VpnManager::populatedChanged, q, &VpnModel::populatedChanged);
+
+    VpnModel::connect(VpnManagerPrivate::get(m_manager), &VpnManagerPrivate::beginConnectionsReset, q, [q, this]() {
+        q->beginResetModel();
+        m_connections.clear();
+    });
+
+    VpnModel::connect(VpnManagerPrivate::get(m_manager), &VpnManagerPrivate::endConnectionsReset, q, [q]() {
+        q->endResetModel();
+    });
 
     q->connectionsChanged();
 }

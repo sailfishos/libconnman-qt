@@ -90,8 +90,8 @@ signals:
     void connectionsChanged();
     void connectionAdded(const QString &path);
     void connectionRemoved(const QString &path);
-    void connectionsClearingAll();
     void connectionsRefreshed();
+    void connectionsCleared();
     void populatedChanged();
 
 private:

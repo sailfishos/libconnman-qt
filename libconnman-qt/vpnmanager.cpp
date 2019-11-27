@@ -110,6 +110,10 @@ void VpnManagerPrivate::init()
 
         emit q->connectionRemoved(path);
         emit q->connectionsChanged();
+
+        if (m_items.isEmpty()) {
+            emit q->connectionsCleared();
+        }
     });
 
     // If connman-vpn restarts, we need to discard and re-read the state
@@ -117,13 +121,13 @@ void VpnManagerPrivate::init()
     VpnManager::connect(watcher, &QDBusServiceWatcher::serviceUnregistered, q, [this](const QString &) {
         Q_Q(VpnManager);
 
-        emit q->connectionsClearingAll();
-
-        for (int i = 0, n = m_items.size(); i < n; ++i) {
-            m_items.at(i)->deleteLater();
-        }
+        emit beginConnectionsReset();
+        qDeleteAll(m_items);
         m_items.clear();
+        emit endConnectionsReset();
         setPopulated(false);
+
+        emit q->connectionsCleared();
     });
     VpnManager::connect(watcher, &QDBusServiceWatcher::serviceRegistered, q, [this](const QString &) {
         fetchVpnList();

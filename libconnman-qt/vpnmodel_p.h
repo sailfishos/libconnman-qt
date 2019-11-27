@@ -44,7 +44,7 @@ public:
     void init();
 
 public:
-    VpnManager * m_manager;
+    VpnManager *m_manager;
     QVector<VpnConnection*> m_connections;
     static const QHash<int, QByteArray> m_roles;
 

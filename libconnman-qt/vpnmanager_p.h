@@ -37,8 +37,9 @@
 
 #include "vpnmanager.h"
 
-class VpnManagerPrivate
+class VpnManagerPrivate : public QObject
 {
+    Q_OBJECT
     Q_DECLARE_PUBLIC(VpnManager)
 
 public:
@@ -46,6 +47,13 @@ public:
     void init();
     void fetchVpnList();
     void setPopulated(bool populated);
+
+    static VpnManagerPrivate *get(VpnManager *manager) { return manager->d_func(); }
+    static const VpnManagerPrivate *get(const VpnManager *manager) { return manager->d_func(); }
+
+Q_SIGNALS:
+    void beginConnectionsReset();
+    void endConnectionsReset();
 
 public:
     NetConnmanVpnManagerInterface m_connmanVpn;

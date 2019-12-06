@@ -31,9 +31,98 @@
  */
 
 #include <QDebug>
+#include <QDBusMetaType>
 #include "vpnconnection.h"
 
 #include "marshalutils.h"
+
+// Empty namespace for local static functions
+namespace {
+
+// Marshall the RouteStructure data into a D-Bus argument
+QDBusArgument &operator<<(QDBusArgument &argument, const RouteStructure &routestruct)
+{
+    QVariantMap dict;
+    dict.insert("ProtocolFamily", routestruct.protocolFamily);
+    dict.insert("Network", routestruct.network);
+    dict.insert("Netmask", routestruct.netmask);
+    dict.insert("Gateway", routestruct.gateway);
+
+    argument.beginStructure();
+    argument << dict;
+    argument.endStructure();
+    return argument;
+}
+
+// Retrieve the RouteStructure data from the D-Bus argument
+const QDBusArgument &operator>>(const QDBusArgument &argument, RouteStructure &routestruct)
+{
+    QVariantMap dict;
+    argument.beginStructure();
+    argument >> dict;
+    argument.endStructure();
+
+    routestruct.protocolFamily = dict.value("ProtocolFamily", 0).toInt();
+    routestruct.network = dict.value("Network").toString();
+    routestruct.netmask = dict.value("Netmask").toString();
+    routestruct.gateway = dict.value("Gateway").toString();
+
+    return argument;
+}
+
+QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
+{
+    QList<QPair<QVariant, QVariant> > states;
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("idle")), QVariant::fromValue(static_cast<int>(VpnConnection::Idle))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("failure")), QVariant::fromValue(static_cast<int>(VpnConnection::Failure))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("configuration")), QVariant::fromValue(static_cast<int>(VpnConnection::Configuration))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("ready")), QVariant::fromValue(static_cast<int>(VpnConnection::Ready))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("disconnect")), QVariant::fromValue(static_cast<int>(VpnConnection::Disconnect))));
+
+    auto lit = std::find_if(states.cbegin(), states.cend(), [value, toDBus](const QPair<QVariant, QVariant> &pair) { return value == (toDBus ? pair.second : pair.first); });
+    if (lit != states.end()) {
+        return toDBus ? (*lit).first : (*lit).second;
+    }
+    qDebug() << "No conversion found for" << (toDBus ? "QML" : "DBus") << "value:" << value << key;
+    return value;
+}
+
+QVariant convertRoutes (const QString &, const QVariant &value, bool toDBus) {
+    // We use qDBusRegisterMetaType in VpnConnections to convert automatically
+    // between QList<RouteStruture> and QDBusArgument, but we still need to
+    // convert to/from suitable Javascript structures
+    QVariant variant;
+    if (toDBus) {
+        QVariantList in = value.toList();
+        QList<RouteStructure> out;
+        for (QVariant item : in) {
+            QVariantMap jsRoute = item.toMap();
+            RouteStructure route;
+            route.protocolFamily = jsRoute.value("ProtocolFamily", 0).toInt();
+            route.network = jsRoute.value("Network").toString();
+            route.netmask = jsRoute.value("Netmask").toString();
+            route.gateway = jsRoute.value("Gateway").toString();
+            out << route;
+        }
+        variant.setValue(out);
+    }
+    else {
+        QList<RouteStructure> in = qdbus_cast<QList<RouteStructure>>(value.value<QDBusArgument>());
+        QVariantList out;
+        for (RouteStructure route : in) {
+            QVariantMap jsRoute;
+            jsRoute.insert("ProtocolFamily", route.protocolFamily);
+            jsRoute.insert("Network", route.network);
+            jsRoute.insert("Netmask", route.netmask);
+            jsRoute.insert("Gateway", route.gateway);
+            out << jsRoute;
+        }
+        variant.setValue(out);
+    }
+    return variant;
+}
+
+} // Empty namespace
 
 template<typename T>
 inline QVariant extract(const QDBusArgument &arg)
@@ -82,9 +171,6 @@ QVariantMap MarshalUtils::propertiesToQml(const QVariantMap &fromDBus)
             // iPv4 becomes ipv4 and iPv6 becomes ipv6
             key = key.toLower();
             value = extract<QVariantMap>(value.value<QDBusArgument>());
-        } else if (key == QStringLiteral("serverRoutes") ||
-                   key == QStringLiteral("userRoutes")) {
-            value = extractArray<QVariantMap>(value.value<QDBusArgument>());
         }
 
         rv.insert(key, convertToQml(key, value));
@@ -98,34 +184,27 @@ QVariantMap MarshalUtils::propertiesToQml(const QVariantMap &fromDBus)
 }
 
 // Conversion to/from DBus/QML
-QHash<QString, QList<QPair<QVariant, QVariant> > > MarshalUtils::propertyConversions()
+QHash<QString, MarshalUtils::conversionFunction> MarshalUtils::propertyConversions()
 {
-    QHash<QString, QList<QPair<QVariant, QVariant> > > rv;
+    qDBusRegisterMetaType<RouteStructure>();
+    qDBusRegisterMetaType<QList<RouteStructure>>();
 
-    QList<QPair<QVariant, QVariant> > states;
-    states.push_back(qMakePair(QVariant::fromValue(QString("idle")), QVariant::fromValue(static_cast<int>(VpnConnection::Idle))));
-    states.push_back(qMakePair(QVariant::fromValue(QString("failure")), QVariant::fromValue(static_cast<int>(VpnConnection::Failure))));
-    states.push_back(qMakePair(QVariant::fromValue(QString("configuration")), QVariant::fromValue(static_cast<int>(VpnConnection::Configuration))));
-    states.push_back(qMakePair(QVariant::fromValue(QString("ready")), QVariant::fromValue(static_cast<int>(VpnConnection::Ready))));
-    states.push_back(qMakePair(QVariant::fromValue(QString("disconnect")), QVariant::fromValue(static_cast<int>(VpnConnection::Disconnect))));
-    rv.insert(QString("state"), states);
+    QHash<QString, conversionFunction> rv;
+
+    rv.insert(QStringLiteral("state"), convertState);
+    rv.insert(QStringLiteral("userroutes"), convertRoutes);
+    rv.insert(QStringLiteral("serverroutes"), convertRoutes);
 
     return rv;
 }
 
 QVariant MarshalUtils::convertValue(const QString &key, const QVariant &value, bool toDBus)
 {
-    static const QHash<QString, QList<QPair<QVariant, QVariant> > > conversions(propertyConversions());
+    static const QHash<QString, conversionFunction> conversions(propertyConversions());
 
     auto it = conversions.find(key.toLower());
     if (it != conversions.end()) {
-        const QList<QPair<QVariant, QVariant> > &list(it.value());
-        auto lit = std::find_if(list.cbegin(), list.cend(), [value, toDBus](const QPair<QVariant, QVariant> &pair) { return value == (toDBus ? pair.second : pair.first); });
-        if (lit != list.end()) {
-            return toDBus ? (*lit).first : (*lit).second;
-        } else {
-            qDebug() << "No conversion found for" << (toDBus ? "QML" : "DBus") << "value:" << value << key;
-        }
+        return it.value()(key, value, toDBus);
     }
 
     return value;

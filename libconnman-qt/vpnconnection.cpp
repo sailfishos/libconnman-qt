@@ -233,7 +233,7 @@ void VpnConnection::update(const QVariantMap &updateProperties)
     d->checkChanged(properties, emissions, "ipv4", &VpnConnection::ipv4Changed);
     d->checkChanged(properties, emissions, "ipv6", &VpnConnection::ipv6Changed);
     d->checkChanged(properties, emissions, "nameservers", &VpnConnection::nameserversChanged);
-    d->checkChanged(properties, emissions, "usreRoutes", &VpnConnection::userRoutesChanged);
+    d->checkChanged(properties, emissions, "userRoutes", &VpnConnection::userRoutesChanged);
     d->checkChanged(properties, emissions, "serverRoutes", &VpnConnection::serverRoutesChanged);
 
     d->updateVariable(properties, emissions, "autoConnect", &d->m_autoConnect, &VpnConnection::autoConnectChanged);
@@ -332,8 +332,8 @@ DEFAULT_PROPERTY_METHODS(int, int, Index, index)
 DEFAULT_PROPERTY_METHODS(QVariantMap &, QVariantMap, Ipv4, ipv4)
 DEFAULT_PROPERTY_METHODS(QVariantMap &, QVariantMap, Ipv6, ipv6)
 DEFAULT_PROPERTY_METHODS(QStringList &, QStringList, Nameservers, nameservers)
-DEFAULT_PROPERTY_METHODS(QVariantList &, QVariantList, UserRoutes, userRoutes)
-DEFAULT_PROPERTY_METHODS(QVariantList &, QVariantList, ServerRoutes, serverRoutes)
+DEFAULT_PROPERTY_METHODS(QVariant &, QVariant, UserRoutes, userRoutes)
+DEFAULT_PROPERTY_METHODS(QVariant &, QVariant, ServerRoutes, serverRoutes)
 DEFAULT_PROPERTY_METHODS(QVariantMap &, QVariantMap, ProviderProperties, providerProperties)
 
 // ==========================================================================

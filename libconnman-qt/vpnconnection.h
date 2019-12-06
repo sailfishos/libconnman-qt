@@ -38,6 +38,17 @@
 
 class VpnConnectionPrivate;
 
+// The userRoutes and serverRoutes properties are QVariants containing a
+// QList<RouteStructure> structure
+struct RouteStructure
+{
+    int protocolFamily;
+    QString network;
+    QString netmask;
+    QString gateway;
+};
+Q_DECLARE_METATYPE(RouteStructure)
+
 class VpnConnection : public QObject
 {
     Q_OBJECT
@@ -58,8 +69,8 @@ class VpnConnection : public QObject
     Q_PROPERTY(QVariantMap ipv4 READ ipv4 WRITE setIpv4 NOTIFY ipv4Changed)
     Q_PROPERTY(QVariantMap ipv6 READ ipv6 WRITE setIpv6 NOTIFY ipv6Changed)
     Q_PROPERTY(QStringList nameservers READ nameservers WRITE setNameservers NOTIFY nameserversChanged)
-    Q_PROPERTY(QVariantList userRoutes READ userRoutes WRITE setUserRoutes NOTIFY userRoutesChanged)
-    Q_PROPERTY(QVariantList serverRoutes READ serverRoutes WRITE setServerRoutes NOTIFY serverRoutesChanged)
+    Q_PROPERTY(QVariant userRoutes READ userRoutes WRITE setUserRoutes NOTIFY userRoutesChanged)
+    Q_PROPERTY(QVariant serverRoutes READ serverRoutes WRITE setServerRoutes NOTIFY serverRoutesChanged)
 
     Q_PROPERTY(QVariantMap properties READ properties WRITE setProperties NOTIFY propertiesChanged)
     Q_PROPERTY(QVariantMap providerProperties READ providerProperties WRITE setProviderProperties NOTIFY providerPropertiesChanged)
@@ -123,11 +134,11 @@ public:
     QStringList nameservers() const;
     void setNameservers(const QStringList &nameservers);
 
-    QVariantList userRoutes() const;
-    void setUserRoutes(const QVariantList &userRoutes);
+    QVariant userRoutes() const;
+    void setUserRoutes(const QVariant &userRoutes);
 
-    QVariantList serverRoutes() const;
-    void setServerRoutes(const QVariantList &serverRoutes);
+    QVariant serverRoutes() const;
+    void setServerRoutes(const QVariant &serverRoutes);
 
     QVariantMap properties() const;
     void setProperties(const QVariantMap properties);

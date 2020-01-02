@@ -155,7 +155,9 @@ void VpnConnection::modifyConnection(const QVariantMap &properties)
     updatedProperties.remove(QString("immutable"));
     updatedProperties.remove(QString("storeCredentials"));
 
-    d->m_connectionProxy.SetProperties(MarshalUtils::propertiesToDBus(updatedProperties));
+    // SetProperty supports a single property or an array of properties
+    d->m_connectionProxy.SetProperty(QString("Properties"),
+        QDBusVariant(MarshalUtils::propertiesToDBus(updatedProperties)));
 }
 
 void VpnConnection::activate()

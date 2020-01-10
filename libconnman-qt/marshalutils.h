@@ -51,8 +51,10 @@ namespace MarshalUtils
 
     }
 
+    typedef QVariant (*conversionFunction)(const QString &key, const QVariant &value, bool toDBus);
+
     QVariantMap propertiesToQml(const QVariantMap &fromDBus);
-    QHash<QString, QList<QPair<QVariant, QVariant> > > propertyConversions();
+    QHash<QString, conversionFunction> propertyConversions();
     QVariant convertValue(const QString &key, const QVariant &value, bool toDBus);
     QVariant convertToQml(const QString &key, const QVariant &value);
     QVariant convertToDBus(const QString &key, const QVariant &value);

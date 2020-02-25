@@ -916,8 +916,8 @@ Module {
         Property { name: "ipv4"; type: "QVariantMap" }
         Property { name: "ipv6"; type: "QVariantMap" }
         Property { name: "nameservers"; type: "QStringList" }
-        Property { name: "userRoutes"; type: "QVariantList" }
-        Property { name: "serverRoutes"; type: "QVariantList" }
+        Property { name: "userRoutes"; type: "QVariant" }
+        Property { name: "serverRoutes"; type: "QVariant" }
         Property { name: "properties"; type: "QVariantMap" }
         Property { name: "providerProperties"; type: "QVariantMap" }
         Property { name: "connected"; type: "bool"; isReadonly: true }
@@ -939,8 +939,8 @@ Module {
             name: "connectionRemoved"
             Parameter { name: "path"; type: "string" }
         }
-        Signal { name: "connectionsClearingAll" }
         Signal { name: "connectionsRefreshed" }
+        Signal { name: "connectionsCleared" }
         Method {
             name: "createConnection"
             Parameter { name: "properties"; type: "QVariantMap" }

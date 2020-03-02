@@ -1,7 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2018 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
+ * Copyright © 2012-2020 Jolla Ltd.
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -39,6 +38,7 @@ class NetworkManager : public QObject
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
+    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)
@@ -86,6 +86,7 @@ public:
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
     NetworkService* connectedWifi() const;
+    bool connectingWifi() const;
 
     bool sessionMode() const;
     uint inputRequestTimeout() const;
@@ -155,6 +156,7 @@ Q_SIGNALS:
 
     void connectedChanged();
     void connectingChanged();
+    void connectingWifiChanged();
 
 private:
     typedef bool (*ServiceSelector)(NetworkService*);

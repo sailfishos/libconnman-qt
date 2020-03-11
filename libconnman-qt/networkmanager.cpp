@@ -1,7 +1,6 @@
 /*
  * Copyright © 2010 Intel Corporation.
- * Copyright © 2012-2018 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
+ * Copyright © 2012-2020 Jolla Ltd.
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
@@ -53,7 +52,8 @@ public:
     bool m_servicesAvailable;
     bool m_technologiesAvailable;
 
-    bool m_connecting;
+    // For now, we are only tracking connecting state for WiFi service
+    bool m_connectingWifi;
     bool m_connected;
 
     QStringList m_availableServicesOrder;
@@ -65,6 +65,7 @@ public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
     bool updateWifiConnected(NetworkService *service);
+    bool updateWifiConnecting(NetworkService *service);
     void setServicesAvailable(bool servicesAvailable);
     void setTechnologiesAvailable(bool technologiesAvailable);
 
@@ -76,7 +77,7 @@ public:
         , m_registered(false)
         , m_servicesAvailable(false)
         , m_technologiesAvailable(false)
-        , m_connecting(false)
+        , m_connectingWifi(false)
         , m_connected(false)
         , m_connectedWifi(NULL) {}
     NetworkManager* manager()
@@ -87,6 +88,7 @@ public:
 public Q_SLOTS:
     void maybeCreateInterfaceProxy();
     void onWifiConnectedChanged();
+    void onWifiConnectingChanged();
 };
 
 const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
@@ -143,6 +145,47 @@ void NetworkManager::Private::onWifiConnectedChanged()
     NetworkService *service = qobject_cast<NetworkService*>(sender());
     if (service && updateWifiConnected(service)) {
         Q_EMIT manager()->connectedWifiChanged();
+    }
+}
+
+bool NetworkManager::Private::updateWifiConnecting(NetworkService *service)
+{
+    if (service && service->connecting()) {
+        // Definitely connecting
+        if (!m_connectingWifi) {
+            m_connectingWifi = true;
+            return true;
+        }
+    } else {
+        // Need to check
+        const QVector<NetworkService*> availableWifi = manager()->getAvailableServices(WifiType);
+        for (NetworkService *wifi: availableWifi) {
+            if (wifi->connecting()) {
+                if (m_connectingWifi) {
+                    // Already connecting
+                    return false;
+                } else {
+                    // Connecting state changed
+                    m_connectingWifi = true;
+                    return true;
+                }
+            }
+        }
+        // Nothing is connecting
+        if (m_connectingWifi) {
+            m_connectingWifi = false;
+            return true;
+        }
+    }
+    return false;
+}
+
+void NetworkManager::Private::onWifiConnectingChanged()
+{
+    NetworkService *service = qobject_cast<NetworkService*>(sender());
+    if (service && updateWifiConnecting(service)) {
+        Q_EMIT manager()->connectingChanged();
+        Q_EMIT manager()->connectingWifiChanged();
     }
 }
 
@@ -561,6 +604,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 this, SLOT(updateDefaultRoute()));
             disconnect(service, SIGNAL(connectedChanged(bool)),
                 m_priv, SLOT(onWifiConnectedChanged()));
+            disconnect(service, SIGNAL(connectingChanged()),
+                m_priv, SLOT(onWifiConnectingChanged()));
             service->updateProperties(obj.properties);
         } else {
             service = new NetworkService(path, obj.properties, this);
@@ -593,6 +638,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             m_priv->updateWifiConnected(service);
             connect(service, SIGNAL(connectedChanged(bool)),
                 m_priv, SLOT(onWifiConnectedChanged()));
+            connect(service, SIGNAL(connectingChanged()),
+                m_priv, SLOT(onWifiConnectingChanged()));
         } else if (type == Private::CellularType) {
             cellularServices.add(path);
         }
@@ -641,6 +688,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     // Update availability and check whether validity changed
     bool wasValid = isValid();
     m_priv->setServicesAvailable(true);
+    m_priv->updateWifiConnecting(NULL);
 
     // Emit signals
     if (m_priv->m_connectedWifi != prevConnectedWifi) {
@@ -1241,7 +1289,13 @@ bool NetworkManager::connected() const
 
 bool NetworkManager::connecting() const
 {
-    return m_priv->m_connecting;
+    // For now, we are only tracking connecting state for WiFi service
+    return m_priv->m_connectingWifi;
+}
+
+bool NetworkManager::connectingWifi() const
+{
+    return m_priv->m_connectingWifi;
 }
 
 void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
@@ -1260,18 +1314,19 @@ void NetworkManager::Private::updateState(const QString &newState)
         return;
 
     manager()->m_propertiesCache[State] = newState;
-    Q_EMIT manager()->stateChanged(newState);
 
-    bool value = ConnmanState::connected(newState);
+    const bool value = ConnmanState::connected(newState);
+    bool connectedChanged;
     if (m_connected != value) {
         m_connected = value;
-        Q_EMIT manager()->connectedChanged();
+        connectedChanged = true;
+    } else {
+        connectedChanged = false;
     }
 
-    value = ConnmanState::connecting(newState);
-    if (m_connecting != value) {
-        m_connecting = value;
-        Q_EMIT manager()->connectingChanged();
+    Q_EMIT manager()->stateChanged(newState);
+    if (connectedChanged) {
+        Q_EMIT manager()->connectedChanged();
     }
 
     manager()->updateDefaultRoute();

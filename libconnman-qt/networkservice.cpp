@@ -32,6 +32,7 @@
     ClassNoArg(CACertAvailable,caCertAvailable) \
     ClassNoArg(CACertFileAvailable,caCertFileAvailable) \
     ClassNoArg(DomainSuffixMatchAvailable,domainSuffixMatchAvailable) \
+    ClassNoArg(AnonymousIdentityAvailable,anonymousIdentityAvailable) \
     ClassNoArg(LastConnectError,lastConnectError) \
     ConnmanArg("Type",Type,type) \
     ConnmanArg("Name",Name,name) \
@@ -70,7 +71,8 @@
     ConnmanArg("ClientCertFile",ClientCertFile,clientCertFile) \
     ConnmanArg("PrivateKey",PrivateKey,privateKey) \
     ConnmanArg("PrivateKeyFile",PrivateKeyFile,privateKeyFile) \
-    ConnmanArg("PrivateKeyPasshprase",PrivateKeyPassphrase,privateKeyPassphrase) \
+    ConnmanArg("PrivateKeyPassphrase",PrivateKeyPassphrase,privateKeyPassphrase) \
+    ConnmanArg("AnonymousIdentity",AnonymousIdentity,anonymousIdentity) \
     ConnmanNoArg("Available",Available,available) \
     ConnmanNoArg("Saved",Saved,saved) \
     ClassNoArg(Valid,valid)
@@ -122,7 +124,8 @@ public:
         PropertyCACert        = 0x00000200,
         PropertyCACertFile    = 0x00000400,
         PropertyDomainSuffixMatch = 0x00000800,
-        PropertyAll           = 0x00000fff
+        PropertyAnonymousIdentity = 0x00001000,
+        PropertyAll           = 0x00001fff
     };
 
     enum CallFlags {
@@ -166,6 +169,7 @@ public:
     static const PropertyAccessInfo PropCACert;
     static const PropertyAccessInfo PropCACertFile;
     static const PropertyAccessInfo PropDomainSuffixMatch;
+    static const PropertyAccessInfo PropAnonymousIdentity;
 
     static QVariantMap adaptToConnmanProperties(const QVariantMap &map);
 
@@ -396,6 +400,9 @@ const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropC
 const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropDomainSuffixMatch =
     { NetworkService::Private::DomainSuffixMatch, NetworkService::Private::PropertyDomainSuffixMatch,
       NetworkService::Private::SignalDomainSuffixMatchAvailableChanged };
+const NetworkService::Private::PropertyAccessInfo NetworkService::Private::PropAnonymousIdentity =
+    { NetworkService::Private::AnonymousIdentity, NetworkService::Private::PropertyAnonymousIdentity,
+      NetworkService::Private::SignalAnonymousIdentityChanged };
 
 const NetworkService::Private::PropertyAccessInfo* NetworkService::Private::Properties[] = {
     &NetworkService::Private::PropAccess,
@@ -410,6 +417,7 @@ const NetworkService::Private::PropertyAccessInfo* NetworkService::Private::Prop
     &NetworkService::Private::PropCACert,
     &NetworkService::Private::PropCACertFile,
     &NetworkService::Private::PropDomainSuffixMatch,
+    &NetworkService::Private::PropAnonymousIdentity,
 };
 
 // The order must match EapMethod enum
@@ -1089,6 +1097,9 @@ void NetworkService::Private::resetProperties()
         } else if (key == PrivateKeyFile) {
             queueSignal(SignalPrivateKeyFileChanged);
             setPropertyAvailable(&PropPrivateKeyFile, false);
+        } else if (key == AnonymousIdentity) {
+            queueSignal(SignalAnonymousIdentityChanged);
+            setPropertyAvailable(&PropAnonymousIdentity, false);
         }
     }
     updateManaged();
@@ -1205,6 +1216,9 @@ void NetworkService::Private::updatePropertyCache(const QString &name, const QVa
     } else if (name == PrivateKeyPassphrase) {
         queueSignal(SignalPrivateKeyPassphraseChanged);
         setPropertyAvailable(&PropPrivateKeyPassphrase, true);
+    } else if (name == AnonymousIdentity) {
+        queueSignal(SignalAnonymousIdentityChanged);
+        setPropertyAvailable(&PropAnonymousIdentity, true);
     }
 
     updateManaged();
@@ -1742,6 +1756,16 @@ void NetworkService::setPrivateKeyFile(const QString &privateKeyFile)
 bool NetworkService::privateKeyFileAvailable() const
 {
     return (m_priv->m_propGetFlags & Private::PropertyPrivateKeyFile) != 0;
+}
+
+QString NetworkService::anonymousIdentity() const
+{
+    return m_priv->stringValue(Private::AnonymousIdentity);
+}
+
+void NetworkService::setAnonymousIdentity(const QString &anonymousIdentity)
+{
+    m_priv->setProperty(Private::AnonymousIdentity, anonymousIdentity);
 }
 
 #include "networkservice.moc"

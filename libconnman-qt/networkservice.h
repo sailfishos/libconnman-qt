@@ -62,6 +62,7 @@ class NetworkService : public QObject
     Q_PROPERTY(bool privateKeyAvailable READ privateKeyAvailable NOTIFY privateKeyAvailableChanged)
     Q_PROPERTY(bool privateKeyFileAvailable READ privateKeyFileAvailable NOTIFY privateKeyFileAvailableChanged)
     Q_PROPERTY(bool privateKeyPassphraseAvailable READ privateKeyPassphraseAvailable NOTIFY privateKeyPassphraseAvailableChanged)
+    Q_PROPERTY(bool anonymousIdentityAvailable READ anonymousIdentityAvailable NOTIFY anonymousIdentityAvailableChanged)
     Q_PROPERTY(QString bssid READ bssid NOTIFY bssidChanged)
     Q_PROPERTY(quint32 maxRate READ maxRate NOTIFY maxRateChanged)
     Q_PROPERTY(quint16 frequency READ frequency NOTIFY frequencyChanged)
@@ -81,6 +82,7 @@ class NetworkService : public QObject
     Q_PROPERTY(QString privateKeyPassphrase READ privateKeyPassphrase WRITE setPrivateKeyPassphrase NOTIFY privateKeyPassphraseChanged)
     Q_PROPERTY(QString domainSuffixMatch READ domainSuffixMatch WRITE setDomainSuffixMatch NOTIFY domainSuffixMatchChanged)
     Q_PROPERTY(QString phase2 READ phase2 WRITE setPhase2 NOTIFY phase2Changed)
+    Q_PROPERTY(QString anonymousIdentity READ anonymousIdentity WRITE setAnonymousIdentity NOTIFY anonymousIdentityChanged)
 
     class Private;
     friend class Private;
@@ -134,6 +136,7 @@ public:
     QString clientCertFile() const;
     QString domainSuffixMatch() const;
     QString phase2() const;
+    QString anonymousIdentity() const;
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -183,6 +186,7 @@ public:
     bool caCertAvailable() const;
     bool caCertFileAvailable() const;
     bool domainSuffixMatchAvailable() const;
+    bool anonymousIdentityAvailable() const;
 
     int peapVersion() const;
     void setPeapVersion(int version);
@@ -216,6 +220,7 @@ Q_SIGNALS:
     void privateKeyPassphraseChanged(const QString &privateKeyFile);
     void domainSuffixMatchChanged(const QString &domainSuffixMatch);
     void phase2Changed(const QString &phase2);
+    void anonymousIdentityChanged(const QString &anonymousIdentity);
     void ethernetChanged(const QVariantMap &ethernet);
     void connectRequestFailed(const QString &error);
     void typeChanged(const QString &type);
@@ -251,6 +256,7 @@ Q_SIGNALS:
     void caCertAvailableChanged();
     void caCertFileAvailableChanged();
     void domainSuffixMatchAvailableChanged();
+    void anonymousIdentityAvailableChanged();
     void availableChanged();
     void savedChanged();
     void connectingChanged();
@@ -273,6 +279,7 @@ public Q_SLOTS:
     void setClientCertFile(const QString &clientCertFile);
     void setDomainSuffixMatch(const QString &domainSuffixMatch);
     void setPhase2(const QString &phase2);
+    void setAnonymousIdentity(const QString &anonymousIdentity);
 
     void resetCounters();
 

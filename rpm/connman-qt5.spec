@@ -1,6 +1,6 @@
 Name:       connman-qt5
 Summary:    Qt bindings for connman
-Version:    1.2.30
+Version:    1.2.31
 Release:    1
 Group:      System/GUI/Other
 License:    ASL 2.0

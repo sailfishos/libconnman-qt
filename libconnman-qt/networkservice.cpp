@@ -1708,6 +1708,11 @@ bool NetworkService::domainSuffixMatchAvailable() const
     return (m_priv->m_propGetFlags & Private::PropertyDomainSuffixMatch) != 0;
 }
 
+bool NetworkService::anonymousIdentityAvailable() const
+{
+    return (m_priv->m_propGetFlags & Private::PropertyAnonymousIdentity) != 0;
+}
+
 QString NetworkService::clientCert() const
 {
     return m_priv->stringValue(Private::ClientCert);

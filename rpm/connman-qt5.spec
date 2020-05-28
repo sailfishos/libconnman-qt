@@ -2,7 +2,6 @@ Name:       connman-qt5
 Summary:    Qt bindings for connman
 Version:    1.2.32
 Release:    1
-Group:      System/GUI/Other
 License:    ASL 2.0
 URL:        https://git.sailfishos.org/mer-core/libconnman-qt
 Source0:    %{name}-%{version}.tar.bz2
@@ -67,11 +66,11 @@ rm -rf %{buildroot}
 
 %files declarative
 %defattr(-,root,root,-)
-%{_usr}/lib/qt5/qml/MeeGo/Connman
+%{_libdir}/qt5/qml/MeeGo/Connman
 
 %files devel
 %defattr(-,root,root,-)
-%{_usr}/include/connman-qt5
-%{_usr}/lib/pkgconfig/connman-qt5.pc
-%{_usr}/lib/libconnman-qt5.prl
-%{_usr}/lib/libconnman-qt5.so
+%{_includedir}/connman-qt5
+%{_libdir}/pkgconfig/connman-qt5.pc
+%{_libdir}/libconnman-qt5.prl
+%{_libdir}/libconnman-qt5.so

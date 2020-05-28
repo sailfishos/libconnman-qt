@@ -92,7 +92,7 @@ SOURCES += \
     vpnmanager.cpp \
     vpnmodel.cpp
 
-target.path = $$INSTALL_ROOT$$PREFIX/lib
+target.path = $$[QT_INSTALL_LIBS]
 
 headers.files = $$PUBLIC_HEADERS
 

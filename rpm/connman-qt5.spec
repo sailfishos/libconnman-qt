@@ -1,6 +1,6 @@
 Name:       connman-qt5
 Summary:    Qt bindings for connman
-Version:    1.2.33
+Version:    1.2.34
 Release:    1
 License:    ASL 2.0
 URL:        https://git.sailfishos.org/mer-core/libconnman-qt

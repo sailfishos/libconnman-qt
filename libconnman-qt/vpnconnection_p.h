@@ -55,6 +55,7 @@ public:
     NetConnmanServiceInterface m_serviceProxy;
     QString m_path;
     bool m_autoConnect;
+    bool m_defaultRoute;
     VpnConnection::ConnectionState m_state;
     QVariantMap m_properties;
 

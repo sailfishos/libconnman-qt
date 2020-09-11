@@ -52,10 +52,7 @@ namespace {
 const QString connmanService = QStringLiteral("net.connman");
 const QString connmanVpnService = QStringLiteral("net.connman.vpn");
 const QString autoConnectKey = QStringLiteral("AutoConnect");
-const QString defaultRouteKey = QStringLiteral("DefaultRoute");
-const QString defaultRoutePropertyName = QStringLiteral("defaultRoute");
-const QString strTrue = QString("true");
-const QString strFalse = QString("false");
+const QString splitRoutingKey = QStringLiteral("SplitRouting");
 
 QString vpnServicePath(const QString &connectionPath)
 {
@@ -69,7 +66,7 @@ VpnConnectionPrivate::VpnConnectionPrivate(VpnConnection &qq, const QString &pat
     , m_serviceProxy(connmanService, vpnServicePath(path), QDBusConnection::systemBus(), nullptr)
     , m_path(path)
     , m_autoConnect(false)
-    , m_defaultRoute(true)
+    , m_splitRouting(false)
     , m_state(VpnConnection::Idle)
     , q_ptr(&qq)
 {
@@ -89,16 +86,8 @@ void VpnConnectionPrivate::init()
             QDBusMessage message = reply.reply();
             QVariantMap properties = MarshalUtils::demarshallArgument<QVariantMap>(message.arguments().value(0));
             bool autoConnect = properties.value(autoConnectKey).toBool();
-            QString str = properties.value(defaultRouteKey).toString();
             properties.clear();
             properties.insert(autoConnectKey, autoConnect);
-
-            // Don't add the value if it is not set. Undefined value is treated being as the default value (true)
-            if (!str.isEmpty()) {
-                bool defaultRoute = str == strTrue;
-                properties.insert(defaultRouteKey, defaultRoute);
-            }
-
             q->update(MarshalUtils::propertiesToQml(properties));
         } else {
             qDebug() << "Error :" << m_path << ":" << reply.error().message();
@@ -167,10 +156,6 @@ void VpnConnection::modifyConnection(const QVariantMap &properties)
     updatedProperties.remove(QString("index"));
     updatedProperties.remove(QString("immutable"));
     updatedProperties.remove(QString("storeCredentials"));
-
-    // Convert defaultRoute bool to string for ConnMan
-    d->m_defaultRoute = updatedProperties.value(defaultRoutePropertyName).toBool();
-    updatedProperties.insert(defaultRoutePropertyName, d->m_defaultRoute ? strTrue : strFalse);
 
     // SetProperty supports a single property or an array of properties
     d->m_connectionProxy.SetProperty(QString("Properties"),
@@ -253,7 +238,7 @@ void VpnConnection::update(const QVariantMap &updateProperties)
     d->checkChanged(properties, emissions, "userRoutes", &VpnConnection::userRoutesChanged);
     d->checkChanged(properties, emissions, "serverRoutes", &VpnConnection::serverRoutesChanged);
 
-    d->updateVariable(properties, emissions, "defaultRoute", &d->m_defaultRoute, &VpnConnection::defaultRouteChanged);
+    d->updateVariable(properties, emissions, "splitRouting", &d->m_splitRouting, &VpnConnection::splitRoutingChanged);
     d->updateVariable(properties, emissions, "autoConnect", &d->m_autoConnect, &VpnConnection::autoConnectChanged);
     d->updateVariable(properties, emissions, "state", &d->m_state, &VpnConnection::stateChanged);
 
@@ -313,25 +298,22 @@ void VpnConnection::setAutoConnect(bool autoConnect)
     }
 }
 
-bool VpnConnection::defaultRoute() const
+bool VpnConnection::splitRouting() const
 {
     Q_D(const VpnConnection);
 
-    return d->m_defaultRoute;
+    return d->m_splitRouting;
 }
 
-void VpnConnection::setDefaultRoute(bool defaultRoute)
+void VpnConnection::setSplitRouting(bool splitRouting)
 {
     Q_D(VpnConnection);
 
-    if (d->m_defaultRoute != defaultRoute) {
-        d->m_defaultRoute = defaultRoute;
-        qDebug() << "VPN defaultRoute changed:" << d->m_properties.value("name").toString() << defaultRoute;
-
-        QString defaultRouteStr = defaultRoute ? strTrue : strFalse;
-        d->m_serviceProxy.SetProperty(defaultRouteKey, QDBusVariant(defaultRouteStr));
-
-        emit defaultRouteChanged();
+    if (d->m_splitRouting != splitRouting) {
+        d->m_splitRouting = splitRouting;
+        qDebug() << "VPN splitRouting changed:" << d->m_properties.value("name").toString() << splitRouting;
+        d->m_serviceProxy.SetProperty(splitRoutingKey, QDBusVariant(splitRouting));
+        emit splitRoutingChanged();
     }
 }
 
@@ -395,15 +377,8 @@ inline void VpnConnectionPrivate::updateVariable(QVariantMap &properties, QQueue
 {
     QVariantMap::const_iterator it = properties.constFind(name);
     if ((it != properties.constEnd()) && (*property != qvariant_cast< T >(it.value()))) {
-        if (name == defaultRoutePropertyName) {
-            QString str = it.value().toString();
-            m_defaultRoute = (str.isEmpty() || str == strTrue);
-            *property = qvariant_cast< T >(m_defaultRoute);
-            m_properties.insert(name, QVariant(m_defaultRoute));
-        } else {
-            *property = qvariant_cast< T >(it.value());
-            m_properties.insert(name, it.value());
-        }
+        *property = qvariant_cast< T >(it.value());
+        m_properties.insert(name, it.value());
         properties.remove(name);
         emissions << changedSignal;
     }

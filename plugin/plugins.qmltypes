@@ -918,7 +918,7 @@ Module {
         Property { name: "nameservers"; type: "QStringList" }
         Property { name: "userRoutes"; type: "QVariant" }
         Property { name: "serverRoutes"; type: "QVariant" }
-        Property { name: "defaultRoute"; type: "bool" }
+        Property { name: "splitRouting"; type: "bool" }
         Property { name: "properties"; type: "QVariantMap" }
         Property { name: "providerProperties"; type: "QVariantMap" }
         Property { name: "connected"; type: "bool"; isReadonly: true }

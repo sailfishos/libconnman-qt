@@ -71,7 +71,7 @@ class VpnConnection : public QObject
     Q_PROPERTY(QStringList nameservers READ nameservers WRITE setNameservers NOTIFY nameserversChanged)
     Q_PROPERTY(QVariant userRoutes READ userRoutes WRITE setUserRoutes NOTIFY userRoutesChanged)
     Q_PROPERTY(QVariant serverRoutes READ serverRoutes WRITE setServerRoutes NOTIFY serverRoutesChanged)
-    Q_PROPERTY(bool defaultRoute READ defaultRoute WRITE setDefaultRoute NOTIFY defaultRouteChanged)
+    Q_PROPERTY(bool splitRouting READ splitRouting WRITE setSplitRouting NOTIFY splitRoutingChanged)
 
     Q_PROPERTY(QVariantMap properties READ properties WRITE setProperties NOTIFY propertiesChanged)
     Q_PROPERTY(QVariantMap providerProperties READ providerProperties WRITE setProviderProperties NOTIFY providerPropertiesChanged)
@@ -141,8 +141,8 @@ public:
     QVariant serverRoutes() const;
     void setServerRoutes(const QVariant &serverRoutes);
 
-    bool defaultRoute() const;
-    void setDefaultRoute(bool defaultRoute);
+    bool splitRouting() const;
+    void setSplitRouting(bool splitRouting);
 
     QVariantMap properties() const;
     void setProperties(const QVariantMap properties);
@@ -165,7 +165,7 @@ signals:
     void nameserversChanged();
     void userRoutesChanged();
     void serverRoutesChanged();
-    void defaultRouteChanged();
+    void splitRoutingChanged();
     void propertiesChanged();
     void providerPropertiesChanged();
     void connectedChanged();

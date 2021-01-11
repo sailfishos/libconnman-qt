@@ -56,7 +56,7 @@ public:
     void setTetheringPassphrase(const QString &pass);
 
 public Q_SLOTS:
-    void setPowered(const bool &powered);
+    void setPowered(bool powered);
     void scan();
     void setPath(const QString &path);
 
@@ -75,19 +75,11 @@ Q_SIGNALS:
 
 private:
     NetConnmanTechnologyInterface *m_technology;
+    QDBusServiceWatcher *m_dBusWatcher;
     QVariantMap m_propertiesCache;
-
-    static const QString Name;
-    static const QString Type;
-    static const QString Powered;
-    static const QString Connected;
-    static const QString IdleTimeout;
-    static const QString Tethering;
-    static const QString TetheringIdentifier;
-    static const QString TetheringPassphrase;
+    QVariantMap m_pendingProperties;
 
     QString m_path;
-    void init(const QString &path);
 
 private Q_SLOTS:
     void propertyChanged(const QString &name, const QDBusVariant &value);
@@ -95,6 +87,16 @@ private Q_SLOTS:
 
     void scanReply(QDBusPendingCallWatcher *call);
     void getPropertiesFinished(QDBusPendingCallWatcher *call);
+
+    void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
+    void technologyRemoved(const QDBusObjectPath &technology);
+
+    void pendingSetProperty(const QString &key, const QVariant &value);
+
+    void startDBusWatching();
+    void initialize();
+    void createInterface();
+    void destroyInterface();
 
 private:
     Q_DISABLE_COPY(NetworkTechnology)

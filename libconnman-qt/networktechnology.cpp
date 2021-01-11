@@ -12,66 +12,111 @@
 #include "connman_technology_interface.h"
 #include "libconnman_p.h"
 
-const QString NetworkTechnology::Name("Name");
-const QString NetworkTechnology::Type("Type");
-const QString NetworkTechnology::Powered("Powered");
-const QString NetworkTechnology::Connected("Connected");
-const QString NetworkTechnology::IdleTimeout("IdleTimeout");
-const QString NetworkTechnology::Tethering("Tethering");
-const QString NetworkTechnology::TetheringIdentifier("TetheringIdentifier");
-const QString NetworkTechnology::TetheringPassphrase("TetheringPassphrase");
+#include <QDBusPendingReply>
+
+Q_GLOBAL_STATIC(QSet<QString>, techList)
+
+namespace  {
+const auto Name = QStringLiteral("Name");
+const auto Type = QStringLiteral("Type");
+const auto Powered = QStringLiteral("Powered");
+const auto Connected = QStringLiteral("Connected");
+const auto IdleTimeout = QStringLiteral("IdleTimeout");
+const auto Tethering = QStringLiteral("Tethering");
+const auto TetheringIdentifier = QStringLiteral("TetheringIdentifier");
+const auto TetheringPassphrase = QStringLiteral("TetheringPassphrase");
+}
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
-  : QObject(parent),
-    m_technology(NULL)
+  : QObject(parent)
+  , m_technology(nullptr)
+  , m_dBusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+                                          QDBusServiceWatcher::WatchForRegistration
+                                          | QDBusServiceWatcher::WatchForUnregistration, this))
 {
     Q_ASSERT(!path.isEmpty());
     m_propertiesCache = properties;
-    init(path);
+
+    startDBusWatching();
+    initialize();
+    setPath(path);
 }
 
 NetworkTechnology::NetworkTechnology(QObject* parent)
-    : QObject(parent),
-      m_technology(NULL)
+    : QObject(parent)
+    , m_technology(nullptr)
+    , m_dBusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+                                            QDBusServiceWatcher::WatchForRegistration
+                                            | QDBusServiceWatcher::WatchForUnregistration, this))
 {
+    startDBusWatching();
+    initialize();
 }
 
 NetworkTechnology::~NetworkTechnology()
 {
+    destroyInterface();
 }
 
-void NetworkTechnology::init(const QString &path)
+void NetworkTechnology::startDBusWatching()
 {
-    if (path != m_path) {
-        m_path = path;
+    // Monitor connman itself.
+    connect(m_dBusWatcher, &QDBusServiceWatcher::serviceRegistered,
+            this, &NetworkTechnology::initialize);
+    connect(m_dBusWatcher, &QDBusServiceWatcher::serviceUnregistered,
+            this, [this]() {
+        techList()->clear();
+        destroyInterface();
+    });
 
-        delete m_technology;
-        m_technology = 0;
+    // Monitor TechnologyAdded and TechnologyRemoved.
+    CONNMAN_BUS.connect(
+                CONNMAN_SERVICE,
+                "/",
+                "net.connman.Manager",
+                "TechnologyAdded",
+                this,
+                SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
 
-        // Clear the property cache (only) if the path is becoming empty.
-        if (m_path.isEmpty()) {
-            QStringList keys = m_propertiesCache.keys();
-            m_propertiesCache.clear();
-            Q_EMIT pathChanged(m_path);
-            const int n = keys.count();
-            for (int i=0; i<n; i++) {
-                emitPropertyChange(keys.at(i), QVariant());
+    CONNMAN_BUS.connect(
+                CONNMAN_SERVICE,
+                "/",
+                "net.connman.Manager",
+                "TechnologyRemoved",
+                this,
+                SLOT(technologyRemoved(QDBusObjectPath)));
+}
+
+void NetworkTechnology::initialize()
+{
+    if (techList()->isEmpty()) {
+        QDBusInterface managerInterface(CONNMAN_SERVICE,
+                                        "/",
+                                        "net.connman.Manager",
+                                        CONNMAN_BUS);
+
+        QDBusPendingCall pendingCall = managerInterface.asyncCall("GetTechnologies");
+
+        connect(new QDBusPendingCallWatcher(pendingCall, this),
+                &QDBusPendingCallWatcher::finished, [this](QDBusPendingCallWatcher *watcher) {
+            QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+            watcher->deleteLater();
+
+
+            if (reply.isError()) {
+                DBG_("Failed to connman techonologies:" << reply.isError() << reply.error().type());
+            } else {
+                for (const ConnmanObject &object : reply.value()) {
+                    techList()->insert(object.objpath.path());
+                }
+
+                destroyInterface();
+                createInterface();
             }
-            return;
-        }
-
-        // Emit the signal after creating NetConnmanTechnologyInterface
-        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, path,
-                                                         CONNMAN_BUS, this);
-        Q_EMIT pathChanged(m_path);
-
-        connect(m_technology,
-                SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                SLOT(propertyChanged(QString,QDBusVariant)));
-
-        connect(new QDBusPendingCallWatcher(m_technology->GetProperties(), m_technology),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(getPropertiesFinished(QDBusPendingCallWatcher*)));
+        });
+    } else {
+        destroyInterface();
+        createInterface();
     }
 }
 
@@ -81,15 +126,127 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
     call->deleteLater();
 
     if (!reply.isError()) {
+        // Handle first pending values. If there would be more of these,
+        // we could think of having a container of key, setter, and getter.
+        // Over engineering for now.
+        // Call pending update regardless of the actual pending value change but
+        // emit changes only if there are real changes.
+
         QVariantMap tmpCache = reply.value();
-        for (const QString &name : tmpCache.keys()) {
-            m_propertiesCache.insert(name, tmpCache[name]);
-            emitPropertyChange(name, tmpCache[name]);
+        if (m_pendingProperties.contains(Powered)) {
+            bool newValue = tmpCache[Powered].toBool();
+            bool pendingValue = m_pendingProperties[Powered].toBool();
+            setPowered(pendingValue);
+            if (pendingValue == newValue) {
+                m_pendingProperties.remove(Powered);
+            }
         }
+
+        if (m_pendingProperties.contains(IdleTimeout)) {
+            quint32 newValue = tmpCache[IdleTimeout].toUInt();
+            quint32 pendingValue = m_pendingProperties[IdleTimeout].toUInt();
+            setIdleTimeout(pendingValue);
+            if (pendingValue == newValue) {
+                m_pendingProperties.remove(IdleTimeout);
+            }
+        }
+
+        if (m_pendingProperties.contains(Tethering)) {
+            bool newValue = tmpCache[Tethering].toBool();
+            bool pendingValue = m_pendingProperties[Tethering].toBool();
+            setTethering(pendingValue);
+            if (pendingValue == newValue) {
+                m_pendingProperties.remove(Tethering);
+            }
+        }
+
+        if (m_pendingProperties.contains(TetheringIdentifier)) {
+            QString newValue = tmpCache[TetheringIdentifier].toString();
+            QString pendingValue = m_pendingProperties[TetheringIdentifier].toString();
+            setTetheringId(pendingValue);
+            if (pendingValue == newValue) {
+                m_pendingProperties.remove(TetheringIdentifier);
+            }
+        }
+
+        if (m_pendingProperties.contains(TetheringPassphrase)) {
+            QString newValue = tmpCache[TetheringPassphrase].toString();
+            QString pendingValue = m_pendingProperties[TetheringPassphrase].toString();
+            setTetheringPassphrase(pendingValue);
+            if (pendingValue == newValue) {
+                m_pendingProperties.remove(TetheringPassphrase);
+            }
+        }
+
+        for (const QString &name : tmpCache.keys()) {
+            if (!m_pendingProperties.contains(name)) {
+                m_propertiesCache.insert(name, tmpCache[name]);
+                emitPropertyChange(name, tmpCache[name]);
+            }
+        }
+        m_pendingProperties.clear();
         Q_EMIT propertiesReady();
     } else {
         qWarning() << reply.error().message();
+        m_propertiesCache.clear();
     }
+}
+
+void NetworkTechnology::technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties)
+{
+    Q_UNUSED(properties);
+    techList()->insert(technology.path());
+    if (!m_path.isEmpty() && technology.path() == m_path) {
+        destroyInterface();
+        createInterface();
+    }
+}
+
+void NetworkTechnology::technologyRemoved(const QDBusObjectPath &technology)
+{
+    techList()->remove(technology.path());
+    if (m_technology && technology.path() == m_path) {
+        destroyInterface();
+    }
+}
+
+void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
+{
+    connect(new QDBusPendingCallWatcher(m_technology->SetProperty(key, QDBusVariant(value)), m_technology),
+        &QDBusPendingCallWatcher::finished,
+            [this, key, value](QDBusPendingCallWatcher *call) {
+        QDBusPendingReply<QVariantMap> reply = *call;
+        call->deleteLater();
+
+        // If technology object is not yet registered update pending value accordingly.
+        // This is merely a fallback mechnanism as technologies are also istened.
+        if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
+            m_pendingProperties.insert(key, value);
+        }
+    });
+}
+
+void NetworkTechnology::createInterface()
+{
+    if (!m_path.isEmpty() && techList()->contains(m_path)) {
+        // Emit the signal after creating NetConnmanTechnologyInterface
+        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path,
+                                                         CONNMAN_BUS, this);
+        Q_EMIT pathChanged(m_path);
+
+        connect(m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
+                this, &NetworkTechnology::propertyChanged);
+
+        connect(new QDBusPendingCallWatcher(m_technology->GetProperties(), m_technology),
+                &QDBusPendingCallWatcher::finished,
+                this, &NetworkTechnology::getPropertiesFinished);
+    }
+}
+
+void NetworkTechnology::destroyInterface()
+{
+    delete m_technology;
+    m_technology = nullptr;
 }
 
 // Public API
@@ -150,39 +307,65 @@ QString NetworkTechnology::tetheringPassphrase() const
 
 // Setters
 
-void NetworkTechnology::setPowered(const bool &powered)
+void NetworkTechnology::setPowered(bool powered)
 {
-    if (m_technology)
-        m_technology->SetProperty(Powered, QDBusVariant(QVariant(powered)));
+    if (m_technology) {
+        pendingSetProperty(Powered, QVariant(powered));
+    } else {
+        m_pendingProperties.insert(Powered, QVariant(powered));
+    }
 }
 
 void NetworkTechnology::setPath(const QString &path)
 {
-    init(path);
+    if (path != m_path) {
+        m_path = path;
+        destroyInterface();
+        createInterface();
+    }
+
+    // Clear the property cache (only) if the path is becoming empty.
+    if (m_path.isEmpty()) {
+        QStringList keys = m_propertiesCache.keys();
+        m_propertiesCache.clear();
+        Q_EMIT pathChanged(m_path);
+        const int n = keys.count();
+        for (int i=0; i<n; i++) {
+            emitPropertyChange(keys.at(i), QVariant());
+        }
+    }
 }
 
 void NetworkTechnology::setIdleTimeout(quint32 timeout)
 {
     if (m_technology)
-        m_technology->SetProperty(IdleTimeout, QDBusVariant(QVariant(timeout)));
+        pendingSetProperty(IdleTimeout, QVariant(timeout));
+    else
+        m_pendingProperties.insert(IdleTimeout, QVariant(timeout));
 }
 
 void NetworkTechnology::setTethering(bool b)
 {
     if (m_technology)
-        m_technology->SetProperty(Tethering, QDBusVariant(QVariant(b)));
+        pendingSetProperty(Tethering, QVariant(b));
+    else
+        m_pendingProperties.insert(Tethering, QVariant(b));
 }
 
 void NetworkTechnology::setTetheringId(const QString &id)
 {
     if (m_technology)
-        m_technology->SetProperty(TetheringIdentifier, QDBusVariant(QVariant(id)));
+        pendingSetProperty(TetheringIdentifier, QVariant(id));
+    else
+        m_pendingProperties.insert(TetheringIdentifier, QVariant(id));
 }
 
 void NetworkTechnology::setTetheringPassphrase(const QString &pass)
 {
     if (m_technology)
-        m_technology->SetProperty(TetheringPassphrase, QDBusVariant(QVariant(pass)));
+        pendingSetProperty(TetheringPassphrase, QVariant(pass));
+    else
+        m_pendingProperties.insert(TetheringPassphrase, QVariant(pass));
 }
 
 // Private
@@ -224,7 +407,6 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
     QVariant tmp = value.variant();
 
     Q_ASSERT(m_technology);
-
     m_propertiesCache[name] = tmp;
     emitPropertyChange(name,tmp);
 }

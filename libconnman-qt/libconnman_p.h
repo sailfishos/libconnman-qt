@@ -62,7 +62,7 @@ public:
 #include <QDebug>
 
 #if CONNMAN_DEBUG
-#  define DBG_(x) qDebug() << x
+#  define DBG_(x) qDebug() << this << Q_FUNC_INFO << "line:" << __LINE__ << x
 #  define ASSERT_(x) ((x) ? ((void)0) : qt_assert(#x,__FILE__,__LINE__))
 #  define VERIFY_(x) ASSERT(x)
 #else

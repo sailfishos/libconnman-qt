@@ -451,9 +451,16 @@ void NetworkManager::disconnectServices()
     bool wasValid = isValid();
     m_priv->setServicesAvailable(false);
 
+    bool emitDefaultRouteChanged = false;
     if (m_defaultRoute != m_invalidDefaultRoute) {
         m_defaultRoute = m_invalidDefaultRoute;
-        Q_EMIT defaultRouteChanged(m_defaultRoute);
+        emitDefaultRouteChanged = true;
+    }
+
+    bool emitConnectedWifiChanged = false;
+    if (m_priv->m_connectedWifi) {
+        m_priv->m_connectedWifi = NULL;
+        emitConnectedWifiChanged = true;
     }
 
     if (m_proxy) {
@@ -496,6 +503,14 @@ void NetworkManager::disconnectServices()
     if (!m_servicesOrder.isEmpty()) {
         m_servicesOrder.clear();
         Q_EMIT servicesChanged();
+    }
+
+    if (emitDefaultRouteChanged) {
+        Q_EMIT defaultRouteChanged(m_defaultRoute);
+    }
+
+    if (emitConnectedWifiChanged) {
+        Q_EMIT connectedWifiChanged();
     }
 
     if (emitSavedServicesChanged) {

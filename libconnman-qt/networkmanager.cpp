@@ -47,6 +47,7 @@ public:
 
     static const QString WifiType;
     static const QString CellularType;
+    static const QString EthernetType;
 
     bool m_registered;
     bool m_servicesAvailable;
@@ -59,12 +60,15 @@ public:
     QStringList m_availableServicesOrder;
     QStringList m_wifiServicesOrder;
     QStringList m_cellularServicesOrder;
+    QStringList m_ethernetServicesOrder;
     NetworkService* m_connectedWifi;
+    NetworkService* m_connectedEthernet;
 
 public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
     bool updateWifiConnected(NetworkService *service);
+    bool updateEthernetConnected(NetworkService *service);
     bool updateWifiConnecting(NetworkService *service);
     void setServicesAvailable(bool servicesAvailable);
     void setTechnologiesAvailable(bool technologiesAvailable);
@@ -79,7 +83,8 @@ public:
         , m_technologiesAvailable(false)
         , m_connectingWifi(false)
         , m_connected(false)
-        , m_connectedWifi(NULL) {}
+        , m_connectedWifi(NULL)
+        , m_connectedEthernet(NULL) {}
     NetworkManager* manager()
         { return (NetworkManager*)parent(); }
     void maybeCreateInterfaceProxyLater()
@@ -89,6 +94,7 @@ public Q_SLOTS:
     void maybeCreateInterfaceProxy();
     void onWifiConnectedChanged();
     void onWifiConnectingChanged();
+    void onEthernetConnectedChanged();
 };
 
 const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
@@ -96,6 +102,7 @@ const uint NetworkManager::Private::DefaultInputRequestTimeout(300000);
 
 const QString NetworkManager::Private::WifiType("wifi");
 const QString NetworkManager::Private::CellularType("cellular");
+const QString NetworkManager::Private::EthernetType("ethernet");
 
 bool NetworkManager::Private::selectSaved(NetworkService *service)
 {
@@ -186,6 +193,35 @@ void NetworkManager::Private::onWifiConnectingChanged()
     if (service && updateWifiConnecting(service)) {
         Q_EMIT manager()->connectingChanged();
         Q_EMIT manager()->connectingWifiChanged();
+    }
+}
+
+bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
+{
+    if (service->connected()) {
+        if (!m_connectedEthernet) {
+            m_connectedEthernet = service;
+            return true;
+        }
+    } else if (m_connectedEthernet == service) {
+        QVector<NetworkService*> availableEthernet = manager()->getAvailableServices(EthernetType);
+        m_connectedEthernet = NULL;
+        for (NetworkService *ethernet: availableEthernet) {
+            if (ethernet->connected()) {
+                m_connectedEthernet = ethernet;
+                break;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+void NetworkManager::Private::onEthernetConnectedChanged()
+{
+    NetworkService *service = qobject_cast<NetworkService*>(sender());
+    if (service && updateEthernetConnected(service)) {
+        Q_EMIT manager()->connectedEthernetChanged();
     }
 }
 
@@ -314,6 +350,7 @@ const QString NetworkManager::WifiTechnologyPath("/net/connman/technology/wifi")
 const QString NetworkManager::CellularTechnologyPath("/net/connman/technology/cellular");
 const QString NetworkManager::BluetoothTechnologyPath("/net/connman/technology/bluetooth");
 const QString NetworkManager::GpsTechnologyPath("/net/connman/technology/gps");
+const QString NetworkManager::EthernetTechnologyPath("/net/connman/technology/ethernet");
 
 NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
@@ -463,6 +500,12 @@ void NetworkManager::disconnectServices()
         emitConnectedWifiChanged = true;
     }
 
+    bool emitConnectedEthernetChanged = false;
+    if (m_priv->m_connectedEthernet) {
+        m_priv->m_connectedEthernet = NULL;
+        emitConnectedEthernetChanged = true;
+    }
+
     if (m_proxy) {
         disconnect(m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
                    this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
@@ -500,6 +543,12 @@ void NetworkManager::disconnectServices()
         emitCellularServicesChanged = true;
     }
 
+    bool emitEthernetServicesChanged = false;
+    if (!m_priv->m_ethernetServicesOrder.isEmpty()) {
+        m_priv->m_ethernetServicesOrder.clear();
+        emitEthernetServicesChanged = true;
+    }
+
     if (!m_servicesOrder.isEmpty()) {
         m_servicesOrder.clear();
         Q_EMIT servicesChanged();
@@ -511,6 +560,10 @@ void NetworkManager::disconnectServices()
 
     if (emitConnectedWifiChanged) {
         Q_EMIT connectedWifiChanged();
+    }
+
+    if (emitConnectedEthernetChanged) {
+        Q_EMIT connectedEthernetChanged();
     }
 
     if (emitSavedServicesChanged) {
@@ -531,6 +584,10 @@ void NetworkManager::disconnectServices()
 
     if (emitCellularServicesChanged) {
         Q_EMIT cellularServicesChanged();
+    }
+
+    if (emitEthernetServicesChanged) {
+        Q_EMIT ethernetServicesChanged();
     }
 
     if (wasValid != isValid()) {
@@ -603,6 +660,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     Private::ListUpdate availableServices(&m_priv->m_availableServicesOrder);
     Private::ListUpdate wifiServices(&m_priv->m_wifiServicesOrder);
     Private::ListUpdate cellularServices(&m_priv->m_cellularServicesOrder);
+    Private::ListUpdate ethernetServices(&m_priv->m_ethernetServicesOrder);
 
     QStringList addedServices;
     QStringList removedServices;
@@ -621,6 +679,8 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 m_priv, SLOT(onWifiConnectedChanged()));
             disconnect(service, SIGNAL(connectingChanged()),
                 m_priv, SLOT(onWifiConnectingChanged()));
+            disconnect(service, SIGNAL(connectedChanged(bool)),
+                m_priv, SLOT(onEthernetConnectedChanged()));
             service->updateProperties(obj.properties);
         } else {
             service = new NetworkService(path, obj.properties, this);
@@ -657,6 +717,11 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
                 m_priv, SLOT(onWifiConnectingChanged()));
         } else if (type == Private::CellularType) {
             cellularServices.add(path);
+        } else if (type == Private::EthernetType) {
+            ethernetServices.add(path);
+            m_priv->updateEthernetConnected(service);
+            connect(service, SIGNAL(connectedChanged(bool)),
+                m_priv, SLOT(onEthernetConnectedChanged()));
         }
     }
 
@@ -666,6 +731,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     availableServices.done();
     wifiServices.done();
     cellularServices.done();
+    ethernetServices.done();
 
     // Removed services
     for (const QDBusObjectPath &obj : removed) {
@@ -738,6 +804,9 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     }
     if (cellularServices.changed) {
         Q_EMIT cellularServicesChanged();
+    }
+    if (ethernetServices.changed) {
+        Q_EMIT ethernetServicesChanged();
     }
     if (wasValid != isValid()) {
         Q_EMIT validChanged();
@@ -919,6 +988,11 @@ NetworkService* NetworkManager::connectedWifi() const
     return m_priv->m_connectedWifi;
 }
 
+NetworkService *NetworkManager::connectedEthernet() const
+{
+    return m_priv->m_connectedEthernet;
+}
+
 NetworkTechnology* NetworkManager::getTechnology(const QString &type) const
 {
     return m_technologiesCache.value(type);
@@ -1002,6 +1076,8 @@ QVector<NetworkService*> NetworkManager::getServices(const QString &tech) const
         return selectServices(m_priv->m_wifiServicesOrder, QString());
     } else if (tech == Private::CellularType) {
         return selectServices(m_priv->m_cellularServicesOrder, QString());
+    } else if (tech == Private::EthernetType) {
+        return selectServices(m_priv->m_ethernetServicesOrder, QString());
     } else {
         return selectServices(m_servicesOrder, tech);
     }
@@ -1018,6 +1094,10 @@ QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) c
         if (m_priv->m_cellularServicesOrder.count() < m_savedServicesOrder.count()) {
             return selectServices(m_priv->m_cellularServicesOrder, Private::selectSaved);
         }
+    } else if (tech == Private::EthernetType) {
+        if (m_priv->m_ethernetServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectSaved);
+        }
     }
     return selectServices(m_savedServicesOrder, tech);
 }
@@ -1033,6 +1113,10 @@ QVector<NetworkService*> NetworkManager::getAvailableServices(const QString &tec
         if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
             return selectServices(m_priv->m_cellularServicesOrder, Private::selectAvailable);
         }
+    } else if (tech == Private::EthernetType) {
+        if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectAvailable);
+        }
     }
     return selectServices(m_priv->m_availableServicesOrder, tech);
 }
@@ -1043,6 +1127,8 @@ QStringList NetworkManager::servicesList(const QString &tech)
         return m_priv->m_wifiServicesOrder;
     } else if (tech == Private::CellularType) {
         return m_priv->m_cellularServicesOrder;
+    } else if (tech == Private::EthernetType) {
+        return m_priv->m_ethernetServicesOrder;
     } else {
         return selectServiceList(m_servicesOrder, tech);
     }
@@ -1059,6 +1145,10 @@ QStringList NetworkManager::savedServicesList(const QString &tech)
         if (m_priv->m_cellularServicesOrder.count() < m_savedServicesOrder.count()) {
             return selectServiceList(m_priv->m_cellularServicesOrder, Private::selectSaved);
         }
+    } else if (tech == Private::EthernetType) {
+        if (m_priv->m_ethernetServicesOrder.count() < m_savedServicesOrder.count()) {
+            return selectServiceList(m_priv->m_ethernetServicesOrder, Private::selectSaved);
+        }
     }
     return selectServiceList(m_savedServicesOrder, tech);
 }
@@ -1073,6 +1163,10 @@ QStringList NetworkManager::availableServices(const QString &tech)
     } else if (tech == Private::CellularType) {
         if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
             return selectServiceList(m_priv->m_cellularServicesOrder, Private::selectAvailable);
+        }
+    } else if (tech == Private::EthernetType) {
+        if (m_priv->m_ethernetServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
+            return selectServiceList(m_priv->m_ethernetServicesOrder, Private::selectAvailable);
         }
     }
     return selectServiceList(m_priv->m_availableServicesOrder, tech);
@@ -1385,6 +1479,11 @@ QStringList NetworkManager::technologiesList()
 QString NetworkManager::wifiTechnologyPath() const
 {
     return WifiTechnologyPath;
+}
+
+QString NetworkManager::ethernetTechnologyPath() const
+{
+    return EthernetTechnologyPath;
 }
 
 QString NetworkManager::cellularTechnologyPath() const

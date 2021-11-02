@@ -40,6 +40,8 @@ class NetworkManager : public QObject
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
     Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
 
+    Q_PROPERTY(NetworkService* connectedEthernet READ connectedEthernet NOTIFY connectedEthernetChanged)
+
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)
 
@@ -54,12 +56,14 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString CellularTechnology READ cellularTechnologyPath CONSTANT)
     Q_PROPERTY(QString BluetoothTechnology READ bluetoothTechnologyPath CONSTANT)
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
+    Q_PROPERTY(QString EthernetTechnology READ ethernetTechnologyPath CONSTANT)
 
 public:
     static const QString WifiTechnologyPath;
     static const QString CellularTechnologyPath;
     static const QString BluetoothTechnologyPath;
     static const QString GpsTechnologyPath;
+    static const QString EthernetTechnologyPath;
 
     static NetworkManager* instance();
 
@@ -88,6 +92,8 @@ public:
     NetworkService* connectedWifi() const;
     bool connectingWifi() const;
 
+    NetworkService *connectedEthernet() const;
+
     bool sessionMode() const;
     uint inputRequestTimeout() const;
 
@@ -108,6 +114,7 @@ public:
     QString cellularTechnologyPath() const;
     QString bluetoothTechnologyPath() const;
     QString gpsTechnologyPath() const;
+    QString ethernetTechnologyPath() const;
 
 public Q_SLOTS:
     void setOfflineMode(bool offlineMode);
@@ -139,9 +146,11 @@ Q_SIGNALS:
     void savedServicesChanged();
     void wifiServicesChanged();
     void cellularServicesChanged();
+    void ethernetServicesChanged();
     void availableServicesChanged();
     void defaultRouteChanged(NetworkService* defaultRoute);
     void connectedWifiChanged();
+    void connectedEthernetChanged();
     void sessionModeChanged(bool);
     void servicesListChanged(const QStringList &list);
     void serviceAdded(const QString &servicePath);

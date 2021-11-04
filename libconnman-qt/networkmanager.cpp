@@ -67,6 +67,7 @@ public:
 public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
+    static bool selectSavedOrAvailable(NetworkService *service);
     bool updateWifiConnected(NetworkService *service);
     bool updateEthernetConnected(NetworkService *service);
     bool updateWifiConnecting(NetworkService *service);
@@ -112,6 +113,11 @@ bool NetworkManager::Private::selectSaved(NetworkService *service)
 bool NetworkManager::Private::selectAvailable(NetworkService *service)
 {
     return service && service->available();
+}
+
+bool NetworkManager::Private::selectSavedOrAvailable(NetworkService *service)
+{
+    return service && (service->saved() || service->available());
 }
 
 void NetworkManager::Private::maybeCreateInterfaceProxy()
@@ -1096,7 +1102,7 @@ QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) c
         }
     } else if (tech == Private::EthernetType) {
         if (m_priv->m_ethernetServicesOrder.count() < m_savedServicesOrder.count()) {
-            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectSaved);
+            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectSavedOrAvailable);
         }
     }
     return selectServices(m_savedServicesOrder, tech);

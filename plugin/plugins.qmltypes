@@ -112,6 +112,7 @@ Module {
         Property { name: "defaultRoute"; type: "NetworkService"; isReadonly: true; isPointer: true }
         Property { name: "connectedWifi"; type: "NetworkService"; isReadonly: true; isPointer: true }
         Property { name: "connectingWifi"; type: "bool"; isReadonly: true }
+        Property { name: "connectedEthernet"; type: "NetworkService"; isReadonly: true; isPointer: true }
         Property { name: "sessionMode"; type: "bool" }
         Property { name: "inputRequestTimeout"; type: "uint"; isReadonly: true }
         Property { name: "servicesEnabled"; type: "bool" }
@@ -123,6 +124,7 @@ Module {
         Property { name: "CellularTechnology"; type: "string"; isReadonly: true }
         Property { name: "BluetoothTechnology"; type: "string"; isReadonly: true }
         Property { name: "GpsTechnology"; type: "string"; isReadonly: true }
+        Property { name: "EthernetTechnology"; type: "string"; isReadonly: true }
         Signal {
             name: "availabilityChanged"
             Parameter { name: "available"; type: "bool" }
@@ -142,6 +144,7 @@ Module {
         Signal { name: "savedServicesChanged" }
         Signal { name: "wifiServicesChanged" }
         Signal { name: "cellularServicesChanged" }
+        Signal { name: "ethernetServicesChanged" }
         Signal { name: "availableServicesChanged" }
         Signal {
             name: "defaultRouteChanged"

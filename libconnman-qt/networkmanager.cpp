@@ -672,6 +672,18 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     for (const ConnmanObject &obj : changed) {
         const QString path(obj.objpath.path());
 
+        // Ignore all WiFi with a zeroed/unknown BSSIDs to reduce list size
+        // in crowded areas. These are most likely weak and really unreachable
+        // but ConnMan maintains them if they come within reach and then they
+        // have a valid BSSID. WiFi services with an empty BSSID are saved ones
+        // that are not in the range.
+        if (obj.properties.value("Type").toString() == NetworkManager::Private::WifiType) {
+            const QString bssid = obj.properties.value("BSSID").toString();
+
+            if (bssid == QStringLiteral("00:00:00:00:00:00"))
+                continue;
+        }
+
         NetworkService *service = m_servicesCache.value(path);
         if (service) {
             // We don't want to emit signals at this point. Those will

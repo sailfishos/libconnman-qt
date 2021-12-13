@@ -147,6 +147,22 @@ void TechnologyModel::setChangesInhibited(bool b)
 {
     if (m_changesInhibited != b) {
         m_changesInhibited = b;
+
+        if (m_changesInhibited) {
+            // Since m_changesInhibited can also inhibit updates
+            // about removed/deleted services, connect destroyed.
+            for (const NetworkService *service : m_services) {
+                connect(service, &QObject::destroyed,
+                        this, &TechnologyModel::networkServiceDestroyed);
+            }
+        } else {
+            for (const NetworkService *service : m_services) {
+                disconnect(service, &QObject::destroyed,
+                           this, &TechnologyModel::networkServiceDestroyed);
+            }
+
+        }
+
         Q_EMIT changesInhibitedChanged(m_changesInhibited);
 
         if (!m_changesInhibited && m_uneffectedChanges) {
@@ -267,24 +283,13 @@ void TechnologyModel::updateServiceList()
 
     const int num_old = m_services.count();
 
-    foreach(const NetworkService *s, m_services) {
-        disconnect(s, SIGNAL(destroyed(QObject*)),
-                   this, SLOT(networkServiceDestroyed(QObject*)));
-    }
-
     const QVector<NetworkService *> new_services =
-        (m_filter == SavedServices) ? m_manager->getSavedServices(m_techname) :
-        (m_filter == AvailableServices) ? m_manager->getAvailableServices(m_techname) :
-        m_manager->getServices(m_techname);
+        (m_filter == SavedServices) ? m_manager->getSavedServices(m_techname)
+                                    : (m_filter == AvailableServices)
+                                      ? m_manager->getAvailableServices(m_techname)
+                                      : m_manager->getServices(m_techname);
 
     const int num_new = new_services.count();
-
-    // Since m_changesInhibited can also inhibit updates
-    // about removed/deleted services, connect destroyed.
-    foreach(const NetworkService *s, new_services) {
-        connect(s, SIGNAL(destroyed(QObject*)),
-                this, SLOT(networkServiceDestroyed(QObject*)));
-    }
 
     for (int i = 0; i < num_new; i++) {
         int j = m_services.indexOf(new_services.value(i));
@@ -354,7 +359,7 @@ void TechnologyModel::finishedScan()
 void TechnologyModel::networkServiceDestroyed(QObject *service)
 {
     int ind = m_services.indexOf(static_cast<NetworkService*>(service));
-    if (ind>=0) {
+    if (ind >= 0) {
         qWarning() << "out-of-band removal of network service" << service;
         beginRemoveRows(QModelIndex(), ind, ind);
         m_services.remove(ind);

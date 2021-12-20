@@ -1101,9 +1101,7 @@ QVector<NetworkService*> NetworkManager::getSavedServices(const QString &tech) c
             return selectServices(m_priv->m_cellularServicesOrder, Private::selectSaved);
         }
     } else if (tech == Private::EthernetType) {
-        if (m_priv->m_ethernetServicesOrder.count() < m_savedServicesOrder.count()) {
-            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectSavedOrAvailable);
-        }
+        return selectServices(m_priv->m_ethernetServicesOrder, Private::selectSavedOrAvailable);
     }
     return selectServices(m_savedServicesOrder, tech);
 }
@@ -1120,9 +1118,7 @@ QVector<NetworkService*> NetworkManager::getAvailableServices(const QString &tec
             return selectServices(m_priv->m_cellularServicesOrder, Private::selectAvailable);
         }
     } else if (tech == Private::EthernetType) {
-        if (m_priv->m_cellularServicesOrder.count() < m_priv->m_availableServicesOrder.count()) {
-            return selectServices(m_priv->m_ethernetServicesOrder, Private::selectAvailable);
-        }
+        return selectServices(m_priv->m_ethernetServicesOrder, Private::selectAvailable);
     }
     return selectServices(m_priv->m_availableServicesOrder, tech);
 }

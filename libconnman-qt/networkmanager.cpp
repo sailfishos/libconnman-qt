@@ -93,9 +93,8 @@ public:
 
 public Q_SLOTS:
     void maybeCreateInterfaceProxy();
-    void onWifiConnectedChanged();
+    void onConnectedChanged();
     void onWifiConnectingChanged();
-    void onEthernetConnectedChanged();
 };
 
 const QString NetworkManager::Private::InputRequestTimeout("InputRequestTimeout");
@@ -153,11 +152,17 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
     return false;
 }
 
-void NetworkManager::Private::onWifiConnectedChanged()
+void NetworkManager::Private::onConnectedChanged()
 {
+    manager()->updateDefaultRoute();
     NetworkService *service = qobject_cast<NetworkService*>(sender());
-    if (service && updateWifiConnected(service)) {
+    if (!service) {
+        return;
+    }
+    if (service->type() == Private::WifiType && updateWifiConnected(service)) {
         Q_EMIT manager()->connectedWifiChanged();
+    } else if (service->type() == Private::EthernetType) {
+        Q_EMIT manager()->connectedEthernetChanged();
     }
 }
 
@@ -221,14 +226,6 @@ bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
         return true;
     }
     return false;
-}
-
-void NetworkManager::Private::onEthernetConnectedChanged()
-{
-    NetworkService *service = qobject_cast<NetworkService*>(sender());
-    if (service && updateEthernetConnected(service)) {
-        Q_EMIT manager()->connectedEthernetChanged();
-    }
 }
 
 // ==========================================================================
@@ -679,24 +676,13 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         if (service) {
             // We don't want to emit signals at this point. Those will
             // be emitted later, after internal state is fully updated
-            disconnect(service, SIGNAL(connectedChanged(bool)),
-                this, SLOT(updateDefaultRoute()));
-            disconnect(service, SIGNAL(connectedChanged(bool)),
-                m_priv, SLOT(onWifiConnectedChanged()));
-            disconnect(service, SIGNAL(connectingChanged()),
-                m_priv, SLOT(onWifiConnectingChanged()));
-            disconnect(service, SIGNAL(connectedChanged(bool)),
-                m_priv, SLOT(onEthernetConnectedChanged()));
+            disconnect(service, nullptr, m_priv, nullptr);
             service->updateProperties(obj.properties);
         } else {
             service = new NetworkService(path, obj.properties, this);
             m_servicesCache.insert(path, service);
             addedServices.append(path);
         }
-
-        // Re-connect updateDefaultRoute slot
-        connect(service, SIGNAL(connectedChanged(bool)),
-            this, SLOT(updateDefaultRoute()));
 
         // Full list
         services.add(path);
@@ -717,18 +703,17 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             wifiServices.add(path);
             // Some special treatment for WiFi services
             m_priv->updateWifiConnected(service);
-            connect(service, SIGNAL(connectedChanged(bool)),
-                m_priv, SLOT(onWifiConnectedChanged()));
-            connect(service, SIGNAL(connectingChanged()),
-                m_priv, SLOT(onWifiConnectingChanged()));
+            connect(service, &NetworkService::connectingChanged,
+                    m_priv, &NetworkManager::Private::onWifiConnectingChanged);
         } else if (type == Private::CellularType) {
             cellularServices.add(path);
         } else if (type == Private::EthernetType) {
             ethernetServices.add(path);
             m_priv->updateEthernetConnected(service);
-            connect(service, SIGNAL(connectedChanged(bool)),
-                m_priv, SLOT(onEthernetConnectedChanged()));
         }
+
+        connect(service, &NetworkService::connectedChanged,
+                m_priv, &NetworkManager::Private::onConnectedChanged);
     }
 
     // Cut the tails

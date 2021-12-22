@@ -177,6 +177,7 @@ private:
     QVector<NetworkService*> selectServices(const QStringList &list, ServiceSelector selector) const;
     QStringList selectServiceList(const QStringList &list, const QString &tech) const;
     QStringList selectServiceList(const QStringList &list, ServiceSelector selector) const;
+    void updateDefaultRoute();
 
 private:
     class Private;
@@ -224,7 +225,6 @@ private Q_SLOTS:
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
     void getPropertiesFinished(QDBusPendingCallWatcher *watcher);
-    void updateDefaultRoute();
     void getTechnologiesFinished(QDBusPendingCallWatcher *watcher);
     void getServicesFinished(QDBusPendingCallWatcher *watcher);
 

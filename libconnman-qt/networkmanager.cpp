@@ -152,6 +152,28 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
     return false;
 }
 
+
+bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
+{
+    if (service->connected()) {
+        if (!m_connectedEthernet) {
+            m_connectedEthernet = service;
+            return true;
+        }
+    } else if (m_connectedEthernet == service) {
+        QVector<NetworkService*> availableEthernet = manager()->getAvailableServices(EthernetType);
+        m_connectedEthernet = NULL;
+        for (NetworkService *ethernet: availableEthernet) {
+            if (ethernet->connected()) {
+                m_connectedEthernet = ethernet;
+                break;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 void NetworkManager::Private::onConnectedChanged()
 {
     manager()->updateDefaultRoute();
@@ -161,7 +183,7 @@ void NetworkManager::Private::onConnectedChanged()
     }
     if (service->type() == Private::WifiType && updateWifiConnected(service)) {
         Q_EMIT manager()->connectedWifiChanged();
-    } else if (service->type() == Private::EthernetType) {
+    } else if (service->type() == Private::EthernetType && updateEthernetConnected(service)) {
         Q_EMIT manager()->connectedEthernetChanged();
     }
 }
@@ -205,27 +227,6 @@ void NetworkManager::Private::onWifiConnectingChanged()
         Q_EMIT manager()->connectingChanged();
         Q_EMIT manager()->connectingWifiChanged();
     }
-}
-
-bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
-{
-    if (service->connected()) {
-        if (!m_connectedEthernet) {
-            m_connectedEthernet = service;
-            return true;
-        }
-    } else if (m_connectedEthernet == service) {
-        QVector<NetworkService*> availableEthernet = manager()->getAvailableServices(EthernetType);
-        m_connectedEthernet = NULL;
-        for (NetworkService *ethernet: availableEthernet) {
-            if (ethernet->connected()) {
-                m_connectedEthernet = ethernet;
-                break;
-            }
-        }
-        return true;
-    }
-    return false;
 }
 
 // ==========================================================================

@@ -669,6 +669,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     QStringList addedServices;
     QStringList removedServices;
     NetworkService* prevConnectedWifi = m_priv->m_connectedWifi;
+    NetworkService* prevConnectedEthernet = m_priv->m_connectedEthernet;
 
     for (const ConnmanObject &obj : changed) {
         const QString path(obj.objpath.path());
@@ -778,6 +779,10 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     // Emit signals
     if (m_priv->m_connectedWifi != prevConnectedWifi) {
         Q_EMIT connectedWifiChanged();
+    }
+
+    if (m_priv->m_connectedEthernet != prevConnectedEthernet) {
+        Q_EMIT connectedEthernetChanged();
     }
 
     // Added services

@@ -313,27 +313,27 @@ public:
     QDBusPendingCall GetProperties()
         { return asyncCall("GetProperties"); }
     QDBusPendingCall SetProperty(QString name, QVariant value)
-        { return asyncCall("SetProperty", name, qVariantFromValue(QDBusVariant(value))); }
+        { return asyncCall("SetProperty", name, QVariant::fromValue(QDBusVariant(value))); }
     QDBusPendingCall GetTechnologies()
         { return asyncCall("GetTechnologies"); }
     QDBusPendingCall GetServices()
         { return asyncCall("GetServices"); }
     QDBusPendingCall RegisterAgent(const QString &path)
-        { return asyncCall("RegisterAgent", qVariantFromValue(QDBusObjectPath(path))); }
+        { return asyncCall("RegisterAgent", QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingCall UnregisterAgent(const QString &path)
-        { return asyncCall("UnregisterAgent", qVariantFromValue(QDBusObjectPath(path))); }
+        { return asyncCall("UnregisterAgent", QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingCall RegisterCounter(const QString &path, uint accuracy, uint period)
-        { return asyncCall("RegisterCounter", qVariantFromValue(QDBusObjectPath(path)), accuracy, period); }
+        { return asyncCall("RegisterCounter", QVariant::fromValue(QDBusObjectPath(path)), accuracy, period); }
     QDBusPendingCall ResetCounters(const QString &type)
         { return asyncCall("ResetCounters", type); }
     QDBusPendingCall UnregisterCounter(const QString &path)
-        { return asyncCall("UnregisterCounter", qVariantFromValue(QDBusObjectPath(path))); }
+        { return asyncCall("UnregisterCounter", QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingReply<QDBusObjectPath> CreateSession(const QVariantMap &settings, const QString &path)
-        { return asyncCall("CreateSession", settings, qVariantFromValue(QDBusObjectPath(path))); }
+        { return asyncCall("CreateSession", settings, QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingCall DestroySession(const QString &path)
-        { return asyncCall("DestroySession", qVariantFromValue(QDBusObjectPath(path))); }
+        { return asyncCall("DestroySession", QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingReply<QDBusObjectPath> CreateService(const QString &type, const QString &device, const QString &network, const StringPairArray &settings)
-        { return asyncCall("CreateService", type, device, network, qVariantFromValue(settings)); }
+        { return asyncCall("CreateService", type, device, network, QVariant::fromValue(settings)); }
 
 Q_SIGNALS:
     void PropertyChanged(const QString &name, const QDBusVariant &value);

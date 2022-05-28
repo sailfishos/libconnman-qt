@@ -75,13 +75,13 @@ QString NetworkSession::connectionType() const
 
 void NetworkSession::setAllowedBearers(const QStringList &bearers)
 {
-    settingsMap.insert("AllowedBearers", qVariantFromValue(bearers));
+    settingsMap.insert("AllowedBearers", QVariant::fromValue(bearers));
     m_sessionAgent->setAllowedBearers(bearers);
 }
 
 void NetworkSession::setConnectionType(const QString &type)
 {
-    settingsMap.insert("ConnectionType", qVariantFromValue(type));
+    settingsMap.insert("ConnectionType", QVariant::fromValue(type));
     m_sessionAgent->setConnectionType(type);
 }
 

@@ -321,7 +321,7 @@ public Q_SLOTS:
     QDBusPendingCall GetProperty(const QString &name)
         { return asyncCall("GetProperty", name); }
     QDBusPendingCall SetProperty(const QString &name, QVariant value)
-        { return asyncCall("SetProperty", name, qVariantFromValue(QDBusVariant(value))); }
+        { return asyncCall("SetProperty", name, QVariant::fromValue(QDBusVariant(value))); }
     QDBusPendingCall ClearProperty(const QString &name)
         { return asyncCall("ClearProperty", name); }
     QDBusPendingCall Connect()

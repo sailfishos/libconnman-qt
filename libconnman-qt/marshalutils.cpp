@@ -31,10 +31,15 @@
  */
 
 #include <QDebug>
-#include <QDBusMetaType>
+#include <QDBusArgument> 
 #include "vpnconnection.h"
 
 #include "marshalutils.h"
+
+#if defined(__clang__) &&  __clang_major__ >= 11 || __GNUC__ >= 12
+Q_DBUS_EXPORT const QDBusArgument &operator>>(const QDBusArgument &a, RouteStructure &v);
+Q_DBUS_EXPORT QDBusArgument &operator<<(QDBusArgument &a, const RouteStructure &v);
+#endif
 
 // Empty namespace for local static functions
 namespace {
@@ -183,6 +188,7 @@ QVariantMap MarshalUtils::propertiesToQml(const QVariantMap &fromDBus)
     return rv;
 }
 
+#include <QDBusMetaType>
 // Conversion to/from DBus/QML
 QHash<QString, MarshalUtils::conversionFunction> MarshalUtils::propertyConversions()
 {

@@ -10,7 +10,7 @@
 #include "networkmanager.h"
 
 #include "libconnman_p.h"
-#include <QRegExp>
+#include <QRegularExpression>
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -853,7 +853,7 @@ void NetworkManager::updateDefaultRoute()
              QTextStream ipv6in(&ipv6routeFile);
              QString ipv6line = ipv6in.readLine();
              while (!ipv6line.isNull()) {
-                 QStringList ipv6lineList = ipv6line.split(QRegExp("\\s+"));
+                 QStringList ipv6lineList = ipv6line.split(QRegularExpression("\\s+"));
                  if (ipv6lineList.size() >= 10) {
                      if (ipv6lineList.at(0) == "00000000000000000000000000000000" &&
                         (ipv6lineList.at(8).endsWith("3") || (ipv6lineList.at(8).endsWith("1")))) {

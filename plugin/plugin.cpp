@@ -34,7 +34,11 @@ static QObject *singleton_api_factory(QQmlEngine *, QJSEngine *)
 class ConnmanPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "MeeGo.Connman")
+    #ifdef USE_MODULE_PREFIX
+        Q_PLUGIN_METADATA(IID "MeeGo.Connman")
+    #else
+        Q_PLUGIN_METADATA(IID "Connman")
+    #endif
 
 public:
     void registerTypes(const char *uri);

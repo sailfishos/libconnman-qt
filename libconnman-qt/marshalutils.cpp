@@ -32,48 +32,13 @@
 
 #include <QDebug>
 #include <QDBusArgument> 
+#include <QDBusMetaType>
 #include "vpnconnection.h"
 
 #include "marshalutils.h"
 
-#if defined(__clang__) &&  __clang_major__ >= 11 || __GNUC__ >= 12
-Q_DBUS_EXPORT const QDBusArgument &operator>>(const QDBusArgument &a, RouteStructure &v);
-Q_DBUS_EXPORT QDBusArgument &operator<<(QDBusArgument &a, const RouteStructure &v);
-#endif
-
 // Empty namespace for local static functions
 namespace {
-
-// Marshall the RouteStructure data into a D-Bus argument
-QDBusArgument &operator<<(QDBusArgument &argument, const RouteStructure &routestruct)
-{
-    QVariantMap dict;
-    dict.insert("ProtocolFamily", routestruct.protocolFamily);
-    dict.insert("Network", routestruct.network);
-    dict.insert("Netmask", routestruct.netmask);
-    dict.insert("Gateway", routestruct.gateway);
-
-    argument.beginStructure();
-    argument << dict;
-    argument.endStructure();
-    return argument;
-}
-
-// Retrieve the RouteStructure data from the D-Bus argument
-const QDBusArgument &operator>>(const QDBusArgument &argument, RouteStructure &routestruct)
-{
-    QVariantMap dict;
-    argument.beginStructure();
-    argument >> dict;
-    argument.endStructure();
-
-    routestruct.protocolFamily = dict.value("ProtocolFamily", 0).toInt();
-    routestruct.network = dict.value("Network").toString();
-    routestruct.netmask = dict.value("Netmask").toString();
-    routestruct.gateway = dict.value("Gateway").toString();
-
-    return argument;
-}
 
 QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
 {
@@ -128,6 +93,39 @@ QVariant convertRoutes (const QString &, const QVariant &value, bool toDBus) {
 }
 
 } // Empty namespace
+
+// Marshall the RouteStructure data into a D-Bus argument
+QDBusArgument &operator<<(QDBusArgument &argument, const RouteStructure &routestruct)
+{
+    QVariantMap dict;
+    dict.insert("ProtocolFamily", routestruct.protocolFamily);
+    dict.insert("Network", routestruct.network);
+    dict.insert("Netmask", routestruct.netmask);
+    dict.insert("Gateway", routestruct.gateway);
+
+    argument.beginStructure();
+    argument << dict;
+    argument.endStructure();
+    return argument;
+}
+
+// Retrieve the RouteStructure data from the D-Bus argument
+const QDBusArgument &operator>>(const QDBusArgument &argument, RouteStructure &routestruct)
+{
+    QVariantMap dict;
+    argument.beginStructure();
+    argument >> dict;
+    argument.endStructure();
+
+    routestruct.protocolFamily = dict.value("ProtocolFamily", 0).toInt();
+    routestruct.network = dict.value("Network").toString();
+    routestruct.netmask = dict.value("Netmask").toString();
+    routestruct.gateway = dict.value("Gateway").toString();
+
+    return argument;
+}
+
+
 
 template<typename T>
 inline QVariant extract(const QDBusArgument &arg)
@@ -188,7 +186,6 @@ QVariantMap MarshalUtils::propertiesToQml(const QVariantMap &fromDBus)
     return rv;
 }
 
-#include <QDBusMetaType>
 // Conversion to/from DBus/QML
 QHash<QString, MarshalUtils::conversionFunction> MarshalUtils::propertyConversions()
 {

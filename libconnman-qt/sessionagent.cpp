@@ -44,7 +44,7 @@ void SessionAgent::setAllowedBearers(const QStringList &bearers)
     if (!m_session)
         return;
     QVariantMap map;
-    map.insert("AllowedBearers",  qVariantFromValue(bearers));
+    map.insert("AllowedBearers",  QVariant::fromValue(bearers));
     QDBusPendingReply<> reply = m_session->Change("AllowedBearers",QDBusVariant(bearers));
     // hope this is not a lengthy task
     reply.waitForFinished();
@@ -59,7 +59,7 @@ void SessionAgent::setConnectionType(const QString &type)
     if (!m_session)
         return;
     QVariantMap map;
-    map.insert("ConnectionType",  qVariantFromValue(type));
+    map.insert("ConnectionType",  QVariant::fromValue(type));
     m_session->Change("ConnectionType",QDBusVariant(type));
 }
 

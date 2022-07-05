@@ -8,6 +8,9 @@
  */
 
 #include <QtDBus/QDBusConnection>
+#if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
+#include <QRandomGenerator>
+#endif
 
 #include "counter.h"
 #include "networkmanager.h"
@@ -29,8 +32,12 @@ Counter::Counter(QObject *parent) :
     registered(false)
 {
     QTime time = QTime::currentTime();
-    qsrand((uint)time.msec());
-    int randomValue = qrand();
+    #if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
+        quint32 randomValue = QRandomGenerator::global()->generate();
+    #else
+        qsrand((uint)time.msec());
+        int randomValue = qrand();
+    #endif
     //this needs to be unique so we can use more than one at a time with different processes
     counterPath = "/ConnectivityCounter" + QString::number(randomValue);
 

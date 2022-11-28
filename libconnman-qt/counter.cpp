@@ -31,10 +31,10 @@ Counter::Counter(QObject *parent) :
     shouldBeRunning(false),
     registered(false)
 {
-    QTime time = QTime::currentTime();
     #if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
         quint32 randomValue = QRandomGenerator::global()->generate();
     #else
+        QTime time = QTime::currentTime();
         qsrand((uint)time.msec());
         int randomValue = qrand();
     #endif

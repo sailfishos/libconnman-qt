@@ -81,6 +81,7 @@ public:
     enum ConnectionState {
         Idle,
         Failure,
+        Association,
         Configuration,
         Ready,
         Disconnect

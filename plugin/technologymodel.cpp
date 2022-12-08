@@ -271,6 +271,8 @@ int TechnologyModel::indexOf(const QString &dbusObjectPath) const
     return -1;
 }
 
+static const int scaler = 10;
+
 void TechnologyModel::updateServiceList()
 {
     if (m_changesInhibited) {
@@ -292,18 +294,23 @@ void TechnologyModel::updateServiceList()
     const int num_new = new_services.count();
 
     for (int i = 0; i < num_new; i++) {
+        int pos = i * scaler;
         int j = m_services.indexOf(new_services.value(i));
         if (j == -1) {
             // wifi service not found -> remove from list
-            beginInsertRows(QModelIndex(), i, i);
-            m_services.insert(i, new_services.value(i));
+            beginInsertRows(QModelIndex(), pos, pos + (scaler - 1));
+            for (int count = 0; count < scaler; ++count) {
+                m_services.insert(pos, new_services.value(i));
+            }
             endInsertRows();
-        } else if (i != j) {
+        } else if (pos != j) {
             // wifi service changed its position -> move it
             NetworkService* service = m_services.value(j);
-            beginMoveRows(QModelIndex(), j, j, QModelIndex(), i);
-            m_services.remove(j);
-            m_services.insert(i, service);
+            beginMoveRows(QModelIndex(), j, j + (scaler - 1), QModelIndex(), pos);
+            m_services.remove(j, scaler);
+            for (int count = 0; count < scaler; ++count) {
+                m_services.insert(pos, service);
+            }
             endMoveRows();
         }
     }
@@ -311,13 +318,13 @@ void TechnologyModel::updateServiceList()
     // m_services contains [new_services, old_services \ new_services]
 
     int num_union = m_services.count();
-    if (num_union > num_new) {
-        beginRemoveRows(QModelIndex(), num_new, num_union - 1);
-        m_services.remove(num_new, num_union - num_new);
+    if (num_union > num_new * scaler) {
+        beginRemoveRows(QModelIndex(), num_new * scaler, num_union - 1);
+        m_services.remove(num_new * scaler, num_union - num_new * scaler);
         endRemoveRows();
     }
 
-    if (num_new != num_old)
+    if (num_new * scaler != num_old)
         Q_EMIT countChanged();
 }
 

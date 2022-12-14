@@ -900,7 +900,7 @@ void NetworkManager::technologyRemoved(const QDBusObjectPath &technology)
     // if we weren't storing by type() this loop would be unecessary
     // but since this function will be triggered rarely that's fine
     for (NetworkTechnology *net : m_technologiesCache) {
-        if (net->objPath() == technology.path()) {
+        if (net->path() == technology.path()) {
             m_technologiesCache.remove(net->type());
             net->deleteLater();
             break;

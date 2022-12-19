@@ -1,11 +1,11 @@
 Name:       connman-qt5
 Summary:    Qt bindings for connman
-Version:    1.2.35
+Version:    1.2.48
 Release:    1
 License:    ASL 2.0
 URL:        https://git.sailfishos.org/mer-core/libconnman-qt
 Source0:    %{name}-%{version}.tar.bz2
-Requires:   connman >= 1.32+git138
+Requires:   connman >= 1.32+git191
 Requires:   libdbusaccess >= 1.0.4
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig

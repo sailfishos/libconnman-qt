@@ -45,6 +45,7 @@ QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
     QList<QPair<QVariant, QVariant> > states;
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("idle")), QVariant::fromValue(static_cast<int>(VpnConnection::Idle))));
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("failure")), QVariant::fromValue(static_cast<int>(VpnConnection::Failure))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("association")), QVariant::fromValue(static_cast<int>(VpnConnection::Association))));
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("configuration")), QVariant::fromValue(static_cast<int>(VpnConnection::Configuration))));
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("ready")), QVariant::fromValue(static_cast<int>(VpnConnection::Ready))));
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("disconnect")), QVariant::fromValue(static_cast<int>(VpnConnection::Disconnect))));

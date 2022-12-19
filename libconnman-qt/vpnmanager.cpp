@@ -208,7 +208,9 @@ void VpnManager::deleteConnection(const QString &path)
     Q_D(VpnManager);
 
     if (VpnConnection *conn = connection(path)) {
-        if (conn->state() == VpnConnection::Ready || conn->state() == VpnConnection::Configuration) {
+        if (conn->state() == VpnConnection::Ready ||
+                                conn->state() == VpnConnection::Configuration ||
+                                conn->state() == VpnConnection::Association) {
             conn->setAutoConnect(false);
 
             connect(conn, &VpnConnection::stateChanged, this, [this, path, conn](){
@@ -244,7 +246,8 @@ void VpnManager::activateConnection(const QString &path)
     for (VpnConnection *conn : d->m_items) {
         QString otherPath = conn->path();
         if (otherPath != path && (conn->state() == VpnConnection::Ready ||
-                                  conn->state() == VpnConnection::Configuration)) {
+                                conn->state() == VpnConnection::Configuration ||
+                                conn->state() == VpnConnection::Association)) {
             deactivateConnection(otherPath);
             qDebug() << "Adding pending vpn disconnect" << otherPath << conn->state() << "when connecting to vpn";
         }

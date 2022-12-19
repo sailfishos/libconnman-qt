@@ -912,9 +912,10 @@ Module {
             values: {
                 "Idle": 0,
                 "Failure": 1,
-                "Configuration": 2,
-                "Ready": 3,
-                "Disconnect": 4
+                "Association": 2,
+                "Configuration": 3,
+                "Ready": 4,
+                "Disconnect": 5
             }
         }
         Property { name: "path"; type: "string"; isReadonly: true }

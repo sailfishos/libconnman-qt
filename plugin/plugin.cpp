@@ -34,11 +34,7 @@ static QObject *singleton_api_factory(QQmlEngine *, QJSEngine *)
 class ConnmanPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
-    #ifdef USE_MODULE_PREFIX
-        Q_PLUGIN_METADATA(IID "MeeGo.Connman")
-    #else
-        Q_PLUGIN_METADATA(IID "Connman")
-    #endif
+    Q_PLUGIN_METADATA(IID "Connman")
 
 public:
     void registerTypes(const char *uri);
@@ -48,7 +44,7 @@ public:
 
 void ConnmanPlugin::registerTypes(const char *uri)
 {
-    // @uri MeeGo.Connman
+    Q_ASSERT(uri == QLatin1String("MeeGo.Connman") || uri == QLatin1String("Connman"));
 
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");

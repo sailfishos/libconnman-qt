@@ -3,7 +3,7 @@ Summary:    Qt bindings for connman
 Version:    1.2.48
 Release:    1
 License:    ASL 2.0
-URL:        https://git.sailfishos.org/mer-core/libconnman-qt
+URL:        https://github.com/sailfishos/libconnman-qt/
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   connman >= 1.32+git191
 Requires:   libdbusaccess >= 1.0.4
@@ -26,7 +26,6 @@ This is a library for working with connman using Qt
 
 %package declarative
 Summary:    Declarative plugin for Qt Quick for connman-qt
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   connman-qt5
 
@@ -37,7 +36,6 @@ applications using libconnman-qt
 
 %package devel
 Summary:    Development files for connman-qt
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 
 %description devel
@@ -53,8 +51,11 @@ applications using libconnman-qt
 %qtc_make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 %qmake5_install
+# MeeGo.Connman legacy import
+mkdir -p %{buildroot}%{_libdir}/qt5/qml/MeeGo/Connman
+ln -sf ../../Connman/libConnmanQtDeclarative.so %{buildroot}%{_libdir}/qt5/qml/MeeGo/Connman/
+sed 's/module Connman/module MeeGo.Connman/' < plugin/qmldir > %{buildroot}%{_libdir}/qt5/qml/MeeGo/Connman/qmldir
 
 %post -p /sbin/ldconfig
 
@@ -66,6 +67,7 @@ rm -rf %{buildroot}
 
 %files declarative
 %defattr(-,root,root,-)
+%{_libdir}/qt5/qml/Connman
 %{_libdir}/qt5/qml/MeeGo/Connman
 
 %files devel

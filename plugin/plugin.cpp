@@ -45,6 +45,9 @@ public:
 void ConnmanPlugin::registerTypes(const char *uri)
 {
     Q_ASSERT(uri == QLatin1String("MeeGo.Connman") || uri == QLatin1String("Connman"));
+    if (QLatin1String(uri) == QLatin1String("MeeGo.Connman")) {
+        qWarning() << "MeeGo.Connman QML module name is deprecated and subject for removal. Please adapt code to \"import Connman\".";
+    }
 
     qmlRegisterType<NetworkService>(uri,0,2,"NetworkService");
     qmlRegisterType<TechnologyModel>(uri,0,2,"TechnologyModel");

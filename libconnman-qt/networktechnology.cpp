@@ -102,7 +102,6 @@ void NetworkTechnology::initialize()
             QDBusPendingReply<ConnmanObjectList> reply = *watcher;
             watcher->deleteLater();
 
-
             if (reply.isError()) {
                 DBG_("Failed to connman techonologies:" << reply.isError() << reply.error().type());
             } else {

@@ -31,8 +31,8 @@
  */
 
 #include <QtDBus>
-#include <vpnmanager.h>
-#include <vpnconnection.h>
+#include "vpnmanager.h"
+#include "vpnconnection.h"
 
 #include "vpnmodel.h"
 #include "vpnmodel_p.h"

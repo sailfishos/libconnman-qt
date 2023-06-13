@@ -349,6 +349,7 @@ Q_SIGNALS:
 const QString NetworkManager::State("State");
 const QString NetworkManager::OfflineMode("OfflineMode");
 const QString NetworkManager::SessionMode("SessionMode");
+const QString NetworkManager::DefaultService("DefaultService");
 
 const QString NetworkManager::WifiTechnologyPath("/net/connman/technology/wifi");
 const QString NetworkManager::CellularTechnologyPath("/net/connman/technology/cellular");
@@ -827,62 +828,77 @@ void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &va
     propertyChanged(name, value.variant());
 }
 
+NetworkService* NetworkManager::selectDefaultRoute(const QString &path) const
+{
+    NetworkService *newDefaultRoute = nullptr;
+    bool isVPN = path.indexOf("vpn_") != -1 ? true : false;
+
+    // Check if it is VPN -> old is the transport as this does not understand
+    // or has not been designed VPNs in mind. So the default service from
+    // networkmanager point of view is still the transport.
+    // TODO implement a VPN support here as well
+    if (isVPN) {
+         if (m_defaultRoute && m_defaultRoute != m_invalidDefaultRoute) {
+            qDebug() << "New default service is VPN, use old service " << m_defaultRoute->name();
+            return m_defaultRoute;
+        } else {
+            qDebug() << "No old default service set, select next connected";
+        }
+    } else {
+       if (m_servicesOrder.contains(path)) {
+            newDefaultRoute = m_servicesCache.value(path, nullptr);
+            if (newDefaultRoute && newDefaultRoute->connected()) {
+                qDebug() << "Selected service" << newDefaultRoute->name() << "path" << path;
+                return newDefaultRoute;
+            } else {
+                qDebug() << "Service" << (newDefaultRoute ? newDefaultRoute->name() : "NULL") << "not connected";
+            }
+        } else {
+            qDebug() << "No service for" << path << "select next connected";
+        }
+    }
+
+    // No default route was set = VPN was connected before check use the
+    // ordered list to get the next non-VPN service that is used as
+    // transport. When VPN is set as the default service the transport is
+    // always the next non-VPN service in the list. The order is defined
+    // by the technology type when states are equal ethernet > wlan >
+    // cellular.
+    for (const QString &servicePath : m_servicesOrder) {
+        if (servicePath.indexOf("vpn_") != -1) {
+            qDebug() << "VPN service, continue";
+            continue;
+        }
+
+        newDefaultRoute = m_servicesCache.value(servicePath, nullptr);
+        if (!newDefaultRoute) {
+            qDebug() << "No service for path" << servicePath;
+            continue;
+        }
+
+        if (newDefaultRoute->connected()) {
+            qDebug() << "Selected service" << newDefaultRoute->name() << "path" << servicePath;
+            return newDefaultRoute;
+        }
+
+        qDebug() << "Service not connected, continue";
+    }
+
+    qDebug() << "No transport service found";
+    return nullptr;
+}
+
 void NetworkManager::updateDefaultRoute()
 {
-    QString defaultNetDev;
-    QFile routeFile("/proc/net/route");
-    if (routeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&routeFile);
-        QString line = in.readLine();
-        while (!line.isNull()) {
-            QStringList lineList = line.split('\t');
-            if (lineList.size() >= 11) {
-                if ((lineList.at(1) == "00000000" && lineList.at(3) == "0003") ||
-                   (lineList.at(0).startsWith("ppp") && lineList.at(3) == "0001")) {
-                    defaultNetDev = lineList.at(0);
-                    break;
-                }
-            }
-            line = in.readLine();
-        }
-        routeFile.close();
-    }
-    if (defaultNetDev.isNull()) {
-         QFile ipv6routeFile("/proc/net/ipv6_route");
-         if (ipv6routeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-             QTextStream ipv6in(&ipv6routeFile);
-             QString ipv6line = ipv6in.readLine();
-             while (!ipv6line.isNull()) {
-                 QStringList ipv6lineList = ipv6line.split(QRegularExpression("\\s+"));
-                 if (ipv6lineList.size() >= 10) {
-                     if (ipv6lineList.at(0) == "00000000000000000000000000000000" &&
-                        (ipv6lineList.at(8).endsWith("3") || (ipv6lineList.at(8).endsWith("1")))) {
-                         defaultNetDev = ipv6lineList.at(9).trimmed();
-                         break;
-                     }
-                     ipv6line = ipv6in.readLine();
-                 }
-             }
-             ipv6routeFile.close();
-         }
+    if (!m_defaultRoute || m_defaultRoute == m_invalidDefaultRoute) {
+        qDebug() << "No default route set, services:" << m_servicesCache.count();
+
+        m_defaultRoute = selectDefaultRoute(QString(""));
+        if (!m_defaultRoute)
+            m_defaultRoute = m_invalidDefaultRoute;
     }
 
-    for (NetworkService *service : m_servicesCache) {
-        if (service->connected()) {
-            if (defaultNetDev == service->ethernet().value("Interface")) {
-                if (m_defaultRoute != service) {
-                    m_defaultRoute = service;
-                    Q_EMIT defaultRouteChanged(m_defaultRoute);
-                }
-                return;
-            }
-        }
-    }
-
-    if (m_defaultRoute != m_invalidDefaultRoute) {
-        m_defaultRoute = m_invalidDefaultRoute;
-        Q_EMIT defaultRouteChanged(m_defaultRoute);
-    }
+    Q_EMIT defaultRouteChanged(m_defaultRoute);
 }
 
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
@@ -963,7 +979,9 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     } else {
         services = reply.value();
     }
+    qDebug() << "Updating services as GetServices returns";
     updateServices(services, QList<QDBusObjectPath>());
+    updateDefaultRoute();
 }
 
 // Public API /////////////
@@ -1300,6 +1318,19 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 {
     if (name == State) {
         m_priv->updateState(value.toString());
+    } else if (name == DefaultService) {
+        NetworkService* newDefaultRoute(NULL);
+        QString path = value.toString();
+
+        qDebug() << "Default service changed to path \'" << path << "\'";
+
+        newDefaultRoute = selectDefaultRoute(path);
+
+        if (m_defaultRoute != newDefaultRoute) {
+            qDebug() << "Updating default route";
+            m_defaultRoute = newDefaultRoute;
+            updateDefaultRoute();
+        }
     } else {
         if (m_propertiesCache.value(name) == value)
             return;

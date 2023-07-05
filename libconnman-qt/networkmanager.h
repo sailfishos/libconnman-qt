@@ -179,7 +179,7 @@ private:
     void disconnectFromConnman();
     QVector<NetworkService*> selectServices(const QStringList &list, const QString &tech) const;
     QVector<NetworkService*> selectServices(const QStringList &list, ServiceSelector selector) const;
-    NetworkService* selectDefaultRoute(const QString &path) const;
+    NetworkService* selectDefaultRoute(const QString &path);
     QStringList selectServiceList(const QStringList &list, const QString &tech) const;
     QStringList selectServiceList(const QStringList &list, ServiceSelector selector) const;
     void updateDefaultRoute();
@@ -207,6 +207,9 @@ private:
 
     /* Invalid default route service for use when there is no default route */
     NetworkService *m_invalidDefaultRoute;
+
+    /* Since VPNs are not known this holds info necessary for dropping out of VPN */
+    bool m_defaultRouteIsVPN;
 
     Private *m_priv;
 

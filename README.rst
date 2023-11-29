@@ -19,21 +19,10 @@ path property to that of an appropriate dbus path, will re-initialize the object
 
 QMake CONFIG flags
 -----------
-* notests: doesn't compile tests
 * noplugin: doesn't compile qml plugin
 
 Example:
-``qmake CONFIG+=notests``
-
-The requestConnect signal in UserAgent requires a patch to connman.
-http://gitweb.merproject.org/gitweb?p=mer-core/connman.git;a=blob_plain;f=0003-connman-request-connect-notify.patch;hb=HEAD
-
-This allows a signal being sent to the UserAgent when there is a connection started/tried but no technology is connected.
-This only works if you use that patch and connman's dnsproxy.
-
-The Agent class has two answers it can handle "Clear" and "Suppress"
-"Suppress" will suppress the request signal for the timeout period or until "Clear" is sent to the agent.
-
+``qmake CONFIG+=noplugin``
 
 Extra make targets
 -----------

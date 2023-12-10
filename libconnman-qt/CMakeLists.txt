@@ -52,4 +52,8 @@ add_library(connman-qt
 
 target_link_libraries(connman-qt  PRIVATE Qt${QT_VERSION_MAJOR}::DBus Qt${QT_VERSION_MAJOR}::Network)
 target_include_directories(connman-qt PUBLIC ./ ${CMAKE_CURRENT_BINARY_DIR})
+
+# cmake add CONNMANQT_CMAKE for fix c++ #define 
+#   qmake generate "connman_clock_interface.h" 
+#   cmake generate "connman_clockinterface.h" 
 target_compile_definitions(connman-qt PUBLIC CONNMANQT_CMAKE)

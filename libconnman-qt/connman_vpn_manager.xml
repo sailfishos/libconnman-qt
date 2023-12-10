@@ -11,7 +11,7 @@
       <arg name="identifier" type="o" direction="in"/>
     </method>
     <method name="GetConnections">
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="PathPropertiesArray"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
       <arg name="connections" type="a(oa{sv})" direction="out"/>
     </method>
     <method name="RegisterAgent">

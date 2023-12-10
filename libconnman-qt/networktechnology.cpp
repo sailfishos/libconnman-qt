@@ -9,7 +9,7 @@
  */
 
 #include "networktechnology.h"
-#include "connman_technology_interface.h"
+#include "connman_technologyinterface.h"
 #include "libconnman_p.h"
 
 #include <QDBusPendingReply>

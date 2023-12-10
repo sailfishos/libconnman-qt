@@ -8,7 +8,7 @@
  */
 
 #include "sessionagent.h"
-#include "connman_session_interface.h"
+#include "connman_sessioninterface.h"
 
 /*
 This class is used to run a connman session.

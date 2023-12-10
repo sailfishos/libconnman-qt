@@ -8,7 +8,13 @@
  */
 
 #include "sessionagent.h"
+
+#ifdef CONNMANQT_CMAKE
+#include "connman_sessioninterface.h"
+#else
 #include "connman_session_interface.h"
+#endif
+
 
 /*
 This class is used to run a connman session.

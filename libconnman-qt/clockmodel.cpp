@@ -8,7 +8,12 @@
  */
 
 #include "clockmodel.h"
+
+#ifdef CONNMANQT_CMAKE
+#include "connman_clockinterface.h"
+#else
 #include "connman_clock_interface.h"
+#endif
 
 #define CONNMAN_SERVICE "net.connman"
 #define CONNMAN_CLOCK_INTERFACE CONNMAN_SERVICE ".Clock"

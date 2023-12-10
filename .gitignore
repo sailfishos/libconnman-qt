@@ -18,5 +18,6 @@ libconnman-qt/connman_*_interface.*
 connman-qt.pro.user
 build
 
+# vscode 
 .vscode
 .vscode

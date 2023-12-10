@@ -13,4 +13,7 @@ if (NOT DEFINED CONNMANQT_MASTER_PROJECT)
 endif ()
 
 add_subdirectory(libconnman-qt)
-add_subdirectory(examples/counters)
+
+if(CONNMANQT_MASTER_PROJECT)
+    add_subdirectory(examples/counters)
+endif()

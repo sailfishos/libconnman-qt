@@ -885,15 +885,12 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
                     qDebug() << "VPN is set as default route";
                 }
 
-                qDebug() << "VPN service, continue";
                 continue;
             }
 
             qDebug() << "Selected service" << newDefaultRoute->name() << "path" << servicePath;
             return newDefaultRoute;
         }
-
-        qDebug() << "Service not connected, continue";
     }
 
     qDebug() << "No transport service found";

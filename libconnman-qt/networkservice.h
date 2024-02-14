@@ -191,6 +191,9 @@ public:
     int peapVersion() const;
     void setPeapVersion(int version);
 
+    void moveBefore(const QString &service);
+    void moveAfter(const QString &service);
+
 Q_SIGNALS:
     void validChanged();
     void nameChanged(const QString &name);

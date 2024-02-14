@@ -138,7 +138,9 @@ public:
         CallGetProperties     = 0x00000020,
         CallGetProperty       = 0x00000040,
         CallSetProperty       = 0x00000080,
-        CallAll               = 0x000000ff
+        CallMoveAfter         = 0x00000100,
+        CallMoveBefore        = 0x00000200,
+        CallAll               = 0x00000fff
     };
 
     enum Signal {
@@ -330,6 +332,10 @@ public Q_SLOTS:
         { return asyncCall("Disconnect"); }
     QDBusPendingCall Remove()
         { return asyncCall("Remove"); }
+    QDBusPendingCall MoveBefore(const QDBusObjectPath &service)
+        { return asyncCall("MoveBefore", QVariant::fromValue(service)); }
+    QDBusPendingCall MoveAfter(const QDBusObjectPath &service)
+        { return asyncCall("MoveAfter", QVariant::fromValue(service)); }
     QDBusPendingCall ResetCounters()
         { return asyncCall("ResetCounters"); }
     QDBusPendingCall CheckAccess()
@@ -1247,6 +1253,8 @@ void NetworkService::Private::policyCheck(const QString &rules)
         { "Disconnect",    CallDisconnect,    0 },
         { "Remove",        CallRemove,        0 },
         { "ResetCounters", CallResetCounters, 0 },
+        { "MoveAfter",     CallMoveAfter,     0 },
+        { "MoveBefore",    CallMoveBefore,    0 },
         { 0, 0, 0 }
     };
     DAPolicy *policy = da_policy_new_full(qPrintable(rules), calls);
@@ -1420,6 +1428,20 @@ bool NetworkService::roaming() const
 bool NetworkService::hidden() const
 {
     return m_priv->boolValue(Private::Hidden);
+}
+
+void NetworkService::moveBefore(const QString &service)
+{
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->MoveBefore(QDBusObjectPath(service));
+    }
+}
+
+void NetworkService::moveAfter(const QString &service)
+{
+    if (m_priv->m_proxy) {
+        m_priv->m_proxy->MoveAfter(QDBusObjectPath(service));
+    }
 }
 
 void NetworkService::requestConnect()

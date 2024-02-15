@@ -360,6 +360,7 @@ const QString NetworkManager::EthernetTechnologyPath("/net/connman/technology/et
 NetworkManager::NetworkManager(QObject* parent)
   : QObject(parent),
     m_proxy(NULL),
+    m_servicesCacheHasUpdates(false),
     m_defaultRoute(NULL),
     m_invalidDefaultRoute(new NetworkService("/", QVariantMap(), this)),
     m_defaultRouteIsVPN(false),
@@ -523,6 +524,7 @@ void NetworkManager::disconnectServices()
     }
 
     m_servicesCache.clear();
+    m_servicesCacheHasUpdates = false;
 
     // Clear all lists before emitting the signals
 
@@ -798,6 +800,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         Q_EMIT serviceRemoved(path);
     }
 
+    m_servicesCacheHasUpdates = true;
     updateDefaultRoute();
 
     if (services.changed) {
@@ -835,6 +838,12 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
     NetworkService *newDefaultRoute = nullptr;
     bool isVPN = path.indexOf("vpn_") != -1 ? true : false;
 
+    if (!m_servicesCacheHasUpdates)
+        return nullptr;
+
+    // Avoid repetitive calls with this
+    m_servicesCacheHasUpdates = false;
+
     // Check if it is VPN -> old is the transport as this does not understand
     // or has not been designed VPNs in mind. So the default service from
     // networkmanager point of view is still the transport.
@@ -856,8 +865,6 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
             } else {
                 qDebug() << "Service" << (newDefaultRoute ? newDefaultRoute->name() : "NULL") << "not connected";
             }
-        } else {
-            qDebug() << "No service for" << path << "select next connected";
         }
     }
 
@@ -872,10 +879,9 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
         i++;
 
         newDefaultRoute = m_servicesCache.value(servicePath, nullptr);
-        if (!newDefaultRoute) {
-            qDebug() << "No service for path, continue" << servicePath;
+        /* No service for path, try next */
+        if (!newDefaultRoute)
             continue;
-        }
 
         if (newDefaultRoute->connected()) {
             if (servicePath.indexOf("vpn_") != -1) {
@@ -890,22 +896,31 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
 
             qDebug() << "Selected service" << newDefaultRoute->name() << "path" << servicePath;
             return newDefaultRoute;
+        } else {
+            /* Stop when first not-connected is reached as the services are ordered based on state */
+            break;
         }
     }
 
     qDebug() << "No transport service found";
+
     return nullptr;
 }
 
 void NetworkManager::updateDefaultRoute()
 {
     if (!m_defaultRoute || m_defaultRoute == m_invalidDefaultRoute) {
+        if (!m_servicesCacheHasUpdates)
+            return;
+
         qDebug() << "No default route set, services:" << m_servicesCache.count();
 
         m_defaultRoute = selectDefaultRoute(QString(""));
         if (!m_defaultRoute)
             m_defaultRoute = m_invalidDefaultRoute;
     }
+
+    m_servicesCacheHasUpdates = false;
 
     Q_EMIT defaultRouteChanged(m_defaultRoute);
 }
@@ -990,7 +1005,6 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     }
     qDebug() << "Updating services as GetServices returns";
     updateServices(services, QList<QDBusObjectPath>());
-    updateDefaultRoute();
 }
 
 // Public API /////////////
@@ -1330,6 +1344,12 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
     } else if (name == DefaultService) {
         NetworkService* newDefaultRoute(NULL);
         QString path = value.toString();
+
+        /* No change in default route */
+        if (m_defaultRoute && m_defaultRoute->path() == path)
+            return;
+
+        m_servicesCacheHasUpdates = true;
 
         qDebug() << "Default service changed to path \'" << path << "\'";
 

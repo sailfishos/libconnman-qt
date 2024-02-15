@@ -197,6 +197,7 @@ private:
     /* Not just for cache, but actual containers of Network* type objects */
     QHash<QString, NetworkTechnology *> m_technologiesCache;
     QHash<QString, NetworkService *> m_servicesCache;
+    bool m_servicesCacheHasUpdates;
 
     /* Define the order of services returned in service lists */
     QStringList m_servicesOrder;

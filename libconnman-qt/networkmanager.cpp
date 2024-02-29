@@ -86,8 +86,9 @@ public:
         , m_connected(false)
         , m_connectedWifi(NULL)
         , m_connectedEthernet(NULL) {}
+
     NetworkManager* manager()
-        { return (NetworkManager*)parent(); }
+        { return (NetworkManager*) parent(); }
     void maybeCreateInterfaceProxyLater()
         { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
 
@@ -228,6 +229,71 @@ void NetworkManager::Private::onWifiConnectingChanged()
         Q_EMIT manager()->connectingWifiChanged();
     }
 }
+
+void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
+{
+    m_servicesAvailable = servicesAvailable;
+}
+
+void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
+{
+    m_technologiesAvailable = technologiesAvailable;
+}
+
+void NetworkManager::Private::updateState(const QString &newState)
+{
+    if (manager()->state() == newState)
+        return;
+
+    manager()->m_propertiesCache[State] = newState;
+
+    const bool value = ConnmanState::connected(newState);
+    bool connectedChanged;
+    if (m_connected != value) {
+        m_connected = value;
+        connectedChanged = true;
+    } else {
+        connectedChanged = false;
+    }
+
+    Q_EMIT manager()->stateChanged(newState);
+    if (connectedChanged) {
+        Q_EMIT manager()->connectedChanged();
+    }
+
+    manager()->updateDefaultRoute();
+}
+
+class NetworkManager::Private::ListUpdate {
+public:
+    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+
+    void add(const QString& str) {
+        if (storage->count() == count) {
+            storage->append(str);
+            changed = true;
+        } else if (storage->at(count) != str) {
+            while (storage->count() > count) {
+                storage->removeLast();
+            }
+            storage->append(str);
+            changed = true;
+        }
+        count++;
+    }
+
+    void done() {
+        while (storage->count() > count) {
+            storage->removeLast();
+            changed = true;
+        }
+    }
+
+public:
+    QStringList* storage;
+    bool changed;
+    int count;
+};
 
 // ==========================================================================
 // NetworkManager::InterfaceProxy
@@ -630,37 +696,6 @@ void NetworkManager::setupServices()
             SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
     }
 }
-
-class NetworkManager::Private::ListUpdate {
-public:
-    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
-
-    void add(const QString& str) {
-        if (storage->count() == count) {
-            storage->append(str);
-            changed = true;
-        } else if (storage->at(count) != str) {
-            while (storage->count() > count) {
-                storage->removeLast();
-            }
-            storage->append(str);
-            changed = true;
-        }
-        count++;
-    }
-
-    void done() {
-        while (storage->count() > count) {
-            storage->removeLast();
-            changed = true;
-        }
-    }
-
-public:
-    QStringList* storage;
-    bool changed;
-    int count;
-};
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
@@ -1480,40 +1515,6 @@ bool NetworkManager::connecting() const
 bool NetworkManager::connectingWifi() const
 {
     return m_priv->m_connectingWifi;
-}
-
-void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
-{
-    m_servicesAvailable = servicesAvailable;
-}
-
-void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
-{
-    m_technologiesAvailable = technologiesAvailable;
-}
-
-void NetworkManager::Private::updateState(const QString &newState)
-{
-    if (manager()->state() == newState)
-        return;
-
-    manager()->m_propertiesCache[State] = newState;
-
-    const bool value = ConnmanState::connected(newState);
-    bool connectedChanged;
-    if (m_connected != value) {
-        m_connected = value;
-        connectedChanged = true;
-    } else {
-        connectedChanged = false;
-    }
-
-    Q_EMIT manager()->stateChanged(newState);
-    if (connectedChanged) {
-        Q_EMIT manager()->connectedChanged();
-    }
-
-    manager()->updateDefaultRoute();
 }
 
 void NetworkManager::resetCountersForType(const QString &type)

@@ -32,15 +32,13 @@ public:
 class NetworkManager : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
-    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
-
     Q_PROPERTY(NetworkService* connectedEthernet READ connectedEthernet NOTIFY connectedEthernetChanged)
+    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)

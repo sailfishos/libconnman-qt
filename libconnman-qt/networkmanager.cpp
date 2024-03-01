@@ -88,7 +88,7 @@ public:
         , m_connectedEthernet(NULL) {}
 
     NetworkManager* manager()
-        { return (NetworkManager*) parent(); }
+        { return static_cast<NetworkManager*>(parent()); }
     void maybeCreateInterfaceProxyLater()
         { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
 
@@ -152,7 +152,6 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
     }
     return false;
 }
-
 
 bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
 {
@@ -673,27 +672,26 @@ void NetworkManager::disconnectServices()
 void NetworkManager::setupTechnologies()
 {
     if (m_proxy) {
-        connect(m_proxy,
-            SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
-            SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
-        connect(m_proxy,
-            SIGNAL(TechnologyRemoved(QDBusObjectPath)),
-            SLOT(technologyRemoved(QDBusObjectPath)));
-        connect(new QDBusPendingCallWatcher(m_proxy->GetTechnologies(), m_proxy),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
+        connect(m_proxy, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
+                SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
+        connect(m_proxy, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
+                SLOT(technologyRemoved(QDBusObjectPath)));
+
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_proxy->GetTechnologies(), m_proxy);
+        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
     }
 }
 
 void NetworkManager::setupServices()
 {
     if (m_proxy) {
-        connect(m_proxy,
-            SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-            SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
-        connect(new QDBusPendingCallWatcher(m_proxy->GetServices(), m_proxy),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
+        connect(m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
+                SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_proxy->GetServices(), m_proxy);
+        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
     }
 }
 
@@ -876,7 +874,7 @@ void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &va
 NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
 {
     NetworkService *newDefaultRoute = nullptr;
-    bool isVPN = path.indexOf("vpn_") != -1 ? true : false;
+    bool isVPN = path.indexOf("vpn_") != -1;
 
     if (!m_servicesCacheHasUpdates)
         return nullptr;
@@ -955,7 +953,7 @@ void NetworkManager::updateDefaultRoute()
 
         qDebug() << "No default route set, services:" << m_servicesCache.count();
 
-        m_defaultRoute = selectDefaultRoute(QString(""));
+        m_defaultRoute = selectDefaultRoute(QString());
         if (!m_defaultRoute)
             m_defaultRoute = m_invalidDefaultRoute;
     }
@@ -968,8 +966,7 @@ void NetworkManager::updateDefaultRoute()
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
                                      const QVariantMap &properties)
 {
-    NetworkTechnology *tech = new NetworkTechnology(technology.path(),
-                                                    properties, this);
+    NetworkTechnology *tech = new NetworkTechnology(technology.path(), properties, this);
 
     m_technologiesCache.insert(tech->type(), tech);
     Q_EMIT technologiesChanged();

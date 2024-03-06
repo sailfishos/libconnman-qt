@@ -746,13 +746,15 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
     // Removed services
     for (const QDBusObjectPath &obj : removed) {
         const QString path(obj.path());
-        NetworkService *service = m_servicesCache.value(path);
+        NetworkService *service = m_servicesCache.take(path);
         if (service) {
             if (service == m_priv->m_connectedWifi) {
                 m_priv->m_connectedWifi = NULL;
             }
+            if (service == m_defaultRoute) {
+                m_defaultRoute = m_invalidDefaultRoute;
+            }
             service->deleteLater();
-            m_servicesCache.remove(path);
             removedServices.append(path);
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init
@@ -766,8 +768,11 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
         QStringList keys = m_servicesCache.keys();
         for (const QString &path: keys) {
             if (!m_servicesOrder.contains(path)) {
-                m_servicesCache.value(path)->deleteLater();
-                m_servicesCache.remove(path);
+                NetworkService *service = m_servicesCache.take(path);
+                if (service == m_defaultRoute) {
+                    m_defaultRoute = m_invalidDefaultRoute;
+                }
+                service->deleteLater();
                 removedServices.append(path);
                 if (m_servicesCache.count() == m_servicesOrder.count()) {
                     break;

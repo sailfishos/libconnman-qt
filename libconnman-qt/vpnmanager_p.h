@@ -33,7 +33,11 @@
 #ifndef VPNMANAGER_P_H
 #define VPNMANAGER_P_H
 
+#ifdef CONNMANQT_CMAKE
+#include "connman_vpn_managerinterface.h"
+#else
 #include "connman_vpn_manager_interface.h"
+#endif
 
 #include "vpnmanager.h"
 

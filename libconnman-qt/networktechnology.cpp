@@ -9,7 +9,13 @@
  */
 
 #include "networktechnology.h"
+
+#ifdef CONNMANQT_CMAKE
+#include "connman_technologyinterface.h"
+#else
 #include "connman_technology_interface.h"
+#endif
+
 #include "libconnman_p.h"
 
 #include <QDBusPendingReply>

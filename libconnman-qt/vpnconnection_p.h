@@ -33,8 +33,13 @@
 #ifndef VPNCONNECTION_P_H
 #define VPNCONNECTION_P_H
 
+#ifdef CONNMANQT_CMAKE
+#include "connman_vpn_connectioninterface.h"
+#include "connman_serviceinterface.h"
+#else
 #include "connman_vpn_connection_interface.h"
 #include "connman_service_interface.h"
+#endif
 
 #include "vpnconnection.h"
 

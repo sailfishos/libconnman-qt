@@ -21,6 +21,10 @@
 #include <networkservice.h>
 #include <QtCore>
 
+#ifndef endl
+#define endl "\n"
+#endif
+
 NetworkCounter::NetworkCounter(QObject *parent) :
     QObject(parent)
 {

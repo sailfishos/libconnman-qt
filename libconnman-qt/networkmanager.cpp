@@ -430,9 +430,7 @@ NetworkManager::NetworkManager(QObject* parent)
     m_invalidDefaultRoute(new NetworkService("/", QVariantMap(), this)),
     m_defaultRouteIsVPN(false),
     m_priv(new Private(this)),
-    m_available(false),
-    m_servicesEnabled(true),
-    m_technologiesEnabled(true)
+    m_available(false)
 {
     registerCommonDataTypes();
     QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
@@ -1001,10 +999,8 @@ void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
     for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
         propertyChanged(i.key(), i.value());
 
-    if (m_technologiesEnabled)
-        setupTechnologies();
-    if (m_servicesEnabled)
-        setupServices();
+    setupTechnologies();
+    setupServices();
 }
 
 void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
@@ -1432,70 +1428,27 @@ uint NetworkManager::inputRequestTimeout() const
 
 bool NetworkManager::servicesEnabled() const
 {
-    return m_servicesEnabled;
+    return true;
 }
 
-void NetworkManager::setServicesEnabled(bool enabled)
+void NetworkManager::setServicesEnabled(bool)
 {
-    if (m_servicesEnabled == enabled)
-        return;
-
-    if (this == staticInstance) {
-        qWarning() << "Refusing to modify the shared instance";
-        return;
-    }
-
-    bool wasValid = isValid();
-
-    m_servicesEnabled = enabled;
-
-    if (m_servicesEnabled)
-        setupServices();
-    else
-        disconnectServices();
-
-    Q_EMIT servicesEnabledChanged();
-
-    if (wasValid != isValid()) {
-        Q_EMIT validChanged();
-    }
+    qWarning() << "NetworkManager::setServicesEnabled() is deprecated, this call will be ignored";
 }
 
 bool NetworkManager::technologiesEnabled() const
 {
-    return m_technologiesEnabled;
+    return true;
 }
 
-void NetworkManager::setTechnologiesEnabled(bool enabled)
+void NetworkManager::setTechnologiesEnabled(bool)
 {
-    if (m_technologiesEnabled == enabled)
-        return;
-
-    if (this == staticInstance) {
-        qWarning() << "Refusing to modify the shared instance";
-        return;
-    }
-
-    bool wasValid = isValid();
-
-    m_technologiesEnabled = enabled;
-
-    if (m_technologiesEnabled)
-        setupTechnologies();
-    else
-        disconnectTechnologies();
-
-    Q_EMIT technologiesEnabledChanged();
-
-    if (wasValid != isValid()) {
-        Q_EMIT validChanged();
-    }
+    qWarning() << "NetworkManager::setTechnologiesEnabled() is deprecated, this call will be ignored";
 }
 
 bool NetworkManager::isValid() const
 {
-    return (!m_servicesEnabled || m_priv->m_servicesAvailable)
-            && (!m_technologiesEnabled || m_priv->m_technologiesAvailable);
+    return m_priv->m_servicesAvailable && m_priv->m_technologiesAvailable;
 }
 
 bool NetworkManager::connected() const

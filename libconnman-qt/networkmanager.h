@@ -218,8 +218,6 @@ private:
     static const QString DefaultService;
 
     bool m_available;
-    bool m_servicesEnabled;
-    bool m_technologiesEnabled;
 
 private Q_SLOTS:
     void onConnmanRegistered();

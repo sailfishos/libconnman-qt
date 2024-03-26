@@ -38,7 +38,7 @@ class NetworkManager : public QObject
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
     Q_PROPERTY(NetworkService* connectedEthernet READ connectedEthernet NOTIFY connectedEthernetChanged)
-    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
+    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingWifiChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)

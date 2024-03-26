@@ -42,6 +42,7 @@ custom_dbus_interface.files = \
     connman_service.xml \
     connman_vpn_manager.xml \
     connman_vpn_connection.xml
+
 custom_dbus_interface.header_flags = -i qdbusxml2cpp_dbus_types.h
 
 DBUS_INTERFACES = \
@@ -72,9 +73,7 @@ HEADERS += \
     $$PUBLIC_HEADERS \
     libconnman_p.h \
     marshalutils.h \
-    qdbusxml2cpp_dbus_types.h \
-    connman_vpn_manager_interface.h \
-    connman_vpn_connection_interface.h
+    qdbusxml2cpp_dbus_types.h
 
 SOURCES += \
     marshalutils.cpp \

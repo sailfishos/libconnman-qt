@@ -46,11 +46,10 @@ class VpnConnection;
 // ==========================================================================
 // VpnManagerFactory
 // ==========================================================================
-
+// This class is deprecated
 class VpnManagerFactory : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(VpnManager* instance READ instance CONSTANT)
 
 public:
@@ -65,13 +64,12 @@ public:
 class VpnManager : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(VpnManager)
-    Q_DISABLE_COPY(VpnManager)
-
     Q_PROPERTY(QVector<VpnConnection*> connections READ connections NOTIFY connectionsChanged)
     Q_PROPERTY(bool populated READ populated NOTIFY populatedChanged)
 
 public:
+    static QSharedPointer<VpnManager> sharedInstance();
+
     explicit VpnManager(QObject *parent = nullptr);
     explicit VpnManager(VpnManagerPrivate &dd, QObject *parent);
     virtual ~VpnManager();
@@ -99,6 +97,9 @@ signals:
     void populatedChanged();
 
 private:
+    Q_DECLARE_PRIVATE(VpnManager)
+    Q_DISABLE_COPY(VpnManager)
+
     QScopedPointer<VpnManagerPrivate> d_ptr;
 };
 

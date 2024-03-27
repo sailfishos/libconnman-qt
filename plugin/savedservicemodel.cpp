@@ -42,11 +42,15 @@ bool compareManagedServices(NetworkService *a, NetworkService *b)
 }
 
 SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
-:   QAbstractListModel(parent), m_sort(false), m_groupByCategory(false)
+    : QAbstractListModel(parent)
+    , m_sort(false)
+    , m_groupByCategory(false)
 {
-    m_manager = NetworkManagerFactory::createInstance();
-    connect(m_manager, SIGNAL(technologiesChanged()), SLOT(updateServiceList()));
-    connect(m_manager, SIGNAL(servicesChanged()), SLOT(updateServiceList()));
+    m_manager = NetworkManager::sharedInstance();
+    connect(m_manager.data(), &NetworkManager::technologiesChanged,
+            this, &SavedServiceModel::updateServiceList);
+    connect(m_manager.data(), &NetworkManager::servicesChanged,
+            this, &SavedServiceModel::updateServiceList);
 }
 
 SavedServiceModel::~SavedServiceModel()

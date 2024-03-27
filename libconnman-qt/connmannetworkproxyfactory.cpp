@@ -9,15 +9,13 @@
 
 #include "connmannetworkproxyfactory.h"
 
-#include "networkmanager.h"
-
 ConnmanNetworkProxyFactory::ConnmanNetworkProxyFactory(QObject *parent)
     : QObject(parent)
+    , m_networkManager(NetworkManager::sharedInstance())
 {
-    // Despite its name, createInstance() does not create a new instance every time it is called
-    connect(NetworkManagerFactory::createInstance(), SIGNAL(defaultRouteChanged(NetworkService*)),
-            this, SLOT(onDefaultRouteChanged(NetworkService*)));
-    onDefaultRouteChanged(NetworkManagerFactory::createInstance()->defaultRoute());
+    connect(m_networkManager.data(), &NetworkManager::defaultRouteChanged,
+            this, &ConnmanNetworkProxyFactory::onDefaultRouteChanged);
+    onDefaultRouteChanged(m_networkManager->defaultRoute());
 }
 
 QList<QNetworkProxy> ConnmanNetworkProxyFactory::queryProxy(const QNetworkProxyQuery & query)
@@ -30,15 +28,15 @@ QList<QNetworkProxy> ConnmanNetworkProxyFactory::queryProxy(const QNetworkProxyQ
 
 void ConnmanNetworkProxyFactory::onDefaultRouteChanged(NetworkService *defaultRoute)
 {
-    if (m_defaultRoute != 0) {
+    if (m_defaultRoute) {
         m_defaultRoute->disconnect(this);
-        m_defaultRoute = 0;
+        m_defaultRoute = nullptr;
     }
 
     m_cachedProxies_all = QList<QNetworkProxy>() << QNetworkProxy::NoProxy;
     m_cachedProxies_udpSocketOrTcpServerCapable = QList<QNetworkProxy>() << QNetworkProxy::NoProxy;
 
-    if (defaultRoute != 0) {
+    if (defaultRoute) {
         m_defaultRoute = defaultRoute;
         connect(m_defaultRoute, SIGNAL(proxyChanged(QVariantMap)),
                 this, SLOT(onProxyChanged(QVariantMap)));

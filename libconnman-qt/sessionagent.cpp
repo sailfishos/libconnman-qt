@@ -23,12 +23,15 @@ Example:
 
   */
 
-SessionAgent::SessionAgent(const QString &path, QObject* parent) :
-    QObject(parent),
-    agentPath(path),
-    m_manager(NetworkManagerFactory::createInstance()),
-    m_session(0)
+SessionAgent::SessionAgent(const QString &path, QObject *parent)
+    : QObject(parent)
+    , agentPath(path)
+    , m_manager(NetworkManager::sharedInstance())
+    , m_session(nullptr)
 {
+    // FIXME: the session mode is long deprecated property on connman, and this
+    // is nasty anyway by controlling a global property based on class instance
+    // here.
     m_manager->setSessionMode(true);
     createSession();
 }

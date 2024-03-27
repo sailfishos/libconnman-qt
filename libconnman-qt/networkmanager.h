@@ -15,13 +15,14 @@
 #include "networktechnology.h"
 #include "networkservice.h"
 #include <QtDBus>
+#include <QSharedPointer>
 
 class NetworkManager;
 
+// This class is deprecated
 class NetworkManagerFactory : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(NetworkManager* instance READ instance CONSTANT)
 
 public:
@@ -63,7 +64,10 @@ public:
     static const QString GpsTechnologyPath;
     static const QString EthernetTechnologyPath;
 
+    // deprecated
     static NetworkManager* instance();
+
+    static QSharedPointer<NetworkManager> sharedInstance();
 
     NetworkManager(QObject *parent = 0);
     virtual ~NetworkManager();

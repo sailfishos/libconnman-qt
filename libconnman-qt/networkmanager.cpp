@@ -11,6 +11,7 @@
 
 #include "libconnman_p.h"
 #include <QRegularExpression>
+#include <QWeakPointer>
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -20,6 +21,7 @@ static NetworkManager* staticInstance = NULL;
 
 NetworkManager* NetworkManagerFactory::createInstance()
 {
+    qWarning() << "NetworkManagerFactory::createInstance/instance() is deprecated. Use NetworkManager::sharedInstance() instead.";
     if (!staticInstance)
         staticInstance = new NetworkManager;
 
@@ -447,7 +449,22 @@ NetworkManager::~NetworkManager()
 
 NetworkManager* NetworkManager::instance()
 {
+    qWarning() << "NetworkManager::instance() is deprecated. Use sharedInstance() instead.";
     return NetworkManagerFactory::createInstance();
+}
+
+QSharedPointer<NetworkManager> NetworkManager::sharedInstance()
+{
+    static QWeakPointer<NetworkManager> sharedManager;
+
+    QSharedPointer<NetworkManager> manager = sharedManager.toStrongRef();
+
+    if (!manager) {
+        manager = QSharedPointer<NetworkManager>::create();
+        sharedManager = manager;
+    }
+
+    return manager;
 }
 
 void NetworkManager::onConnmanRegistered()

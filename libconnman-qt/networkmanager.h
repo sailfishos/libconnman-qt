@@ -77,7 +77,6 @@ public:
     // Note: the resulting pointer on getTechnology() and getTechnologies() can get invalid after the next
     // technologiesUpdated signal, so need to be sure to fetch values again and stop using pointers that
     // are no longer available.
-    // Note: using getTechnology() from QML is discouraged and the Q_INVOKABLE might get removed
     Q_INVOKABLE NetworkTechnology* getTechnology(const QString &type) const;
     QVector<NetworkTechnology *> getTechnologies() const;
     QVector<NetworkService*> getServices(const QString &tech = QString()) const;

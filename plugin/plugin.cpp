@@ -16,6 +16,7 @@
 
 #include <networkservice.h>
 #include <clockmodel.h>
+#include "declarativenetworkmanager.h"
 #include "technologymodel.h"
 #include "savedservicemodel.h"
 #include "useragent.h"
@@ -55,8 +56,8 @@ void ConnmanPlugin::registerTypes(const char *uri)
     qmlRegisterType<UserAgent>(uri, 0, 2, "UserAgent");
     qmlRegisterType<ClockModel>(uri, 0, 2, "ClockModel");
     qmlRegisterType<NetworkSession>(uri, 0, 2, "NetworkSession");
-    qmlRegisterType<NetworkManager>(uri, 0, 2, "NetworkManager");
-    qmlRegisterType<NetworkManagerFactory>(uri, 0, 2, "NetworkManagerFactory");
+    qmlRegisterType<DeclarativeNetworkManager>(uri, 0, 2, "NetworkManager");
+    qmlRegisterType<DeclarativeNetworkManagerFactory>(uri, 0, 2, "NetworkManagerFactory");
     qmlRegisterType<NetworkTechnology>(uri, 0, 2, "NetworkTechnology");
     qmlRegisterType<Counter>(uri, 0, 2, "NetworkCounter");
     qmlRegisterSingletonType<VpnManager>(uri, 0, 2, "VpnManager", singleton_api_factory<VpnManager>);

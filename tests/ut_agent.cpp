@@ -342,7 +342,6 @@ QVariantMap UtAgent::ManagerMock::GetProperties() const
     QVariantMap properties;
     properties["State"] = "offline";
     properties["OfflineMode"] = false;
-    properties["SessionMode"] = true;
     return properties;
 }
 

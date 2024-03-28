@@ -13,27 +13,22 @@
 
 TechnologyModel::TechnologyModel(QAbstractListModel* parent)
   : QAbstractListModel(parent),
-    m_manager(NULL),
-    m_tech(NULL),
+    m_tech(nullptr),
     m_scanning(false),
     m_changesInhibited(false),
     m_uneffectedChanges(false),
     m_filter(AvailableServices)
 {
-    m_manager = NetworkManagerFactory::createInstance();
+    m_manager = NetworkManager::sharedInstance();
 
-    connect(m_manager, SIGNAL(availabilityChanged(bool)),
-            this, SLOT(managerAvailabilityChanged(bool)));
+    connect(m_manager.data(), &NetworkManager::availabilityChanged,
+            this, &TechnologyModel::managerAvailabilityChanged);
 
-    connect(m_manager,
-            SIGNAL(technologiesChanged()),
-            this,
-            SLOT(updateTechnologies()));
+    connect(m_manager.data(), &NetworkManager::technologiesChanged,
+            this, &TechnologyModel::updateTechnologies);
 
-    connect(m_manager,
-            SIGNAL(servicesChanged()),
-            this,
-            SLOT(updateServiceList()));
+    connect(m_manager.data(), &NetworkManager::servicesChanged,
+            this, &TechnologyModel::updateServiceList);
 }
 
 TechnologyModel::~TechnologyModel()

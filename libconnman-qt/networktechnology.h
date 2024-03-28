@@ -31,7 +31,7 @@ class NetworkTechnology : public QObject
 
 public:
     NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent);
-    NetworkTechnology(QObject* parent=0);
+    NetworkTechnology(QObject *parent = nullptr);
 
     virtual ~NetworkTechnology();
 

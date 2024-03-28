@@ -23,19 +23,17 @@ Example:
 
   */
 
-SessionAgent::SessionAgent(const QString &path, QObject* parent) :
-    QObject(parent),
-    agentPath(path),
-    m_manager(NetworkManagerFactory::createInstance()),
-    m_session(0)
+SessionAgent::SessionAgent(const QString &path, QObject *parent)
+    : QObject(parent)
+    , agentPath(path)
+    , m_manager(NetworkManager::sharedInstance())
+    , m_session(nullptr)
 {
-    m_manager->setSessionMode(true);
     createSession();
 }
 
 SessionAgent::~SessionAgent()
 {
-    m_manager->setSessionMode(false);
     m_manager->destroySession(agentPath);
 }
 

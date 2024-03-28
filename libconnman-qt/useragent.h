@@ -16,7 +16,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-class NetworkManager;
+#include "networkmanager.h"
 
 struct ServiceRequestData
 {
@@ -75,7 +75,7 @@ private:
                         const QDBusMessage &message);
 
     ServiceRequestData* m_req_data;
-    NetworkManager* m_manager;
+    QSharedPointer<NetworkManager> m_manager;
     QDBusMessage currentDbusMessage;
     ConnectionRequestType requestType;
     QString agentPath;

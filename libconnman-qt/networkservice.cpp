@@ -256,6 +256,7 @@ public:
     QString m_lastConnectError;
     QString m_state;
     int m_peapVersion;
+    QSharedPointer<NetworkManager> m_networkManager;
 
 private:
     quint64 m_queuedSignals;
@@ -467,7 +468,7 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
     // to some sort of special NetworkService created by NetworkManager
     // constructor itself.
     if (m_path != "/") {
-        NetworkManagerFactory::createInstance();
+        m_networkManager = NetworkManager::sharedInstance();
     }
 
     // If the property is present in GetProperties output, it means that it's
@@ -675,6 +676,7 @@ NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
 {
     static QWeakPointer<EapMethodMap> sharedInstance;
     m_eapMethodMapRef = sharedInstance;
+
     if (m_eapMethodMapRef.isNull()) {
         EapMethodMap *map = new EapMethodMap;
         // Start with 1 because 0 is EapNone
@@ -926,9 +928,15 @@ bool NetworkService::Private::requestConnect()
         }
 
         const int old_timeout = m_proxy->timeout();
-        m_proxy->setTimeout(NetworkManager::instance()->inputRequestTimeout());
+        if (m_networkManager) {
+            m_proxy->setTimeout(m_networkManager->inputRequestTimeout());
+        }
+
         QDBusPendingCall call = m_proxy->Connect();
-        m_proxy->setTimeout(old_timeout);
+
+        if (m_networkManager) {
+            m_proxy->setTimeout(old_timeout);
+        }
 
         delete m_connectWatcher.data();
         m_connectWatcher = new QDBusPendingCallWatcher(call, m_proxy);

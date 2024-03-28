@@ -211,8 +211,9 @@ void NetworkTechnology::technologyRemoved(const QDBusObjectPath &technology)
 
 void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
 {
-    connect(new QDBusPendingCallWatcher(m_technology->SetProperty(key, QDBusVariant(value)), m_technology),
-        &QDBusPendingCallWatcher::finished,
+    QDBusPendingCallWatcher *pendingCall
+            = new QDBusPendingCallWatcher(m_technology->SetProperty(key, QDBusVariant(value)), m_technology);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
             [this, key, value](QDBusPendingCallWatcher *call) {
         QDBusPendingReply<QVariantMap> reply = *call;
         call->deleteLater();
@@ -236,8 +237,8 @@ void NetworkTechnology::createInterface()
         connect(m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
                 this, &NetworkTechnology::propertyChanged);
 
-        connect(new QDBusPendingCallWatcher(m_technology->GetProperties(), m_technology),
-                &QDBusPendingCallWatcher::finished,
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_technology->GetProperties(), m_technology);
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
                 this, &NetworkTechnology::getPropertiesFinished);
     }
 }
@@ -407,7 +408,7 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 
     Q_ASSERT(m_technology);
     m_propertiesCache[name] = tmp;
-    emitPropertyChange(name,tmp);
+    emitPropertyChange(name, tmp);
 }
 
 void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)

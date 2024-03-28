@@ -15,32 +15,32 @@
 #include "networktechnology.h"
 #include "networkservice.h"
 #include <QtDBus>
+#include <QSharedPointer>
 
 class NetworkManager;
 
+// This class is deprecated
 class NetworkManagerFactory : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(NetworkManager* instance READ instance CONSTANT)
 
 public:
-    static NetworkManager* createInstance();
+    Q_DECL_DEPRECATED_X("Use NetworkManager::sharedInstance()") static NetworkManager* createInstance();
+    // deprecated
     NetworkManager* instance();
 };
 
 class NetworkManager : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
-    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingChanged)
-
     Q_PROPERTY(NetworkService* connectedEthernet READ connectedEthernet NOTIFY connectedEthernetChanged)
+    Q_PROPERTY(bool connectingWifi READ connectingWifi NOTIFY connectingWifiChanged)
 
     Q_PROPERTY(bool sessionMode READ sessionMode WRITE setSessionMode NOTIFY sessionModeChanged)
     Q_PROPERTY(uint inputRequestTimeout READ inputRequestTimeout NOTIFY inputRequestTimeoutChanged)
@@ -65,7 +65,9 @@ public:
     static const QString GpsTechnologyPath;
     static const QString EthernetTechnologyPath;
 
-    static NetworkManager* instance();
+    Q_DECL_DEPRECATED_X("Use NetworkManager::sharedInstance()") static NetworkManager* instance();
+
+    static QSharedPointer<NetworkManager> sharedInstance();
 
     NetworkManager(QObject *parent = 0);
     virtual ~NetworkManager();
@@ -75,7 +77,6 @@ public:
     // Note: the resulting pointer on getTechnology() and getTechnologies() can get invalid after the next
     // technologiesUpdated signal, so need to be sure to fetch values again and stop using pointers that
     // are no longer available.
-    // Note: using getTechnology() from QML is discouraged and the Q_INVOKABLE might get removed
     Q_INVOKABLE NetworkTechnology* getTechnology(const QString &type) const;
     QVector<NetworkTechnology *> getTechnologies() const;
     QVector<NetworkService*> getServices(const QString &tech = QString()) const;
@@ -98,13 +99,18 @@ public:
 
     NetworkService *connectedEthernet() const;
 
+    // deprecated
     bool sessionMode() const;
     uint inputRequestTimeout() const;
 
+    // deprecated
     bool servicesEnabled() const;
+    // deprecated
     void setServicesEnabled(bool enabled);
 
+    // deprecated
     bool technologiesEnabled() const;
+    // deprecated
     void setTechnologiesEnabled(bool enabled);
 
     bool isValid() const;
@@ -138,6 +144,7 @@ public Q_SLOTS:
             const QString &tech = QString(),
             const QString &service = QString(),
             const QString &device = QString());
+    // deprecated
     void setSessionMode(bool sessionMode);
 
 Q_SIGNALS:
@@ -216,12 +223,9 @@ private:
 
     static const QString State;
     static const QString OfflineMode;
-    static const QString SessionMode;
     static const QString DefaultService;
 
     bool m_available;
-    bool m_servicesEnabled;
-    bool m_technologiesEnabled;
 
 private Q_SLOTS:
     void onConnmanRegistered();

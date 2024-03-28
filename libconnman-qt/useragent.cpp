@@ -14,18 +14,20 @@ static const char AGENT_PATH[] = "/ConnectivityUserAgent";
 
 UserAgent::UserAgent(QObject* parent) :
     QObject(parent),
-    m_req_data(NULL),
-    m_manager(NetworkManagerFactory::createInstance()),
+    m_req_data(nullptr),
+    m_manager(NetworkManager::sharedInstance()),
     requestType(TYPE_DEFAULT),
     agentPath(QString())
 {
     QString agentpath = QLatin1String("/ConnectivityUserAgent");
     setAgentPath(agentpath);
-    connect(m_manager, SIGNAL(availabilityChanged(bool)),
-            this, SLOT(updateMgrAvailability(bool)));
+    connect(m_manager.data(), &NetworkManager::availabilityChanged,
+            this, &UserAgent::updateMgrAvailability);
+
     requestTimer = new QTimer(this);
     requestTimer->setSingleShot(true);
-    connect(requestTimer,SIGNAL(timeout()),this,SLOT(requestTimeout()));
+    connect(requestTimer, &QTimer::timeout,
+            this, &UserAgent::requestTimeout);
 }
 
 UserAgent::~UserAgent()
@@ -42,7 +44,7 @@ void UserAgent::requestUserInput(ServiceRequestData* data)
 void UserAgent::cancelUserInput()
 {
     delete m_req_data;
-    m_req_data = NULL;
+    m_req_data = nullptr;
     Q_EMIT userInputCanceled();
 }
 
@@ -53,7 +55,7 @@ void UserAgent::reportError(const QString &servicePath, const QString &error)
 
 void UserAgent::sendUserReply(const QVariantMap &input)
 {
-    if (m_req_data == NULL) {
+    if (m_req_data == nullptr) {
         qWarning() << "Got reply for non-existing request";
         return;
     }
@@ -69,7 +71,7 @@ void UserAgent::sendUserReply(const QVariantMap &input)
         QDBusConnection::systemBus().send(error);
     }
     delete m_req_data;
-    m_req_data = NULL;
+    m_req_data = nullptr;
 }
 
 void UserAgent::requestTimeout()

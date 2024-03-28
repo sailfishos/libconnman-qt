@@ -14,6 +14,7 @@
 #include <QtCore/QVariantMap>
 #include <QtNetwork/QNetworkProxyFactory>
 
+#include "networkmanager.h"
 class NetworkService;
 
 class ConnmanNetworkProxyFactory : public QObject, public QNetworkProxyFactory
@@ -34,6 +35,7 @@ private:
     QPointer<NetworkService> m_defaultRoute;
     QList<QNetworkProxy> m_cachedProxies_all;
     QList<QNetworkProxy> m_cachedProxies_udpSocketOrTcpServerCapable;
+    QSharedPointer<NetworkManager> m_networkManager;
 };
 
 #endif //CONNMANNETWORKPROXYFACTORY_H

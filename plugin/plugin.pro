@@ -2,8 +2,18 @@ TARGET=ConnmanQtDeclarative
 TEMPLATE = lib
 QT += dbus
 CONFIG += plugin
-SOURCES = plugin.cpp technologymodel.cpp savedservicemodel.cpp
-HEADERS = technologymodel.h savedservicemodel.h
+
+SOURCES = \
+    plugin.cpp \
+    technologymodel.cpp \
+    savedservicemodel.cpp \
+    declarativenetworkmanager.cpp
+
+HEADERS = \
+    technologymodel.h \
+    savedservicemodel.h \
+    declarativenetworkmanager.h
+
 INCLUDEPATH += ../libconnman-qt
 LIBS += -L../libconnman-qt
 QT -= gui

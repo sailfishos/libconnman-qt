@@ -83,7 +83,7 @@ Q_SIGNALS:
 
 private:
     QString m_techname;
-    NetworkManager* m_manager;
+    QSharedPointer<NetworkManager> m_manager;
     NetworkTechnology* m_tech;
     QVector<NetworkService *> m_services;
     bool m_scanning;

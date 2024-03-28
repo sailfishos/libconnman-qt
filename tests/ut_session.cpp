@@ -63,7 +63,6 @@ signals:
     Q_SCRIPTABLE void PropertyChanged(const QString &name, const QVariant &value);
 
 private:
-    bool m_sessionMode;
     int m_sessionNextIndex;
     QMap<QString, SessionMock *> m_sessions;
 };
@@ -272,7 +271,6 @@ QObject *UtSession::findSessionNotificationAdaptor() const
 
 UtSession::ManagerMock::ManagerMock()
     : MainObjectMock("net.connman", "/"),
-      m_sessionMode(false),
       m_sessionNextIndex(0)
 {
 }
@@ -282,22 +280,16 @@ QVariantMap UtSession::ManagerMock::GetProperties() const
     QVariantMap properties;
     properties["State"] = "offline";
     properties["OfflineMode"] = false;
-    properties["SessionMode"] = m_sessionMode;
     return properties;
 }
 
 void UtSession::ManagerMock::SetProperty(const QString &name, const QVariant &value,
         const QDBusMessage &message)
 {
-    if (name == "SessionMode") {
-        m_sessionMode = value.toBool();
-        Q_EMIT PropertyChanged(name, value);
-    } else {
-        const QString err = QString("Property '%1' not handled").arg(name);
-        qWarning("%s: %s", Q_FUNC_INFO, qPrintable(err));
-        bus().send(message.createErrorReply(QDBusError::Failed, err));
-        return;
-    }
+    const QString err = QString("Property '%1' not handled").arg(name);
+    qWarning("%s: %s", Q_FUNC_INFO, qPrintable(err));
+    bus().send(message.createErrorReply(QDBusError::Failed, err));
+    return;
 }
 
 ConnmanObjectList UtSession::ManagerMock::GetTechnologies() const

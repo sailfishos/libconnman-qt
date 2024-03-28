@@ -55,19 +55,21 @@ void VpnModelPrivate::init()
 {
     Q_Q(VpnModel);
 
-    m_manager = VpnManagerFactory::createInstance();
+    m_manager = VpnManager::sharedInstance();
 
     emit q->vpnManagerChanged();
 
-    VpnModel::connect(m_manager, &VpnManager::connectionsChanged, q, &VpnModel::connectionsChanged);
-    VpnModel::connect(m_manager, &VpnManager::populatedChanged, q, &VpnModel::populatedChanged);
+    VpnModel::connect(m_manager.data(), &VpnManager::connectionsChanged, q, &VpnModel::connectionsChanged);
+    VpnModel::connect(m_manager.data(), &VpnManager::populatedChanged, q, &VpnModel::populatedChanged);
 
-    VpnModel::connect(VpnManagerPrivate::get(m_manager), &VpnManagerPrivate::beginConnectionsReset, q, [q, this]() {
+    VpnModel::connect(VpnManagerPrivate::get(m_manager.data()), &VpnManagerPrivate::beginConnectionsReset,
+                      q, [q, this]() {
         q->beginResetModel();
         m_connections.clear();
     });
 
-    VpnModel::connect(VpnManagerPrivate::get(m_manager), &VpnManagerPrivate::endConnectionsReset, q, [q]() {
+    VpnModel::connect(VpnManagerPrivate::get(m_manager.data()), &VpnManagerPrivate::endConnectionsReset,
+                      q, [q]() {
         q->endResetModel();
     });
 
@@ -94,7 +96,7 @@ VpnModel::~VpnModel()
 {
     Q_D(VpnModel);
 
-    disconnect(d->m_manager, &VpnManager::connectionsChanged, this, &VpnModel::connectionsChanged);
+    disconnect(d->m_manager.data(), &VpnManager::connectionsChanged, this, &VpnModel::connectionsChanged);
 }
 
 QHash<int, QByteArray> VpnModel::roleNames() const
@@ -226,7 +228,7 @@ VpnManager * VpnModel::vpnManager() const
 {
     Q_D(const VpnModel);
 
-    return d->m_manager;
+    return d->m_manager.data();
 }
 
 QVariantMap VpnModel::connectionSettings(const QString &path) const

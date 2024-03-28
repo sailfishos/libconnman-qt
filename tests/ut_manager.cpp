@@ -170,7 +170,6 @@ void UtManager::testWriteProperties_data()
     QTest::addColumn<QVariant>("newValue");
 
     QTest::newRow("offlineMode") << QVariant(true);
-    QTest::newRow("sessionMode") << QVariant(false);
 }
 
 void UtManager::testWriteProperties()
@@ -391,7 +390,7 @@ QVariantMap UtManager::ManagerMock::GetProperties() const
 void UtManager::ManagerMock::SetProperty(const QString &name, const QDBusVariant &value,
         const QDBusMessage &message)
 {
-    if (name != "OfflineMode" && name != "SessionMode") {
+    if (name != "OfflineMode") {
         const QString err = QString("Property not writable '%1'").arg(name);
         qWarning("%s: %s", Q_FUNC_INFO, qPrintable(err));
         bus().send(message.createErrorReply(QDBusError::Failed, err));

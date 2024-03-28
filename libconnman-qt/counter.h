@@ -15,7 +15,7 @@
 #include <QtDBus/QDBusAbstractAdaptor>
 #include <QtDBus/QDBusObjectPath>
 
-class NetworkManager;
+#include "networkmanager.h"
 
 /*
  * Proxy class for interface net.connman.Counter
@@ -70,7 +70,7 @@ private Q_SLOTS:
     void updateCounterAgent();
 
 private:
-    NetworkManager* m_manager;
+    QSharedPointer<NetworkManager> m_manager;
 
     friend class CounterAdaptor;
 

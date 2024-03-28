@@ -43,7 +43,7 @@ private Q_SLOTS:
 private:
     QString agentPath;
     QVariantMap sessionSettings;
-    NetworkManager* m_manager;
+    QSharedPointer<NetworkManager> m_manager;
     NetConnmanSessionInterface *m_session;
 
     friend class SessionNotificationAdaptor;

@@ -53,7 +53,7 @@ class VpnManagerFactory : public QObject
     Q_PROPERTY(VpnManager* instance READ instance CONSTANT)
 
 public:
-    static VpnManager* createInstance();
+    Q_DECL_DEPRECATED_X("Use VpnManager::sharedInstance()") static VpnManager* createInstance();
     VpnManager* instance();
 };
 

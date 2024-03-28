@@ -26,7 +26,8 @@ class NetworkManagerFactory : public QObject
     Q_PROPERTY(NetworkManager* instance READ instance CONSTANT)
 
 public:
-    static NetworkManager* createInstance();
+    Q_DECL_DEPRECATED_X("Use NetworkManager::sharedInstance()") static NetworkManager* createInstance();
+    // deprecated
     NetworkManager* instance();
 };
 
@@ -64,8 +65,7 @@ public:
     static const QString GpsTechnologyPath;
     static const QString EthernetTechnologyPath;
 
-    // deprecated
-    static NetworkManager* instance();
+    Q_DECL_DEPRECATED_X("Use NetworkManager::sharedInstance()") static NetworkManager* instance();
 
     static QSharedPointer<NetworkManager> sharedInstance();
 
@@ -102,10 +102,14 @@ public:
     bool sessionMode() const;
     uint inputRequestTimeout() const;
 
+    // deprecated
     bool servicesEnabled() const;
+    // deprecated
     void setServicesEnabled(bool enabled);
 
+    // deprecated
     bool technologiesEnabled() const;
+    // deprecated
     void setTechnologiesEnabled(bool enabled);
 
     bool isValid() const;

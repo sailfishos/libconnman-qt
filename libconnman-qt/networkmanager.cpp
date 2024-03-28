@@ -19,7 +19,7 @@
 
 static NetworkManager* staticInstance = NULL;
 
-NetworkManager* NetworkManagerFactory::createInstance()
+static NetworkManager* internalCreateInstance()
 {
     qWarning() << "NetworkManagerFactory::createInstance/instance() is deprecated. Use NetworkManager::sharedInstance() instead.";
     if (!staticInstance)
@@ -28,9 +28,14 @@ NetworkManager* NetworkManagerFactory::createInstance()
     return staticInstance;
 }
 
+NetworkManager* NetworkManagerFactory::createInstance()
+{
+    return internalCreateInstance();
+}
+
 NetworkManager* NetworkManagerFactory::instance()
 {
-    return createInstance();
+    return internalCreateInstance();
 }
 
 // ==========================================================================
@@ -450,7 +455,7 @@ NetworkManager::~NetworkManager()
 NetworkManager* NetworkManager::instance()
 {
     qWarning() << "NetworkManager::instance() is deprecated. Use sharedInstance() instead.";
-    return NetworkManagerFactory::createInstance();
+    return internalCreateInstance();
 }
 
 QSharedPointer<NetworkManager> NetworkManager::sharedInstance()

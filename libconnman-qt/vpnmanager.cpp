@@ -42,7 +42,7 @@
 
 static VpnManager* staticInstance = nullptr;
 
-VpnManager* VpnManagerFactory::createInstance()
+static VpnManager* internalCreateInstance()
 {
     qWarning() << "VpnManagerFactory::createInstance/instance() is deprecated. Use VpnManager::sharedInstance() instead.";
 
@@ -52,9 +52,14 @@ VpnManager* VpnManagerFactory::createInstance()
     return staticInstance;
 }
 
+VpnManager* VpnManagerFactory::createInstance()
+{
+    return internalCreateInstance();
+}
+
 VpnManager* VpnManagerFactory::instance()
 {
-    return createInstance();
+    return internalCreateInstance();
 }
 
 // ==========================================================================

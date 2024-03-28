@@ -99,6 +99,7 @@ public:
 
     NetworkService *connectedEthernet() const;
 
+    // deprecated
     bool sessionMode() const;
     uint inputRequestTimeout() const;
 
@@ -143,6 +144,7 @@ public Q_SLOTS:
             const QString &tech = QString(),
             const QString &service = QString(),
             const QString &device = QString());
+    // deprecated
     void setSessionMode(bool sessionMode);
 
 Q_SIGNALS:
@@ -221,7 +223,6 @@ private:
 
     static const QString State;
     static const QString OfflineMode;
-    static const QString SessionMode;
     static const QString DefaultService;
 
     bool m_available;

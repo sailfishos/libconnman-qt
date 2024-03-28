@@ -420,7 +420,6 @@ Q_SIGNALS:
 
 const QString NetworkManager::State("State");
 const QString NetworkManager::OfflineMode("OfflineMode");
-const QString NetworkManager::SessionMode("SessionMode");
 const QString NetworkManager::DefaultService("DefaultService");
 
 const QString NetworkManager::WifiTechnologyPath("/net/connman/technology/wifi");
@@ -1385,11 +1384,9 @@ QString NetworkManager::createServiceSync(
     }
 }
 
-void NetworkManager::setSessionMode(bool sessionMode)
+void NetworkManager::setSessionMode(bool)
 {
-    if (m_proxy) {
-        m_proxy->SetProperty(SessionMode, sessionMode);
-    }
+    qWarning() << "NetworkManager::setSessionMode() is deprecated, this call will be ignored";
 }
 
 void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
@@ -1428,8 +1425,6 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
         if (name == OfflineMode) {
             Q_EMIT offlineModeChanged(value.toBool());
-        } else if (name == SessionMode) {
-            Q_EMIT sessionModeChanged(value.toBool());
         } else if (name == Private::InputRequestTimeout) {
             Q_EMIT inputRequestTimeoutChanged();
         }
@@ -1438,7 +1433,8 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
 bool NetworkManager::sessionMode() const
 {
-    return m_propertiesCache.value(SessionMode).toBool();
+    qWarning() << "NetworkManager::sessionMode() is deprecated, this will return hard-coded false";
+    return false;
 }
 
 uint NetworkManager::inputRequestTimeout() const

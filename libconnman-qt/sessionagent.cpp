@@ -29,16 +29,11 @@ SessionAgent::SessionAgent(const QString &path, QObject *parent)
     , m_manager(NetworkManager::sharedInstance())
     , m_session(nullptr)
 {
-    // FIXME: the session mode is long deprecated property on connman, and this
-    // is nasty anyway by controlling a global property based on class instance
-    // here.
-    m_manager->setSessionMode(true);
     createSession();
 }
 
 SessionAgent::~SessionAgent()
 {
-    m_manager->setSessionMode(false);
     m_manager->destroySession(agentPath);
 }
 

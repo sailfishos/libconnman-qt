@@ -43,14 +43,23 @@ namespace {
 QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
 {
     QList<QPair<QVariant, QVariant> > states;
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("idle")), QVariant::fromValue(static_cast<int>(VpnConnection::Idle))));
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("failure")), QVariant::fromValue(static_cast<int>(VpnConnection::Failure))));
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("association")), QVariant::fromValue(static_cast<int>(VpnConnection::Association))));
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("configuration")), QVariant::fromValue(static_cast<int>(VpnConnection::Configuration))));
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("ready")), QVariant::fromValue(static_cast<int>(VpnConnection::Ready))));
-    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("disconnect")), QVariant::fromValue(static_cast<int>(VpnConnection::Disconnect))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("idle")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Idle))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("failure")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Failure))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("association")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Association))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("configuration")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Configuration))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("ready")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Ready))));
+    states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("disconnect")),
+                               QVariant::fromValue(static_cast<int>(VpnConnection::Disconnect))));
 
-    auto lit = std::find_if(states.cbegin(), states.cend(), [value, toDBus](const QPair<QVariant, QVariant> &pair) { return value == (toDBus ? pair.second : pair.first); });
+    auto lit = std::find_if(states.cbegin(), states.cend(),
+                            [value, toDBus](const QPair<QVariant, QVariant> &pair) {
+        return value == (toDBus ? pair.second : pair.first); });
+
     if (lit != states.end()) {
         return toDBus ? (*lit).first : (*lit).second;
     }
@@ -234,7 +243,8 @@ QVariantMap MarshalUtils::propertiesToDBus(const QVariantMap &fromQml)
 
         if (key == QStringLiteral("providerProperties")) {
             const QVariantMap providerProperties(value.value<QVariantMap>());
-            for (QVariantMap::const_iterator pit = providerProperties.cbegin(), pend = providerProperties.cend(); pit != pend; ++pit) {
+            for (QVariantMap::const_iterator pit = providerProperties.cbegin(), pend = providerProperties.cend();
+                 pit != pend; ++pit) {
                 rv.insert(pit.key(), pit.value());
             }
             continue;

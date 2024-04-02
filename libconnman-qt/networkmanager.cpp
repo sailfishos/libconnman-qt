@@ -404,7 +404,8 @@ public:
         { return asyncCall("CreateSession", settings, QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingCall DestroySession(const QString &path)
         { return asyncCall("DestroySession", QVariant::fromValue(QDBusObjectPath(path))); }
-    QDBusPendingReply<QDBusObjectPath> CreateService(const QString &type, const QString &device, const QString &network, const StringPairArray &settings)
+    QDBusPendingReply<QDBusObjectPath> CreateService(const QString &type, const QString &device,
+                                                     const QString &network, const StringPairArray &settings)
         { return asyncCall("CreateService", type, device, network, QVariant::fromValue(settings)); }
 
 Q_SIGNALS:
@@ -1350,7 +1351,8 @@ bool NetworkManager::createService(
             QDBusReply<QDBusObjectPath> reply = *watcher;
 
             if (!reply.isValid()) {
-                qWarning() << "NetworkManager: Failed to create service." << reply.error().name() << reply.error().message();
+                qWarning() << "NetworkManager: Failed to create service." << reply.error().name()
+                           << reply.error().message();
                 emit serviceCreationFailed(reply.error().name());
             } else {
                 emit serviceCreated(reply.value().path());
@@ -1375,7 +1377,8 @@ QString NetworkManager::createServiceSync(
         reply.waitForFinished();
 
         if (reply.isError()) {
-            qWarning() << "NetworkManager: Failed to create service." << reply.error().name() << reply.error().message();
+            qWarning() << "NetworkManager: Failed to create service." << reply.error().name()
+                       << reply.error().message();
         }
 
         return reply.value().path();

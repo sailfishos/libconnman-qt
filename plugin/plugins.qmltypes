@@ -102,7 +102,7 @@ Module {
         }
     }
     Component {
-        name: "NetworkManager"
+        name: "DeclarativeNetworkManager"
         prototype: "QObject"
         exports: ["Connman/NetworkManager 0.2"]
         exportMetaObjectRevisions: [0]
@@ -111,8 +111,8 @@ Module {
         Property { name: "offlineMode"; type: "bool" }
         Property { name: "defaultRoute"; type: "NetworkService"; isReadonly: true; isPointer: true }
         Property { name: "connectedWifi"; type: "NetworkService"; isReadonly: true; isPointer: true }
-        Property { name: "connectingWifi"; type: "bool"; isReadonly: true }
         Property { name: "connectedEthernet"; type: "NetworkService"; isReadonly: true; isPointer: true }
+        Property { name: "connectingWifi"; type: "bool"; isReadonly: true }
         Property { name: "sessionMode"; type: "bool" }
         Property { name: "inputRequestTimeout"; type: "uint"; isReadonly: true }
         Property { name: "servicesEnabled"; type: "bool" }
@@ -125,10 +125,7 @@ Module {
         Property { name: "BluetoothTechnology"; type: "string"; isReadonly: true }
         Property { name: "GpsTechnology"; type: "string"; isReadonly: true }
         Property { name: "EthernetTechnology"; type: "string"; isReadonly: true }
-        Signal {
-            name: "availabilityChanged"
-            Parameter { name: "available"; type: "bool" }
-        }
+        Signal { name: "availabilityChanged" }
         Signal {
             name: "stateChanged"
             Parameter { name: "state"; type: "string" }
@@ -154,10 +151,7 @@ Module {
             name: "sessionModeChanged"
             Parameter { type: "bool" }
         }
-        Signal {
-            name: "servicesListChanged"
-            Parameter { name: "list"; type: "QStringList" }
-        }
+        Signal { name: "servicesListChanged" }
         Signal {
             name: "serviceAdded"
             Parameter { name: "servicePath"; type: "string" }
@@ -183,6 +177,10 @@ Module {
             Parameter { name: "offlineMode"; type: "bool" }
         }
         Method {
+            name: "setSessionMode"
+            Parameter { name: "sessionMode"; type: "bool" }
+        }
+        Method {
             name: "registerAgent"
             Parameter { name: "path"; type: "string" }
         }
@@ -201,16 +199,6 @@ Module {
             Parameter { name: "path"; type: "string" }
         }
         Method {
-            name: "createSession"
-            type: "QDBusObjectPath"
-            Parameter { name: "settings"; type: "QVariantMap" }
-            Parameter { name: "sessionNotifierPath"; type: "string" }
-        }
-        Method {
-            name: "destroySession"
-            Parameter { name: "sessionAgentPath"; type: "string" }
-        }
-        Method {
             name: "createService"
             type: "bool"
             Parameter { name: "settings"; type: "QVariantMap" }
@@ -261,15 +249,6 @@ Module {
             name: "createServiceSync"
             type: "string"
             Parameter { name: "settings"; type: "QVariantMap" }
-        }
-        Method {
-            name: "setSessionMode"
-            Parameter { name: "sessionMode"; type: "bool" }
-        }
-        Method {
-            name: "getTechnology"
-            type: "NetworkTechnology*"
-            Parameter { name: "type"; type: "string" }
         }
         Method {
             name: "servicesList"
@@ -305,11 +284,16 @@ Module {
         }
     }
     Component {
-        name: "NetworkManagerFactory"
+        name: "DeclarativeNetworkManagerFactory"
         prototype: "QObject"
         exports: ["Connman/NetworkManagerFactory 0.2"]
         exportMetaObjectRevisions: [0]
-        Property { name: "instance"; type: "NetworkManager"; isReadonly: true; isPointer: true }
+        Property {
+            name: "instance"
+            type: "DeclarativeNetworkManager"
+            isReadonly: true
+            isPointer: true
+        }
     }
     Component {
         name: "NetworkService"

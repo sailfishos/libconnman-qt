@@ -60,7 +60,7 @@ Q_SIGNALS:
 
 private:
     QString m_techname;
-    NetworkManager* m_manager;
+    QSharedPointer<NetworkManager> m_manager;
     QVector<NetworkService *> m_services;
     bool m_sort;
     bool m_groupByCategory;

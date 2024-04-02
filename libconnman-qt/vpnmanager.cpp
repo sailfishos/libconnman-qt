@@ -42,17 +42,24 @@
 
 static VpnManager* staticInstance = nullptr;
 
-VpnManager* VpnManagerFactory::createInstance()
+static VpnManager* internalCreateInstance()
 {
+    qWarning() << "VpnManagerFactory::createInstance/instance() is deprecated. Use VpnManager::sharedInstance() instead.";
+
     if (!staticInstance)
         staticInstance = new VpnManager;
 
     return staticInstance;
 }
 
+VpnManager* VpnManagerFactory::createInstance()
+{
+    return internalCreateInstance();
+}
+
 VpnManager* VpnManagerFactory::instance()
 {
-    return createInstance();
+    return internalCreateInstance();
 }
 
 // ==========================================================================
@@ -79,7 +86,8 @@ void VpnManagerPrivate::init()
     qDBusRegisterMetaType<PathProperties>();
     qDBusRegisterMetaType<PathPropertiesArray>();
 
-    VpnManager::connect(&m_connmanVpn, &NetConnmanVpnManagerInterface::ConnectionAdded, q, [this](const QDBusObjectPath &objectPath, const QVariantMap &properties) {
+    VpnManager::connect(&m_connmanVpn, &NetConnmanVpnManagerInterface::ConnectionAdded,
+                        q, [this](const QDBusObjectPath &objectPath, const QVariantMap &properties) {
         Q_Q(VpnManager);
 
         const QString path(objectPath.path());
@@ -96,7 +104,8 @@ void VpnManagerPrivate::init()
         emit q->connectionsChanged();
     });
 
-    VpnManager::connect(&m_connmanVpn, &NetConnmanVpnManagerInterface::ConnectionRemoved, q, [this](const QDBusObjectPath &objectPath) {
+    VpnManager::connect(&m_connmanVpn, &NetConnmanVpnManagerInterface::ConnectionRemoved,
+                        q, [this](const QDBusObjectPath &objectPath) {
         Q_Q(VpnManager);
 
         const QString path(objectPath.path());
@@ -117,7 +126,11 @@ void VpnManagerPrivate::init()
     });
 
     // If connman-vpn restarts, we need to discard and re-read the state
-    QDBusServiceWatcher *watcher = new QDBusServiceWatcher(connmanVpnService, QDBusConnection::systemBus(), QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, q);
+    QDBusServiceWatcher *watcher
+            = new QDBusServiceWatcher(connmanVpnService, QDBusConnection::systemBus(),
+                                      QDBusServiceWatcher::WatchForRegistration
+                                      | QDBusServiceWatcher::WatchForUnregistration,
+                                      q);
     VpnManager::connect(watcher, &QDBusServiceWatcher::serviceUnregistered, q, [this](const QString &) {
         Q_Q(VpnManager);
 
@@ -135,6 +148,21 @@ void VpnManagerPrivate::init()
 
     fetchVpnList();
 }
+
+QSharedPointer<VpnManager> VpnManager::sharedInstance()
+{
+    static QWeakPointer<VpnManager> sharedManager;
+
+    QSharedPointer<VpnManager> manager = sharedManager.toStrongRef();
+
+    if (!manager) {
+        manager = QSharedPointer<VpnManager>::create();
+        sharedManager = manager;
+    }
+
+    return manager;
+}
+
 
 VpnManager::VpnManager(QObject *parent)
     : QObject(parent)
@@ -223,7 +251,8 @@ void VpnManager::deleteConnection(const QString &path)
         } else {
             QDBusPendingCall call = d->m_connmanVpn.Remove(QDBusObjectPath(path));
             QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-            connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, path](QDBusPendingCallWatcher *watcher) {
+            connect(watcher, &QDBusPendingCallWatcher::finished,
+                    this, [this, path](QDBusPendingCallWatcher *watcher) {
                 QDBusPendingReply<void> reply = *watcher;
                 watcher->deleteLater();
                 if (reply.isError()) {
@@ -343,7 +372,8 @@ void VpnManagerPrivate::fetchVpnList()
     QDBusPendingCall call = m_connmanVpn.GetConnections();
 
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, q);
-    q->connect(watcher, &QDBusPendingCallWatcher::finished, q, [this](QDBusPendingCallWatcher *watcher) {
+    q->connect(watcher, &QDBusPendingCallWatcher::finished,
+               q, [this](QDBusPendingCallWatcher *watcher) {
         Q_Q(VpnManager);
 
         QDBusPendingReply<PathPropertiesArray> reply = *watcher;

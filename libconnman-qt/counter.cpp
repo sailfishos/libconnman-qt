@@ -18,7 +18,7 @@
 
 Counter::Counter(QObject *parent) :
     QObject(parent),
-    m_manager(NetworkManagerFactory::createInstance()),
+    m_manager(NetworkManager::sharedInstance()),
     bytesInHome(0),
     bytesOutHome(0),
     secondsOnlineHome(0),
@@ -31,13 +31,13 @@ Counter::Counter(QObject *parent) :
     shouldBeRunning(false),
     registered(false)
 {
-    #if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
-        quint32 randomValue = QRandomGenerator::global()->generate();
-    #else
-        QTime time = QTime::currentTime();
-        qsrand((uint)time.msec());
-        int randomValue = qrand();
-    #endif
+#if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
+    quint32 randomValue = QRandomGenerator::global()->generate();
+#else
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+    int randomValue = qrand();
+#endif
     //this needs to be unique so we can use more than one at a time with different processes
     counterPath = "/ConnectivityCounter" + QString::number(randomValue);
 
@@ -45,7 +45,8 @@ Counter::Counter(QObject *parent) :
     if (!QDBusConnection::systemBus().registerObject(counterPath, this))
         qWarning("Could not register DBus object on %s", qPrintable(counterPath));
 
-    connect(m_manager, SIGNAL(availabilityChanged(bool)), this, SLOT(updateCounterAgent()));
+    connect(m_manager.data(), &NetworkManager::availabilityChanged,
+            this, &Counter::updateCounterAgent);
 }
 
 Counter::~Counter()

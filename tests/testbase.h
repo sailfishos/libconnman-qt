@@ -318,7 +318,6 @@ inline QVariantMap TestBase::defaultManagerProperties()
 
     properties["State"] = "offline";
     properties["OfflineMode"] = false;
-    properties["SessionMode"] = true;
 
     initialized = true;
 

@@ -11,6 +11,7 @@
 
 #include "libconnman_p.h"
 #include <QRegularExpression>
+#include <QWeakPointer>
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -18,17 +19,23 @@
 
 static NetworkManager* staticInstance = NULL;
 
-NetworkManager* NetworkManagerFactory::createInstance()
+static NetworkManager* internalCreateInstance()
 {
+    qWarning() << "NetworkManagerFactory::createInstance/instance() is deprecated. Use NetworkManager::sharedInstance() instead.";
     if (!staticInstance)
         staticInstance = new NetworkManager;
 
     return staticInstance;
 }
 
+NetworkManager* NetworkManagerFactory::createInstance()
+{
+    return internalCreateInstance();
+}
+
 NetworkManager* NetworkManagerFactory::instance()
 {
-    return createInstance();
+    return internalCreateInstance();
 }
 
 // ==========================================================================
@@ -86,8 +93,9 @@ public:
         , m_connected(false)
         , m_connectedWifi(NULL)
         , m_connectedEthernet(NULL) {}
+
     NetworkManager* manager()
-        { return (NetworkManager*)parent(); }
+        { return static_cast<NetworkManager*>(parent()); }
     void maybeCreateInterfaceProxyLater()
         { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
 
@@ -151,7 +159,6 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
     }
     return false;
 }
-
 
 bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
 {
@@ -228,6 +235,71 @@ void NetworkManager::Private::onWifiConnectingChanged()
         Q_EMIT manager()->connectingWifiChanged();
     }
 }
+
+void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
+{
+    m_servicesAvailable = servicesAvailable;
+}
+
+void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
+{
+    m_technologiesAvailable = technologiesAvailable;
+}
+
+void NetworkManager::Private::updateState(const QString &newState)
+{
+    if (manager()->state() == newState)
+        return;
+
+    manager()->m_propertiesCache[State] = newState;
+
+    const bool value = ConnmanState::connected(newState);
+    bool connectedChanged;
+    if (m_connected != value) {
+        m_connected = value;
+        connectedChanged = true;
+    } else {
+        connectedChanged = false;
+    }
+
+    Q_EMIT manager()->stateChanged(newState);
+    if (connectedChanged) {
+        Q_EMIT manager()->connectedChanged();
+    }
+
+    manager()->updateDefaultRoute();
+}
+
+class NetworkManager::Private::ListUpdate {
+public:
+    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+
+    void add(const QString& str) {
+        if (storage->count() == count) {
+            storage->append(str);
+            changed = true;
+        } else if (storage->at(count) != str) {
+            while (storage->count() > count) {
+                storage->removeLast();
+            }
+            storage->append(str);
+            changed = true;
+        }
+        count++;
+    }
+
+    void done() {
+        while (storage->count() > count) {
+            storage->removeLast();
+            changed = true;
+        }
+    }
+
+public:
+    QStringList* storage;
+    bool changed;
+    int count;
+};
 
 // ==========================================================================
 // NetworkManager::InterfaceProxy
@@ -348,7 +420,6 @@ Q_SIGNALS:
 
 const QString NetworkManager::State("State");
 const QString NetworkManager::OfflineMode("OfflineMode");
-const QString NetworkManager::SessionMode("SessionMode");
 const QString NetworkManager::DefaultService("DefaultService");
 
 const QString NetworkManager::WifiTechnologyPath("/net/connman/technology/wifi");
@@ -365,9 +436,7 @@ NetworkManager::NetworkManager(QObject* parent)
     m_invalidDefaultRoute(new NetworkService("/", QVariantMap(), this)),
     m_defaultRouteIsVPN(false),
     m_priv(new Private(this)),
-    m_available(false),
-    m_servicesEnabled(true),
-    m_technologiesEnabled(true)
+    m_available(false)
 {
     registerCommonDataTypes();
     QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
@@ -384,7 +453,22 @@ NetworkManager::~NetworkManager()
 
 NetworkManager* NetworkManager::instance()
 {
-    return NetworkManagerFactory::createInstance();
+    qWarning() << "NetworkManager::instance() is deprecated. Use sharedInstance() instead.";
+    return internalCreateInstance();
+}
+
+QSharedPointer<NetworkManager> NetworkManager::sharedInstance()
+{
+    static QWeakPointer<NetworkManager> sharedManager;
+
+    QSharedPointer<NetworkManager> manager = sharedManager.toStrongRef();
+
+    if (!manager) {
+        manager = QSharedPointer<NetworkManager>::create();
+        sharedManager = manager;
+    }
+
+    return manager;
 }
 
 void NetworkManager::onConnmanRegistered()
@@ -607,60 +691,28 @@ void NetworkManager::disconnectServices()
 void NetworkManager::setupTechnologies()
 {
     if (m_proxy) {
-        connect(m_proxy,
-            SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
-            SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
-        connect(m_proxy,
-            SIGNAL(TechnologyRemoved(QDBusObjectPath)),
-            SLOT(technologyRemoved(QDBusObjectPath)));
-        connect(new QDBusPendingCallWatcher(m_proxy->GetTechnologies(), m_proxy),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
+        connect(m_proxy, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
+                SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
+        connect(m_proxy, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
+                SLOT(technologyRemoved(QDBusObjectPath)));
+
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_proxy->GetTechnologies(), m_proxy);
+        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
     }
 }
 
 void NetworkManager::setupServices()
 {
     if (m_proxy) {
-        connect(m_proxy,
-            SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-            SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
-        connect(new QDBusPendingCallWatcher(m_proxy->GetServices(), m_proxy),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
+        connect(m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
+                SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_proxy->GetServices(), m_proxy);
+        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
     }
 }
-
-class NetworkManager::Private::ListUpdate {
-public:
-    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
-
-    void add(const QString& str) {
-        if (storage->count() == count) {
-            storage->append(str);
-            changed = true;
-        } else if (storage->at(count) != str) {
-            while (storage->count() > count) {
-                storage->removeLast();
-            }
-            storage->append(str);
-            changed = true;
-        }
-        count++;
-    }
-
-    void done() {
-        while (storage->count() > count) {
-            storage->removeLast();
-            changed = true;
-        }
-    }
-
-public:
-    QStringList* storage;
-    bool changed;
-    int count;
-};
 
 void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
 {
@@ -841,7 +893,7 @@ void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &va
 NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
 {
     NetworkService *newDefaultRoute = nullptr;
-    bool isVPN = path.indexOf("vpn_") != -1 ? true : false;
+    bool isVPN = path.indexOf("vpn_") != -1;
 
     if (!m_servicesCacheHasUpdates)
         return nullptr;
@@ -920,7 +972,7 @@ void NetworkManager::updateDefaultRoute()
 
         qDebug() << "No default route set, services:" << m_servicesCache.count();
 
-        m_defaultRoute = selectDefaultRoute(QString(""));
+        m_defaultRoute = selectDefaultRoute(QString());
         if (!m_defaultRoute)
             m_defaultRoute = m_invalidDefaultRoute;
     }
@@ -933,8 +985,7 @@ void NetworkManager::updateDefaultRoute()
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
                                      const QVariantMap &properties)
 {
-    NetworkTechnology *tech = new NetworkTechnology(technology.path(),
-                                                    properties, this);
+    NetworkTechnology *tech = new NetworkTechnology(technology.path(), properties, this);
 
     m_technologiesCache.insert(tech->type(), tech);
     Q_EMIT technologiesChanged();
@@ -969,10 +1020,8 @@ void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
     for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
         propertyChanged(i.key(), i.value());
 
-    if (m_technologiesEnabled)
-        setupTechnologies();
-    if (m_servicesEnabled)
-        setupServices();
+    setupTechnologies();
+    setupServices();
 }
 
 void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
@@ -1335,11 +1384,9 @@ QString NetworkManager::createServiceSync(
     }
 }
 
-void NetworkManager::setSessionMode(bool sessionMode)
+void NetworkManager::setSessionMode(bool)
 {
-    if (m_proxy) {
-        m_proxy->SetProperty(SessionMode, sessionMode);
-    }
+    qWarning() << "NetworkManager::setSessionMode() is deprecated, this call will be ignored";
 }
 
 void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
@@ -1378,8 +1425,6 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
         if (name == OfflineMode) {
             Q_EMIT offlineModeChanged(value.toBool());
-        } else if (name == SessionMode) {
-            Q_EMIT sessionModeChanged(value.toBool());
         } else if (name == Private::InputRequestTimeout) {
             Q_EMIT inputRequestTimeoutChanged();
         }
@@ -1388,7 +1433,8 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
 bool NetworkManager::sessionMode() const
 {
-    return m_propertiesCache.value(SessionMode).toBool();
+    qWarning() << "NetworkManager::sessionMode() is deprecated, this will return hard-coded false";
+    return false;
 }
 
 uint NetworkManager::inputRequestTimeout() const
@@ -1400,70 +1446,27 @@ uint NetworkManager::inputRequestTimeout() const
 
 bool NetworkManager::servicesEnabled() const
 {
-    return m_servicesEnabled;
+    return true;
 }
 
-void NetworkManager::setServicesEnabled(bool enabled)
+void NetworkManager::setServicesEnabled(bool)
 {
-    if (m_servicesEnabled == enabled)
-        return;
-
-    if (this == staticInstance) {
-        qWarning() << "Refusing to modify the shared instance";
-        return;
-    }
-
-    bool wasValid = isValid();
-
-    m_servicesEnabled = enabled;
-
-    if (m_servicesEnabled)
-        setupServices();
-    else
-        disconnectServices();
-
-    Q_EMIT servicesEnabledChanged();
-
-    if (wasValid != isValid()) {
-        Q_EMIT validChanged();
-    }
+    qWarning() << "NetworkManager::setServicesEnabled() is deprecated, this call will be ignored";
 }
 
 bool NetworkManager::technologiesEnabled() const
 {
-    return m_technologiesEnabled;
+    return true;
 }
 
-void NetworkManager::setTechnologiesEnabled(bool enabled)
+void NetworkManager::setTechnologiesEnabled(bool)
 {
-    if (m_technologiesEnabled == enabled)
-        return;
-
-    if (this == staticInstance) {
-        qWarning() << "Refusing to modify the shared instance";
-        return;
-    }
-
-    bool wasValid = isValid();
-
-    m_technologiesEnabled = enabled;
-
-    if (m_technologiesEnabled)
-        setupTechnologies();
-    else
-        disconnectTechnologies();
-
-    Q_EMIT technologiesEnabledChanged();
-
-    if (wasValid != isValid()) {
-        Q_EMIT validChanged();
-    }
+    qWarning() << "NetworkManager::setTechnologiesEnabled() is deprecated, this call will be ignored";
 }
 
 bool NetworkManager::isValid() const
 {
-    return (!m_servicesEnabled || m_priv->m_servicesAvailable)
-            && (!m_technologiesEnabled || m_priv->m_technologiesAvailable);
+    return m_priv->m_servicesAvailable && m_priv->m_technologiesAvailable;
 }
 
 bool NetworkManager::connected() const
@@ -1480,40 +1483,6 @@ bool NetworkManager::connecting() const
 bool NetworkManager::connectingWifi() const
 {
     return m_priv->m_connectingWifi;
-}
-
-void NetworkManager::Private::setServicesAvailable(bool servicesAvailable)
-{
-    m_servicesAvailable = servicesAvailable;
-}
-
-void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailable)
-{
-    m_technologiesAvailable = technologiesAvailable;
-}
-
-void NetworkManager::Private::updateState(const QString &newState)
-{
-    if (manager()->state() == newState)
-        return;
-
-    manager()->m_propertiesCache[State] = newState;
-
-    const bool value = ConnmanState::connected(newState);
-    bool connectedChanged;
-    if (m_connected != value) {
-        m_connected = value;
-        connectedChanged = true;
-    } else {
-        connectedChanged = false;
-    }
-
-    Q_EMIT manager()->stateChanged(newState);
-    if (connectedChanged) {
-        Q_EMIT manager()->connectedChanged();
-    }
-
-    manager()->updateDefaultRoute();
 }
 
 void NetworkManager::resetCountersForType(const QString &type)

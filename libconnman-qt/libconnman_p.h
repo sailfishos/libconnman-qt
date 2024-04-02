@@ -57,21 +57,14 @@ public:
 
 #ifndef CONNMAN_DEBUG
 #  define CONNMAN_DEBUG 0
-#endif // CONNMAN_DEBUG
+#endif
 
 #include <QDebug>
 
 #if CONNMAN_DEBUG
 #  define DBG_(x) qDebug() << this << Q_FUNC_INFO << "line:" << __LINE__ << x
-#  define ASSERT_(x) ((x) ? ((void)0) : qt_assert(#x,__FILE__,__LINE__))
-#  define VERIFY_(x) ASSERT(x)
 #else
 #  define DBG_(expr) ((void)0)
-#  define ASSERT_(expr) ((void)0)
-#  define VERIFY_(x) (x)
-#endif // CONNMAN_DEBUG
-
-#define WARN_(x) qWarning() << x
-#define VERBOSE_(expr) ((void)0)
+#endif
 
 #endif // LIBCONNMAN_PRIVATE_H

@@ -523,7 +523,7 @@ bool NetworkManager::connectToConnman()
     disconnectFromConnman();
     m_proxy = new InterfaceProxy(this);
     if (!m_proxy->isValid()) {
-        WARN_(m_proxy->lastError());
+        qWarning() << m_proxy->lastError();
         delete m_proxy;
         m_proxy = NULL;
         return false;
@@ -1054,7 +1054,7 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     ConnmanObjectList services;
     watcher->deleteLater();
     if (reply.isError()) {
-        WARN_(reply.error());
+        qWarning() << reply.error();
     } else {
         services = reply.value();
     }

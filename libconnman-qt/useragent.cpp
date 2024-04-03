@@ -12,39 +12,65 @@
 
 static const char AGENT_PATH[] = "/ConnectivityUserAgent";
 
-UserAgent::UserAgent(QObject* parent) :
-    QObject(parent),
-    m_req_data(nullptr),
-    m_manager(NetworkManager::sharedInstance()),
-    requestType(TYPE_DEFAULT),
-    agentPath(QString())
+class UserAgentPrivate
+{
+public:
+    enum ConnectionRequestType {
+        TYPE_DEFAULT =0,
+        TYPE_SUPPRESS,
+        TYPE_CLEAR
+    };
+
+    UserAgentPrivate();
+
+    ServiceRequestData *m_req_data;
+    QSharedPointer<NetworkManager> m_manager;
+    QDBusMessage currentDbusMessage;
+    ConnectionRequestType requestType;
+    QString agentPath;
+    QTimer requestTimer;
+    QDBusMessage requestMessage;
+};
+
+UserAgentPrivate::UserAgentPrivate()
+    : m_req_data(nullptr)
+    , m_manager(NetworkManager::sharedInstance())
+    , requestType(TYPE_DEFAULT)
+{
+}
+
+UserAgent::UserAgent(QObject* parent)
+    : QObject(parent)
+    , d_ptr(new UserAgentPrivate)
 {
     QString agentpath = QLatin1String("/ConnectivityUserAgent");
     setAgentPath(agentpath);
-    connect(m_manager.data(), &NetworkManager::availabilityChanged,
+    connect(d_ptr->m_manager.data(), &NetworkManager::availabilityChanged,
             this, &UserAgent::updateMgrAvailability);
 
-    requestTimer = new QTimer(this);
-    requestTimer->setSingleShot(true);
-    connect(requestTimer, &QTimer::timeout,
+    d_ptr->requestTimer.setSingleShot(true);
+    connect(&d_ptr->requestTimer, &QTimer::timeout,
             this, &UserAgent::requestTimeout);
 }
 
 UserAgent::~UserAgent()
 {
-    m_manager->unregisterAgent(QString(agentPath));
+    d_ptr->m_manager->unregisterAgent(QString(d_ptr->agentPath));
+
+    delete d_ptr;
+    d_ptr = nullptr;
 }
 
 void UserAgent::requestUserInput(ServiceRequestData* data)
 {
-    m_req_data = data;
+    d_ptr->m_req_data = data;
     Q_EMIT userInputRequested(data->objectPath, data->fields);
 }
 
 void UserAgent::cancelUserInput()
 {
-    delete m_req_data;
-    m_req_data = nullptr;
+    delete d_ptr->m_req_data;
+    d_ptr->m_req_data = nullptr;
     Q_EMIT userInputCanceled();
 }
 
@@ -55,28 +81,28 @@ void UserAgent::reportError(const QString &servicePath, const QString &error)
 
 void UserAgent::sendUserReply(const QVariantMap &input)
 {
-    if (m_req_data == nullptr) {
+    if (d_ptr->m_req_data == nullptr) {
         qWarning() << "Got reply for non-existing request";
         return;
     }
 
     if (!input.isEmpty()) {
-        QDBusMessage &reply = m_req_data->reply;
+        QDBusMessage &reply = d_ptr->m_req_data->reply;
         reply << input;
         QDBusConnection::systemBus().send(reply);
     } else {
-        QDBusMessage error = m_req_data->msg.createErrorReply(
+        QDBusMessage error = d_ptr->m_req_data->msg.createErrorReply(
             QString("net.connman.Agent.Error.Canceled"),
             QString("canceled by user"));
         QDBusConnection::systemBus().send(error);
     }
-    delete m_req_data;
-    m_req_data = nullptr;
+    delete d_ptr->m_req_data;
+    d_ptr->m_req_data = nullptr;
 }
 
 void UserAgent::requestTimeout()
 {
-    qDebug() << Q_FUNC_INFO << requestMessage.arguments();
+    qDebug() << Q_FUNC_INFO << d_ptr->requestMessage.arguments();
     setConnectionRequestType("Clear");
 }
 
@@ -84,40 +110,38 @@ void UserAgent::sendConnectReply(const QString &replyMessage, int timeout)
 {
     setConnectionRequestType(replyMessage);
 
-    if (!requestTimer->isActive())
-        requestTimer->start(timeout * 1000);
+    if (!d_ptr->requestTimer.isActive())
+        d_ptr->requestTimer.start(timeout * 1000);
 }
 
 void UserAgent::updateMgrAvailability(bool available)
 {
     if (available) {
-        m_manager->registerAgent(QString(agentPath));
+        d_ptr->m_manager->registerAgent(d_ptr->agentPath);
     } else {
-        if (requestTimer->isActive())
-            requestTimer->stop();
+        if (d_ptr->requestTimer.isActive())
+            d_ptr->requestTimer.stop();
     }
 }
 
 void UserAgent::setConnectionRequestType(const QString &type)
 {
     if (type == "Suppress") {
-        requestType = TYPE_SUPPRESS;
+        d_ptr->requestType = UserAgentPrivate::TYPE_SUPPRESS;
     } else if (type == "Clear") {
-        requestType = TYPE_CLEAR;
+        d_ptr->requestType = UserAgentPrivate::TYPE_CLEAR;
     } else {
-        requestType = TYPE_DEFAULT;
+        d_ptr->requestType = UserAgentPrivate::TYPE_DEFAULT;
     }
 }
 
 QString UserAgent::connectionRequestType() const
 {
-    switch (requestType) {
-    case TYPE_SUPPRESS:
+    switch (d_ptr->requestType) {
+    case UserAgentPrivate::TYPE_SUPPRESS:
         return "Suppress";
-        break;
-    case TYPE_CLEAR:
+    case UserAgentPrivate::TYPE_CLEAR:
         return "Clear";
-        break;
     default:
         break;
     }
@@ -128,7 +152,7 @@ void UserAgent::requestConnect(const QDBusMessage &msg)
 {
     QList<QVariant> arguments2;
     arguments2 << QVariant("Clear");
-    requestMessage = msg.createReply(arguments2);
+    d_ptr->requestMessage = msg.createReply(arguments2);
 
     QList<QVariant> arguments;
     arguments << QVariant(connectionRequestType());
@@ -149,7 +173,7 @@ void UserAgent::requestConnect(const QDBusMessage &msg)
 
 QString UserAgent::path() const
 {
-    return agentPath;
+    return d_ptr->agentPath;
 }
 
 void UserAgent::setAgentPath(const QString &path)
@@ -158,11 +182,11 @@ void UserAgent::setAgentPath(const QString &path)
         return;
 
     new AgentAdaptor(this); // this object will be freed when UserAgent is freed
-    agentPath = path;
-    QDBusConnection::systemBus().registerObject(agentPath, this);
+    d_ptr->agentPath = path;
+    QDBusConnection::systemBus().registerObject(d_ptr->agentPath, this);
 
-    if (m_manager->isAvailable()) {
-        m_manager->registerAgent(QString(agentPath));
+    if (d_ptr->m_manager->isAvailable()) {
+        d_ptr->m_manager->registerAgent(d_ptr->agentPath);
     }
 }
 

@@ -26,6 +26,8 @@ struct ServiceRequestData
     QDBusMessage msg;
 };
 
+class UserAgentPrivate;
+
 class UserAgent : public QObject
 {
     Q_OBJECT
@@ -34,12 +36,6 @@ class UserAgent : public QObject
     Q_DISABLE_COPY(UserAgent)
 
 public:
-    enum ConnectionRequestType {
-        TYPE_DEFAULT =0,
-        TYPE_SUPPRESS,
-        TYPE_CLEAR
-    };
-
     explicit UserAgent(QObject* parent = 0);
     virtual ~UserAgent();
 
@@ -74,15 +70,9 @@ private:
     void requestBrowser(const QString &servicePath, const QString &url,
                         const QDBusMessage &message);
 
-    ServiceRequestData* m_req_data;
-    QSharedPointer<NetworkManager> m_manager;
-    QDBusMessage currentDbusMessage;
-    ConnectionRequestType requestType;
-    QString agentPath;
+    UserAgentPrivate *d_ptr;
 
     friend class AgentAdaptor;
-    QTimer *requestTimer;
-    QDBusMessage requestMessage;
 };
 
 class AgentAdaptor : public QDBusAbstractAdaptor

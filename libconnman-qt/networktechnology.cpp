@@ -13,8 +13,7 @@
 #include "libconnman_p.h"
 
 #include <QDBusPendingReply>
-
-Q_GLOBAL_STATIC(QSet<QString>, techList)
+#include <QWeakPointer>
 
 namespace  {
 const auto Name = QStringLiteral("Name");
@@ -27,46 +26,57 @@ const auto TetheringIdentifier = QStringLiteral("TetheringIdentifier");
 const auto TetheringPassphrase = QStringLiteral("TetheringPassphrase");
 }
 
-NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
-  : QObject(parent)
-  , m_technology(nullptr)
-  , m_dBusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
-                                          QDBusServiceWatcher::WatchForRegistration
-                                          | QDBusServiceWatcher::WatchForUnregistration, this))
-{
-    Q_ASSERT(!path.isEmpty());
-    m_propertiesCache = properties;
+class TechnologyTracker: public QObject {
+    Q_OBJECT
+public:
+    static QSharedPointer<TechnologyTracker> instance();
+    TechnologyTracker();
 
-    startDBusWatching();
-    initialize();
-    setPath(path);
+    QSet<QString> technologies();
+
+signals:
+    void technologyAdded(const QString &technology);
+    void technologyRemoved(const QString &technology);
+
+public slots:
+    void onTechnologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
+    void onTechnologyRemoved(const QDBusObjectPath &technology);
+    void getTechnologies();
+
+private:
+    QDBusServiceWatcher *m_dbusWatcher;
+    QSet<QString> m_technologies;
+};
+
+QSharedPointer<TechnologyTracker> TechnologyTracker::instance()
+{
+    static QWeakPointer<TechnologyTracker> sharedTracker;
+
+    QSharedPointer<TechnologyTracker> tracker = sharedTracker.toStrongRef();
+
+    if (!tracker) {
+        tracker = QSharedPointer<TechnologyTracker>::create();
+        sharedTracker = tracker;
+    }
+
+    return tracker;
 }
 
-NetworkTechnology::NetworkTechnology(QObject* parent)
-    : QObject(parent)
-    , m_technology(nullptr)
-    , m_dBusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+TechnologyTracker::TechnologyTracker()
+    : QObject()
+    , m_dbusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
                                             QDBusServiceWatcher::WatchForRegistration
                                             | QDBusServiceWatcher::WatchForUnregistration, this))
 {
-    startDBusWatching();
-    initialize();
-}
-
-NetworkTechnology::~NetworkTechnology()
-{
-    destroyInterface();
-}
-
-void NetworkTechnology::startDBusWatching()
-{
     // Monitor connman itself.
-    connect(m_dBusWatcher, &QDBusServiceWatcher::serviceRegistered,
-            this, &NetworkTechnology::initialize);
-    connect(m_dBusWatcher, &QDBusServiceWatcher::serviceUnregistered,
+    connect(m_dbusWatcher, &QDBusServiceWatcher::serviceRegistered,
+            this, &TechnologyTracker::getTechnologies);
+    connect(m_dbusWatcher, &QDBusServiceWatcher::serviceUnregistered,
             this, [this]() {
-        techList()->clear();
-        destroyInterface();
+        for (const QString &technology : m_technologies) {
+            Q_EMIT technologyRemoved(technology);
+        }
+        m_technologies.clear();
     });
 
     // Monitor TechnologyAdded and TechnologyRemoved.
@@ -76,7 +86,7 @@ void NetworkTechnology::startDBusWatching()
                 "net.connman.Manager",
                 "TechnologyAdded",
                 this,
-                SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
+                SLOT(onTechnologyAdded(QDBusObjectPath,QVariantMap)));
 
     CONNMAN_BUS.connect(
                 CONNMAN_SERVICE,
@@ -84,39 +94,85 @@ void NetworkTechnology::startDBusWatching()
                 "net.connman.Manager",
                 "TechnologyRemoved",
                 this,
-                SLOT(technologyRemoved(QDBusObjectPath)));
+                SLOT(onTechnologyRemoved(QDBusObjectPath)));
+
+    getTechnologies();
+}
+
+QSet<QString> TechnologyTracker::technologies()
+{
+    return m_technologies;
+}
+
+void TechnologyTracker::getTechnologies()
+{
+    QDBusInterface managerInterface(CONNMAN_SERVICE, "/", "net.connman.Manager", CONNMAN_BUS);
+
+    QDBusPendingCall pendingCall = managerInterface.asyncCall("GetTechnologies");
+
+    connect(new QDBusPendingCallWatcher(pendingCall, this),
+            &QDBusPendingCallWatcher::finished, [this](QDBusPendingCallWatcher *watcher) {
+        QDBusPendingReply<ConnmanObjectList> reply = *watcher;
+        watcher->deleteLater();
+
+        if (reply.isError()) {
+            qWarning() << "Failed to get connman techonologies:" << reply.isError() << reply.error().type();
+        } else {
+            for (const ConnmanObject &object : reply.value()) {
+                QString technology = object.objpath.path();
+                m_technologies.insert(technology);
+                Q_EMIT technologyAdded(technology);
+            }
+        }
+    });
+}
+
+void TechnologyTracker::onTechnologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties)
+{
+    Q_UNUSED(properties);
+    m_technologies.insert(technology.path());
+    Q_EMIT technologyAdded(technology.path());
+}
+
+void TechnologyTracker::onTechnologyRemoved(const QDBusObjectPath &technology)
+{
+    m_technologies.remove(technology.path());
+    Q_EMIT technologyRemoved(technology.path());
+}
+
+
+NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
+  : QObject(parent)
+  , m_technology(nullptr)
+{
+    Q_ASSERT(!path.isEmpty());
+    m_propertiesCache = properties;
+
+    initialize();
+    setPath(path);
+}
+
+NetworkTechnology::NetworkTechnology(QObject* parent)
+    : QObject(parent)
+    , m_technology(nullptr)
+{
+    initialize();
+}
+
+NetworkTechnology::~NetworkTechnology()
+{
+    destroyInterface();
 }
 
 void NetworkTechnology::initialize()
 {
-    if (techList()->isEmpty()) {
-        QDBusInterface managerInterface(CONNMAN_SERVICE,
-                                        "/",
-                                        "net.connman.Manager",
-                                        CONNMAN_BUS);
+    m_technologyTracker = TechnologyTracker::instance();
+    connect(m_technologyTracker.data(), &TechnologyTracker::technologyRemoved,
+            this, &NetworkTechnology::onInterfaceChanged);
+    connect(m_technologyTracker.data(), &TechnologyTracker::technologyAdded,
+            this, &NetworkTechnology::onInterfaceChanged);
 
-        QDBusPendingCall pendingCall = managerInterface.asyncCall("GetTechnologies");
-
-        connect(new QDBusPendingCallWatcher(pendingCall, this),
-                &QDBusPendingCallWatcher::finished, [this](QDBusPendingCallWatcher *watcher) {
-            QDBusPendingReply<ConnmanObjectList> reply = *watcher;
-            watcher->deleteLater();
-
-            if (reply.isError()) {
-                DBG_("Failed to connman techonologies:" << reply.isError() << reply.error().type());
-            } else {
-                for (const ConnmanObject &object : reply.value()) {
-                    techList()->insert(object.objpath.path());
-                }
-
-                destroyInterface();
-                createInterface();
-            }
-        });
-    } else {
-        destroyInterface();
-        createInterface();
-    }
+    createInterface();
 }
 
 void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
@@ -191,23 +247,6 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
     }
 }
 
-void NetworkTechnology::technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties)
-{
-    Q_UNUSED(properties);
-    techList()->insert(technology.path());
-    if (!m_path.isEmpty() && technology.path() == m_path) {
-        destroyInterface();
-        createInterface();
-    }
-}
-
-void NetworkTechnology::technologyRemoved(const QDBusObjectPath &technology)
-{
-    techList()->remove(technology.path());
-    if (m_technology && technology.path() == m_path) {
-        destroyInterface();
-    }
-}
 
 void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
 {
@@ -228,11 +267,8 @@ void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &v
 
 void NetworkTechnology::createInterface()
 {
-    if (!m_path.isEmpty() && techList()->contains(m_path)) {
-        // Emit the signal after creating NetConnmanTechnologyInterface
-        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path,
-                                                         CONNMAN_BUS, this);
-        Q_EMIT pathChanged(m_path);
+    if (!m_path.isEmpty() && m_technologyTracker->technologies().contains(m_path)) {
+        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path, CONNMAN_BUS, this);
 
         connect(m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
                 this, &NetworkTechnology::propertyChanged);
@@ -318,22 +354,25 @@ void NetworkTechnology::setPowered(bool powered)
 
 void NetworkTechnology::setPath(const QString &path)
 {
-    if (path != m_path) {
-        m_path = path;
-        destroyInterface();
-        createInterface();
+    if (path == m_path) {
+        return;
     }
 
-    // Clear the property cache (only) if the path is becoming empty.
-    if (m_path.isEmpty()) {
+    m_path = path;
+    destroyInterface();
+
+    if (!m_path.isEmpty()) {
+        createInterface();
+    } else {
         QStringList keys = m_propertiesCache.keys();
         m_propertiesCache.clear();
-        Q_EMIT pathChanged(m_path);
         const int n = keys.count();
         for (int i=0; i<n; i++) {
             emitPropertyChange(keys.at(i), QVariant());
         }
     }
+
+    Q_EMIT pathChanged(m_path);
 }
 
 void NetworkTechnology::setIdleTimeout(quint32 timeout)
@@ -402,6 +441,14 @@ void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &
     }
 }
 
+void NetworkTechnology::onInterfaceChanged(const QString &interface)
+{
+    if (interface == m_path) {
+        destroyInterface();
+        createInterface();
+    }
+}
+
 void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant &value)
 {
     QVariant tmp = value.variant();
@@ -417,3 +464,5 @@ void NetworkTechnology::scanReply(QDBusPendingCallWatcher *call)
 
     call->deleteLater();
 }
+
+#include "networktechnology.moc"

@@ -24,6 +24,8 @@ namespace Tests {
     class UtClock;
 }
 
+class ClockModelPrivate;
+
 class ClockModel : public QObject
 {
     Q_OBJECT
@@ -36,6 +38,7 @@ class ClockModel : public QObject
 
 public:
     ClockModel();
+    virtual ~ClockModel();
 
     QString timezone() const;
     QString timezoneUpdates() const;
@@ -64,11 +67,7 @@ private Q_SLOTS:
     void propertyChanged(const QString&, const QDBusVariant&);
 
 private:
-    NetConnmanClockInterface *mClockProxy;
-    QString mTimezone;
-    QString mTimezoneUpdates;
-    QString mTimeUpdates;
-    QStringList mTimeservers;
+    ClockModelPrivate *d_ptr;
 
     Q_DISABLE_COPY(ClockModel)
 };

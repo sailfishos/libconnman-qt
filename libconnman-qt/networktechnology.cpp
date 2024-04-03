@@ -140,13 +140,30 @@ void TechnologyTracker::onTechnologyRemoved(const QDBusObjectPath &technology)
     Q_EMIT technologyRemoved(technology.path());
 }
 
+class NetworkTechnologyPrivate
+{
+public:
+    NetworkTechnologyPrivate();
+
+    NetConnmanTechnologyInterface *m_technology;
+    QVariantMap m_propertiesCache;
+    QVariantMap m_pendingProperties;
+
+    QString m_path;
+    QSharedPointer<TechnologyTracker> m_technologyTracker;
+};
+
+NetworkTechnologyPrivate::NetworkTechnologyPrivate()
+    : m_technology(nullptr)
+{
+}
 
 NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &properties, QObject* parent)
-  : QObject(parent)
-  , m_technology(nullptr)
+    : QObject(parent)
+    , d_ptr(new NetworkTechnologyPrivate)
 {
     Q_ASSERT(!path.isEmpty());
-    m_propertiesCache = properties;
+    d_ptr->m_propertiesCache = properties;
 
     initialize();
     setPath(path);
@@ -154,7 +171,7 @@ NetworkTechnology::NetworkTechnology(const QString &path, const QVariantMap &pro
 
 NetworkTechnology::NetworkTechnology(QObject* parent)
     : QObject(parent)
-    , m_technology(nullptr)
+    , d_ptr(new NetworkTechnologyPrivate)
 {
     initialize();
 }
@@ -166,10 +183,10 @@ NetworkTechnology::~NetworkTechnology()
 
 void NetworkTechnology::initialize()
 {
-    m_technologyTracker = TechnologyTracker::instance();
-    connect(m_technologyTracker.data(), &TechnologyTracker::technologyRemoved,
+    d_ptr->m_technologyTracker = TechnologyTracker::instance();
+    connect(d_ptr->m_technologyTracker.data(), &TechnologyTracker::technologyRemoved,
             this, &NetworkTechnology::onInterfaceChanged);
-    connect(m_technologyTracker.data(), &TechnologyTracker::technologyAdded,
+    connect(d_ptr->m_technologyTracker.data(), &TechnologyTracker::technologyAdded,
             this, &NetworkTechnology::onInterfaceChanged);
 
     createInterface();
@@ -188,62 +205,62 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
         // emit changes only if there are real changes.
 
         QVariantMap tmpCache = reply.value();
-        if (m_pendingProperties.contains(Powered)) {
+        if (d_ptr->m_pendingProperties.contains(Powered)) {
             bool newValue = tmpCache[Powered].toBool();
-            bool pendingValue = m_pendingProperties[Powered].toBool();
+            bool pendingValue = d_ptr->m_pendingProperties[Powered].toBool();
             setPowered(pendingValue);
             if (pendingValue == newValue) {
-                m_pendingProperties.remove(Powered);
+                d_ptr->m_pendingProperties.remove(Powered);
             }
         }
 
-        if (m_pendingProperties.contains(IdleTimeout)) {
+        if (d_ptr->m_pendingProperties.contains(IdleTimeout)) {
             quint32 newValue = tmpCache[IdleTimeout].toUInt();
-            quint32 pendingValue = m_pendingProperties[IdleTimeout].toUInt();
+            quint32 pendingValue = d_ptr->m_pendingProperties[IdleTimeout].toUInt();
             setIdleTimeout(pendingValue);
             if (pendingValue == newValue) {
-                m_pendingProperties.remove(IdleTimeout);
+                d_ptr->m_pendingProperties.remove(IdleTimeout);
             }
         }
 
-        if (m_pendingProperties.contains(Tethering)) {
+        if (d_ptr->m_pendingProperties.contains(Tethering)) {
             bool newValue = tmpCache[Tethering].toBool();
-            bool pendingValue = m_pendingProperties[Tethering].toBool();
+            bool pendingValue = d_ptr->m_pendingProperties[Tethering].toBool();
             setTethering(pendingValue);
             if (pendingValue == newValue) {
-                m_pendingProperties.remove(Tethering);
+                d_ptr->m_pendingProperties.remove(Tethering);
             }
         }
 
-        if (m_pendingProperties.contains(TetheringIdentifier)) {
+        if (d_ptr->m_pendingProperties.contains(TetheringIdentifier)) {
             QString newValue = tmpCache[TetheringIdentifier].toString();
-            QString pendingValue = m_pendingProperties[TetheringIdentifier].toString();
+            QString pendingValue = d_ptr->m_pendingProperties[TetheringIdentifier].toString();
             setTetheringId(pendingValue);
             if (pendingValue == newValue) {
-                m_pendingProperties.remove(TetheringIdentifier);
+                d_ptr->m_pendingProperties.remove(TetheringIdentifier);
             }
         }
 
-        if (m_pendingProperties.contains(TetheringPassphrase)) {
+        if (d_ptr->m_pendingProperties.contains(TetheringPassphrase)) {
             QString newValue = tmpCache[TetheringPassphrase].toString();
-            QString pendingValue = m_pendingProperties[TetheringPassphrase].toString();
+            QString pendingValue = d_ptr->m_pendingProperties[TetheringPassphrase].toString();
             setTetheringPassphrase(pendingValue);
             if (pendingValue == newValue) {
-                m_pendingProperties.remove(TetheringPassphrase);
+                d_ptr->m_pendingProperties.remove(TetheringPassphrase);
             }
         }
 
         for (const QString &name : tmpCache.keys()) {
-            if (!m_pendingProperties.contains(name)) {
-                m_propertiesCache.insert(name, tmpCache[name]);
+            if (!d_ptr->m_pendingProperties.contains(name)) {
+                d_ptr->m_propertiesCache.insert(name, tmpCache[name]);
                 emitPropertyChange(name, tmpCache[name]);
             }
         }
-        m_pendingProperties.clear();
+        d_ptr->m_pendingProperties.clear();
         Q_EMIT propertiesReady();
     } else {
         qWarning() << reply.error().message();
-        m_propertiesCache.clear();
+        d_ptr->m_propertiesCache.clear();
     }
 }
 
@@ -251,7 +268,8 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
 void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
 {
     QDBusPendingCallWatcher *pendingCall
-            = new QDBusPendingCallWatcher(m_technology->SetProperty(key, QDBusVariant(value)), m_technology);
+            = new QDBusPendingCallWatcher(d_ptr->m_technology->SetProperty(key, QDBusVariant(value)),
+                                          d_ptr->m_technology);
     connect(pendingCall, &QDBusPendingCallWatcher::finished,
             [this, key, value](QDBusPendingCallWatcher *call) {
         QDBusPendingReply<QVariantMap> reply = *call;
@@ -260,20 +278,22 @@ void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &v
         // If technology object is not yet registered update pending value accordingly.
         // This is merely a fallback mechnanism as technologies are also istened.
         if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
-            m_pendingProperties.insert(key, value);
+            d_ptr->m_pendingProperties.insert(key, value);
         }
     });
 }
 
 void NetworkTechnology::createInterface()
 {
-    if (!m_path.isEmpty() && m_technologyTracker->technologies().contains(m_path)) {
-        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path, QDBusConnection::systemBus(), this);
+    if (!d_ptr->m_path.isEmpty() && d_ptr->m_technologyTracker->technologies().contains(d_ptr->m_path)) {
+        d_ptr->m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, d_ptr->m_path,
+                                                                QDBusConnection::systemBus(), this);
 
-        connect(m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
+        connect(d_ptr->m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
                 this, &NetworkTechnology::propertyChanged);
 
-        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(m_technology->GetProperties(), m_technology);
+        QDBusPendingCallWatcher *pendingCall = new QDBusPendingCallWatcher(d_ptr->m_technology->GetProperties(),
+                                                                           d_ptr->m_technology);
         connect(pendingCall, &QDBusPendingCallWatcher::finished,
                 this, &NetworkTechnology::getPropertiesFinished);
     }
@@ -281,8 +301,8 @@ void NetworkTechnology::createInterface()
 
 void NetworkTechnology::destroyInterface()
 {
-    delete m_technology;
-    m_technology = nullptr;
+    delete d_ptr->m_technology;
+    d_ptr->m_technology = nullptr;
 }
 
 // Public API
@@ -291,131 +311,131 @@ void NetworkTechnology::destroyInterface()
 
 QString NetworkTechnology::path() const
 {
-    return m_path;
+    return d_ptr->m_path;
 }
 
 QString NetworkTechnology::name() const
 {
-    return m_propertiesCache.value(Name).toString();
+    return d_ptr->m_propertiesCache.value(Name).toString();
 }
 
 QString NetworkTechnology::type() const
 {
-    return m_propertiesCache.value(Type).toString();
+    return d_ptr->m_propertiesCache.value(Type).toString();
 }
 
 bool NetworkTechnology::powered() const
 {
-    return m_propertiesCache.value(Powered).toBool();
+    return d_ptr->m_propertiesCache.value(Powered).toBool();
 }
 
 bool NetworkTechnology::connected() const
 {
-    return m_propertiesCache.value(Connected).toBool();
+    return d_ptr->m_propertiesCache.value(Connected).toBool();
 }
 
 QString NetworkTechnology::objPath() const
 {
-    if (m_technology)
-        return m_technology->path();
+    if (d_ptr->m_technology)
+        return d_ptr->m_technology->path();
     return QString();
 }
 
 quint32 NetworkTechnology::idleTimeout() const
 {
-    return m_propertiesCache.value(IdleTimeout).toUInt();
+    return d_ptr->m_propertiesCache.value(IdleTimeout).toUInt();
 }
 
 bool NetworkTechnology::tethering() const
 {
-    return m_propertiesCache.value(Tethering).toBool();
+    return d_ptr->m_propertiesCache.value(Tethering).toBool();
 }
 
 QString NetworkTechnology::tetheringId() const
 {
-    return m_propertiesCache.value(TetheringIdentifier).toString();
+    return d_ptr->m_propertiesCache.value(TetheringIdentifier).toString();
 }
 
 QString NetworkTechnology::tetheringPassphrase() const
 {
-    return m_propertiesCache.value(TetheringPassphrase).toString();
+    return d_ptr->m_propertiesCache.value(TetheringPassphrase).toString();
 }
 
 // Setters
 
 void NetworkTechnology::setPowered(bool powered)
 {
-    if (m_technology) {
+    if (d_ptr->m_technology) {
         pendingSetProperty(Powered, QVariant(powered));
     } else {
-        m_pendingProperties.insert(Powered, QVariant(powered));
+        d_ptr->m_pendingProperties.insert(Powered, QVariant(powered));
     }
 }
 
 void NetworkTechnology::setPath(const QString &path)
 {
-    if (path == m_path) {
+    if (path == d_ptr->m_path) {
         return;
     }
 
-    m_path = path;
+    d_ptr->m_path = path;
     destroyInterface();
 
-    if (!m_path.isEmpty()) {
+    if (!d_ptr->m_path.isEmpty()) {
         createInterface();
     } else {
-        QStringList keys = m_propertiesCache.keys();
-        m_propertiesCache.clear();
+        QStringList keys = d_ptr->m_propertiesCache.keys();
+        d_ptr->m_propertiesCache.clear();
         const int n = keys.count();
         for (int i=0; i<n; i++) {
             emitPropertyChange(keys.at(i), QVariant());
         }
     }
 
-    Q_EMIT pathChanged(m_path);
+    Q_EMIT pathChanged(d_ptr->m_path);
 }
 
 void NetworkTechnology::setIdleTimeout(quint32 timeout)
 {
-    if (m_technology)
+    if (d_ptr->m_technology)
         pendingSetProperty(IdleTimeout, QVariant(timeout));
     else
-        m_pendingProperties.insert(IdleTimeout, QVariant(timeout));
+        d_ptr->m_pendingProperties.insert(IdleTimeout, QVariant(timeout));
 }
 
 void NetworkTechnology::setTethering(bool b)
 {
-    if (m_technology)
+    if (d_ptr->m_technology)
         pendingSetProperty(Tethering, QVariant(b));
     else
-        m_pendingProperties.insert(Tethering, QVariant(b));
+        d_ptr->m_pendingProperties.insert(Tethering, QVariant(b));
 }
 
 void NetworkTechnology::setTetheringId(const QString &id)
 {
-    if (m_technology)
+    if (d_ptr->m_technology)
         pendingSetProperty(TetheringIdentifier, QVariant(id));
     else
-        m_pendingProperties.insert(TetheringIdentifier, QVariant(id));
+        d_ptr->m_pendingProperties.insert(TetheringIdentifier, QVariant(id));
 }
 
 void NetworkTechnology::setTetheringPassphrase(const QString &pass)
 {
-    if (m_technology)
+    if (d_ptr->m_technology)
         pendingSetProperty(TetheringPassphrase, QVariant(pass));
     else
-        m_pendingProperties.insert(TetheringPassphrase, QVariant(pass));
+        d_ptr->m_pendingProperties.insert(TetheringPassphrase, QVariant(pass));
 }
 
 // Private
 
 void NetworkTechnology::scan()
 {
-    if (!m_technology)
+    if (!d_ptr->m_technology)
         return;
 
-    QDBusPendingReply<> reply = m_technology->Scan();
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, m_technology);
+    QDBusPendingReply<> reply = d_ptr->m_technology->Scan();
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, d_ptr->m_technology);
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
             this, SLOT(scanReply(QDBusPendingCallWatcher*)));
 }
@@ -443,7 +463,7 @@ void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &
 
 void NetworkTechnology::onInterfaceChanged(const QString &interface)
 {
-    if (interface == m_path) {
+    if (interface == d_ptr->m_path) {
         destroyInterface();
         createInterface();
     }
@@ -453,8 +473,8 @@ void NetworkTechnology::propertyChanged(const QString &name, const QDBusVariant 
 {
     QVariant tmp = value.variant();
 
-    Q_ASSERT(m_technology);
-    m_propertiesCache[name] = tmp;
+    Q_ASSERT(d_ptr->m_technology);
+    d_ptr->m_propertiesCache[name] = tmp;
     emitPropertyChange(name, tmp);
 }
 

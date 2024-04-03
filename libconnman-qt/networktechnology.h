@@ -13,8 +13,7 @@
 #include <QtDBus>
 #include <QSharedPointer>
 
-class NetConnmanTechnologyInterface;
-class TechnologyTracker;
+class NetworkTechnologyPrivate;
 
 class NetworkTechnology : public QObject
 {
@@ -76,12 +75,7 @@ Q_SIGNALS:
     void typeChanged(const QString &type);
 
 private:
-    NetConnmanTechnologyInterface *m_technology;
-    QVariantMap m_propertiesCache;
-    QVariantMap m_pendingProperties;
-
-    QString m_path;
-    QSharedPointer<TechnologyTracker> m_technologyTracker;
+    NetworkTechnologyPrivate *d_ptr;
 
 private Q_SLOTS:
     void onInterfaceChanged(const QString &interface);

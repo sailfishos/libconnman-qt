@@ -17,7 +17,7 @@
 #include <networkservice.h>
 #include <clockmodel.h>
 #include "declarativenetworkmanager.h"
-#include "technologymodel.h"
+#include "technologyservicemodel.h"
 #include "savedservicemodel.h"
 #include "useragent.h"
 #include "networksession.h"
@@ -51,6 +51,7 @@ void ConnmanPlugin::registerTypes(const char *uri)
     }
 
     qmlRegisterType<NetworkService>(uri, 0, 2, "NetworkService");
+    qmlRegisterType<TechnologyServiceModel>(uri, 0, 2, "TechnologyServiceModel");
     qmlRegisterType<TechnologyModel>(uri, 0, 2, "TechnologyModel");
     qmlRegisterType<SavedServiceModel>(uri, 0, 2, "SavedServiceModel");
     qmlRegisterType<UserAgent>(uri, 0, 2, "UserAgent");

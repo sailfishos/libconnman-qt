@@ -17,13 +17,11 @@
 #include <networkservice.h>
 
 /*
- * TechnologyModel is a list model specific to a certain technology (wifi by default).
+ * TechnologyServiceModel is a list model specific to a certain technology (wifi by default).
  */
-class TechnologyModel : public QAbstractListModel
+class TechnologyServiceModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_DISABLE_COPY(TechnologyModel)
-
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
@@ -45,8 +43,8 @@ public:
         ServiceRole = Qt::UserRole + 1
     };
 
-    TechnologyModel(QAbstractListModel* parent = 0);
-    virtual ~TechnologyModel();
+    TechnologyServiceModel(QObject *parent = 0);
+    virtual ~TechnologyServiceModel();
 
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -82,6 +80,8 @@ Q_SIGNALS:
     void scanRequestFinished();
 
 private:
+    Q_DISABLE_COPY(TechnologyServiceModel)
+
     QString m_techname;
     QSharedPointer<NetworkManager> m_manager;
     NetworkTechnology* m_tech;
@@ -102,6 +102,12 @@ private Q_SLOTS:
     void changedConnected(bool);
     void finishedScan();
     void networkServiceDestroyed(QObject *);
+};
+
+class TechnologyModel: public TechnologyServiceModel
+{
+public:
+    TechnologyModel(QObject *parent = 0);
 };
 
 #endif // TECHNOLOGYMODEL_H

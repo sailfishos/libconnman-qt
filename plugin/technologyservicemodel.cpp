@@ -9,9 +9,9 @@
  */
 
 #include <QDebug>
-#include "technologymodel.h"
+#include "technologyservicemodel.h"
 
-TechnologyModel::TechnologyModel(QAbstractListModel* parent)
+TechnologyServiceModel::TechnologyServiceModel(QObject *parent)
   : QAbstractListModel(parent),
     m_tech(nullptr),
     m_scanning(false),
@@ -22,27 +22,27 @@ TechnologyModel::TechnologyModel(QAbstractListModel* parent)
     m_manager = NetworkManager::sharedInstance();
 
     connect(m_manager.data(), &NetworkManager::availabilityChanged,
-            this, &TechnologyModel::managerAvailabilityChanged);
+            this, &TechnologyServiceModel::managerAvailabilityChanged);
 
     connect(m_manager.data(), &NetworkManager::technologiesChanged,
-            this, &TechnologyModel::updateTechnologies);
+            this, &TechnologyServiceModel::updateTechnologies);
 
     connect(m_manager.data(), &NetworkManager::servicesChanged,
-            this, &TechnologyModel::updateServiceList);
+            this, &TechnologyServiceModel::updateServiceList);
 }
 
-TechnologyModel::~TechnologyModel()
+TechnologyServiceModel::~TechnologyServiceModel()
 {
 }
 
-QHash<int, QByteArray> TechnologyModel::roleNames() const
+QHash<int, QByteArray> TechnologyServiceModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ServiceRole] = "networkService";
     return roles;
 }
 
-QVariant TechnologyModel::data(const QModelIndex &index, int role) const
+QVariant TechnologyServiceModel::data(const QModelIndex &index, int role) const
 {
     switch (role) {
     case ServiceRole:
@@ -52,29 +52,29 @@ QVariant TechnologyModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-int TechnologyModel::rowCount(const QModelIndex &parent) const
+int TechnologyServiceModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
 
     return m_services.count();
 }
 
-int TechnologyModel::count() const
+int TechnologyServiceModel::count() const
 {
     return rowCount();
 }
 
-QString TechnologyModel::name() const
+QString TechnologyServiceModel::name() const
 {
     return m_techname;
 }
 
-bool TechnologyModel::isAvailable() const
+bool TechnologyServiceModel::isAvailable() const
 {
     return m_manager->isAvailable() && m_tech;
 }
 
-bool TechnologyModel::isConnected() const
+bool TechnologyServiceModel::isConnected() const
 {
     if (m_tech) {
         return m_tech->connected();
@@ -84,7 +84,7 @@ bool TechnologyModel::isConnected() const
     }
 }
 
-bool TechnologyModel::isPowered() const
+bool TechnologyServiceModel::isPowered() const
 {
     if (m_tech) {
         return m_tech->powered();
@@ -94,22 +94,22 @@ bool TechnologyModel::isPowered() const
     }
 }
 
-bool TechnologyModel::isScanning() const
+bool TechnologyServiceModel::isScanning() const
 {
     return m_scanning;
 }
 
-bool TechnologyModel::changesInhibited() const
+bool TechnologyServiceModel::changesInhibited() const
 {
     return m_changesInhibited;
 }
 
-TechnologyModel::ServiceFilter TechnologyModel::filter() const
+TechnologyServiceModel::ServiceFilter TechnologyServiceModel::filter() const
 {
     return m_filter;
 }
 
-void TechnologyModel::setFilter(ServiceFilter filter)
+void TechnologyServiceModel::setFilter(ServiceFilter filter)
 {
     if (m_filter != filter) {
         m_filter = filter;
@@ -118,7 +118,7 @@ void TechnologyModel::setFilter(ServiceFilter filter)
     }
 }
 
-void TechnologyModel::setPowered(bool powered)
+void TechnologyServiceModel::setPowered(bool powered)
 {
     if (m_tech) {
         m_tech->setPowered(powered);
@@ -127,7 +127,7 @@ void TechnologyModel::setPowered(bool powered)
     }
 }
 
-void TechnologyModel::setName(const QString &name)
+void TechnologyServiceModel::setName(const QString &name)
 {
     if (m_techname == name || name.isEmpty()) {
         return;
@@ -138,7 +138,7 @@ void TechnologyModel::setName(const QString &name)
     updateTechnologies();
 }
 
-void TechnologyModel::setChangesInhibited(bool b)
+void TechnologyServiceModel::setChangesInhibited(bool b)
 {
     if (m_changesInhibited != b) {
         m_changesInhibited = b;
@@ -148,12 +148,12 @@ void TechnologyModel::setChangesInhibited(bool b)
             // about removed/deleted services, connect destroyed.
             for (const NetworkService *service : m_services) {
                 connect(service, &QObject::destroyed,
-                        this, &TechnologyModel::networkServiceDestroyed);
+                        this, &TechnologyServiceModel::networkServiceDestroyed);
             }
         } else {
             for (const NetworkService *service : m_services) {
                 disconnect(service, &QObject::destroyed,
-                           this, &TechnologyModel::networkServiceDestroyed);
+                           this, &TechnologyServiceModel::networkServiceDestroyed);
             }
 
         }
@@ -167,7 +167,7 @@ void TechnologyModel::setChangesInhibited(bool b)
     }
 }
 
-void TechnologyModel::requestScan()
+void TechnologyServiceModel::requestScan()
 {
     if (m_tech && !m_tech->tethering()) {
         m_tech->scan();
@@ -176,7 +176,7 @@ void TechnologyModel::requestScan()
     }
 }
 
-void TechnologyModel::updateTechnologies()
+void TechnologyServiceModel::updateTechnologies()
 {
     bool wasAvailable = m_manager->isAvailable() && m_tech;
 
@@ -188,7 +188,7 @@ void TechnologyModel::updateTechnologies()
         Q_EMIT availabilityChanged(isAvailable);
 }
 
-void TechnologyModel::doUpdateTechnologies()
+void TechnologyServiceModel::doUpdateTechnologies()
 {
     NetworkTechnology *newTech = m_manager->getTechnology(m_techname);
     if (m_tech == newTech)
@@ -236,7 +236,7 @@ void TechnologyModel::doUpdateTechnologies()
     updateServiceList();
 }
 
-void TechnologyModel::managerAvailabilityChanged(bool available)
+void TechnologyServiceModel::managerAvailabilityChanged(bool available)
 {
     bool wasAvailable = !available && m_tech;
 
@@ -247,14 +247,14 @@ void TechnologyModel::managerAvailabilityChanged(bool available)
         Q_EMIT availabilityChanged(isAvailable);
 }
 
-NetworkService *TechnologyModel::get(int index) const
+NetworkService *TechnologyServiceModel::get(int index) const
 {
     if (index < 0 || index > m_services.count())
         return 0;
     return m_services.value(index);
 }
 
-int TechnologyModel::indexOf(const QString &dbusObjectPath) const
+int TechnologyServiceModel::indexOf(const QString &dbusObjectPath) const
 {
     int idx(-1);
 
@@ -266,7 +266,7 @@ int TechnologyModel::indexOf(const QString &dbusObjectPath) const
     return -1;
 }
 
-void TechnologyModel::updateServiceList()
+void TechnologyServiceModel::updateServiceList()
 {
     if (m_changesInhibited) {
         m_uneffectedChanges = true;
@@ -316,7 +316,7 @@ void TechnologyModel::updateServiceList()
         Q_EMIT countChanged();
 }
 
-void TechnologyModel::changedPower(bool b)
+void TechnologyServiceModel::changedPower(bool b)
 {
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
     if (tech->type() != m_tech->type())
@@ -330,14 +330,14 @@ void TechnologyModel::changedPower(bool b)
     }
 }
 
-void TechnologyModel::changedConnected(bool b)
+void TechnologyServiceModel::changedConnected(bool b)
 {
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
     if (tech->type() == m_tech->type())
         Q_EMIT connectedChanged(b);
 }
 
-void TechnologyModel::finishedScan()
+void TechnologyServiceModel::finishedScan()
 {
     NetworkTechnology *tech = qobject_cast<NetworkTechnology *>(sender());
     if (tech->type() != m_tech->type())
@@ -351,7 +351,7 @@ void TechnologyModel::finishedScan()
     }
 }
 
-void TechnologyModel::networkServiceDestroyed(QObject *service)
+void TechnologyServiceModel::networkServiceDestroyed(QObject *service)
 {
     int ind = m_services.indexOf(static_cast<NetworkService*>(service));
     if (ind >= 0) {
@@ -361,4 +361,10 @@ void TechnologyModel::networkServiceDestroyed(QObject *service)
         endRemoveRows();
         Q_EMIT countChanged();
     }
+}
+
+TechnologyModel::TechnologyModel(QObject *parent)
+    : TechnologyServiceModel(parent)
+{
+    qWarning() << "TechnologyModel is deprecated. Use TechnologyServiceModel";
 }

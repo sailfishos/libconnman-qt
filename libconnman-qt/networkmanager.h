@@ -193,39 +193,8 @@ private:
 
 private:
     class Private;
-    class InterfaceProxy;
     friend class Private;
-
-    InterfaceProxy *m_proxy;
-
-    /* Contains all property related to this net.connman.Manager object */
-    QVariantMap m_propertiesCache;
-
-    /* Not just for cache, but actual containers of Network* type objects */
-    QHash<QString, NetworkTechnology *> m_technologiesCache;
-    QHash<QString, NetworkService *> m_servicesCache;
-    bool m_servicesCacheHasUpdates;
-
-    /* Define the order of services returned in service lists */
-    QStringList m_servicesOrder;
-    QStringList m_savedServicesOrder;
-
-    /* This variable is used just to send signal if changed */
-    NetworkService* m_defaultRoute;
-
-    /* Invalid default route service for use when there is no default route */
-    NetworkService *m_invalidDefaultRoute;
-
-    /* Since VPNs are not known this holds info necessary for dropping out of VPN */
-    bool m_defaultRouteIsVPN;
-
     Private *m_priv;
-
-    static const QString State;
-    static const QString OfflineMode;
-    static const QString DefaultService;
-
-    bool m_available;
 
 private Q_SLOTS:
     void onConnmanRegistered();

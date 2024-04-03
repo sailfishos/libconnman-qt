@@ -316,7 +316,7 @@ class NetworkService::Private::InterfaceProxy: public QDBusAbstractInterface
 public:
     InterfaceProxy(const QString &path, NetworkService::Private *parent) :
         QDBusAbstractInterface(CONNMAN_SERVICE, path, "net.connman.Service",
-            CONNMAN_BUS, parent) {}
+            QDBusConnection::systemBus(), parent) {}
 
 public Q_SLOTS:
     QDBusPendingCall GetProperties()

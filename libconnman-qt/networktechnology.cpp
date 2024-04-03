@@ -64,7 +64,7 @@ QSharedPointer<TechnologyTracker> TechnologyTracker::instance()
 
 TechnologyTracker::TechnologyTracker()
     : QObject()
-    , m_dbusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+    , m_dbusWatcher(new QDBusServiceWatcher(CONNMAN_SERVICE, QDBusConnection::systemBus(),
                                             QDBusServiceWatcher::WatchForRegistration
                                             | QDBusServiceWatcher::WatchForUnregistration, this))
 {
@@ -80,7 +80,7 @@ TechnologyTracker::TechnologyTracker()
     });
 
     // Monitor TechnologyAdded and TechnologyRemoved.
-    CONNMAN_BUS.connect(
+    QDBusConnection::systemBus().connect(
                 CONNMAN_SERVICE,
                 "/",
                 "net.connman.Manager",
@@ -88,7 +88,7 @@ TechnologyTracker::TechnologyTracker()
                 this,
                 SLOT(onTechnologyAdded(QDBusObjectPath,QVariantMap)));
 
-    CONNMAN_BUS.connect(
+    QDBusConnection::systemBus().connect(
                 CONNMAN_SERVICE,
                 "/",
                 "net.connman.Manager",
@@ -106,7 +106,7 @@ QSet<QString> TechnologyTracker::technologies()
 
 void TechnologyTracker::getTechnologies()
 {
-    QDBusInterface managerInterface(CONNMAN_SERVICE, "/", "net.connman.Manager", CONNMAN_BUS);
+    QDBusInterface managerInterface(CONNMAN_SERVICE, "/", "net.connman.Manager", QDBusConnection::systemBus());
 
     QDBusPendingCall pendingCall = managerInterface.asyncCall("GetTechnologies");
 
@@ -268,7 +268,7 @@ void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &v
 void NetworkTechnology::createInterface()
 {
     if (!m_path.isEmpty() && m_technologyTracker->technologies().contains(m_path)) {
-        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path, CONNMAN_BUS, this);
+        m_technology = new NetConnmanTechnologyInterface(CONNMAN_SERVICE, m_path, QDBusConnection::systemBus(), this);
 
         connect(m_technology, &NetConnmanTechnologyInterface::PropertyChanged,
                 this, &NetworkTechnology::propertyChanged);

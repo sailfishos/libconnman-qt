@@ -12,7 +12,6 @@
 
 #include "commondbustypes.h"
 
-#define CONNMAN_BUS QDBusConnection::systemBus()
 #define CONNMAN_SERVICE QLatin1String("net.connman")
 
 class ConnmanError {

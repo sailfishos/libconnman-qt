@@ -379,7 +379,7 @@ class NetworkManager::InterfaceProxy: public QDBusAbstractInterface
 public:
     InterfaceProxy(NetworkManager *parent) :
         QDBusAbstractInterface(CONNMAN_SERVICE, "/", "net.connman.Manager",
-            CONNMAN_BUS, parent) {}
+            QDBusConnection::systemBus(), parent) {}
 
 public:
     QDBusPendingCall GetProperties()
@@ -440,12 +440,12 @@ NetworkManager::NetworkManager(QObject* parent)
     m_available(false)
 {
     registerCommonDataTypes();
-    QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, CONNMAN_BUS,
+    QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, QDBusConnection::systemBus(),
             QDBusServiceWatcher::WatchForRegistration |
             QDBusServiceWatcher::WatchForUnregistration, this);
     connect(watcher, SIGNAL(serviceRegistered(QString)), SLOT(onConnmanRegistered()));
     connect(watcher, SIGNAL(serviceUnregistered(QString)), SLOT(onConnmanUnregistered()));
-    setConnmanAvailable(CONNMAN_BUS.interface()->isServiceRegistered(CONNMAN_SERVICE));
+    setConnmanAvailable(QDBusConnection::systemBus().interface()->isServiceRegistered(CONNMAN_SERVICE));
 }
 
 NetworkManager::~NetworkManager()

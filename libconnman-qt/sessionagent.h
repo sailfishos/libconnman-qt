@@ -13,6 +13,7 @@
 #include "networkmanager.h"
 
 class NetConnmanSessionInterface;
+class SessionAgentPrivate;
 
 class SessionAgent : public QObject
 {
@@ -41,10 +42,7 @@ private Q_SLOTS:
     void onConnectFinished(QDBusPendingCallWatcher *watcher);
 
 private:
-    QString agentPath;
-    QVariantMap sessionSettings;
-    QSharedPointer<NetworkManager> m_manager;
-    NetConnmanSessionInterface *m_session;
+    SessionAgentPrivate *d_ptr;
 
     friend class SessionNotificationAdaptor;
 };

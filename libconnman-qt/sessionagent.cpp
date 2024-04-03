@@ -23,58 +23,79 @@ Example:
 
   */
 
-SessionAgent::SessionAgent(const QString &path, QObject *parent)
-    : QObject(parent)
-    , agentPath(path)
+class SessionAgentPrivate
+{
+public:
+    SessionAgentPrivate(const QString &path);
+
+    QString agentPath;
+    QVariantMap sessionSettings;
+    QSharedPointer<NetworkManager> m_manager;
+    NetConnmanSessionInterface *m_session;
+};
+
+SessionAgentPrivate::SessionAgentPrivate(const QString &path)
+    : agentPath(path)
     , m_manager(NetworkManager::sharedInstance())
     , m_session(nullptr)
+{
+}
+
+SessionAgent::SessionAgent(const QString &path, QObject *parent)
+    : QObject(parent)
+    , d_ptr(new SessionAgentPrivate(path))
 {
     createSession();
 }
 
 SessionAgent::~SessionAgent()
 {
-    m_manager->destroySession(agentPath);
+    d_ptr->m_manager->destroySession(d_ptr->agentPath);
+
+    delete d_ptr;
+    d_ptr = nullptr;
 }
 
 void SessionAgent::setAllowedBearers(const QStringList &bearers)
 {
-    if (!m_session)
+    if (!d_ptr->m_session)
         return;
+
     QVariantMap map;
     map.insert("AllowedBearers",  QVariant::fromValue(bearers));
-    QDBusPendingReply<> reply = m_session->Change("AllowedBearers",QDBusVariant(bearers));
+    QDBusPendingReply<> reply = d_ptr->m_session->Change("AllowedBearers", QDBusVariant(bearers));
     // hope this is not a lengthy task
     reply.waitForFinished();
     if (reply.isError()) {
         qDebug() << Q_FUNC_INFO << reply.error();
     }
-
 }
 
 void SessionAgent::setConnectionType(const QString &type)
 {
-    if (!m_session)
+    if (!d_ptr->m_session)
         return;
+
     QVariantMap map;
-    map.insert("ConnectionType",  QVariant::fromValue(type));
-    m_session->Change("ConnectionType",QDBusVariant(type));
+    map.insert("ConnectionType", QVariant::fromValue(type));
+    d_ptr->m_session->Change("ConnectionType", QDBusVariant(type));
 }
 
 void SessionAgent::createSession()
 {
-    if (m_manager->isAvailable()) {
-        QDBusObjectPath obpath = m_manager->createSession(QVariantMap(),agentPath);
-        if (!obpath.path().isEmpty()) {
-            m_session = new NetConnmanSessionInterface("net.connman", obpath.path(),
-                QDBusConnection::systemBus(), this);
+    if (d_ptr->m_manager->isAvailable()) {
+        QDBusObjectPath objectPath = d_ptr->m_manager->createSession(QVariantMap(), d_ptr->agentPath);
+
+        if (!objectPath.path().isEmpty()) {
+            d_ptr->m_session = new NetConnmanSessionInterface("net.connman", objectPath.path(),
+                                                              QDBusConnection::systemBus(), this);
             new SessionNotificationAdaptor(this);
-            QDBusConnection::systemBus().unregisterObject(agentPath);
-            if (!QDBusConnection::systemBus().registerObject(agentPath, this)) {
+            QDBusConnection::systemBus().unregisterObject(d_ptr->agentPath);
+            if (!QDBusConnection::systemBus().registerObject(d_ptr->agentPath, this)) {
                 qDebug() << "Could not register agent object";
             }
         } else {
-            qDebug() << "agentPath is not valid" << agentPath;
+            qDebug() << "agentPath is not valid" << d_ptr->agentPath;
         }
     } else {
         qDebug() << Q_FUNC_INFO << "manager not valid";
@@ -83,24 +104,24 @@ void SessionAgent::createSession()
 
 void SessionAgent::requestConnect()
 {
-    if (m_session) {
-      QDBusPendingReply<> reply = m_session->Connect();
-      QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-      connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-          this, SLOT(onConnectFinished(QDBusPendingCallWatcher*)));
+    if (d_ptr->m_session) {
+        QDBusPendingReply<> reply = d_ptr->m_session->Connect();
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                this, SLOT(onConnectFinished(QDBusPendingCallWatcher*)));
     }
 }
 
 void SessionAgent::requestDisconnect()
 {
-    if (m_session)
-        m_session->Disconnect();
+    if (d_ptr->m_session)
+        d_ptr->m_session->Disconnect();
 }
 
 void SessionAgent::requestDestroy()
 {
-    if (m_session)
-        m_session->Destroy();
+    if (d_ptr->m_session)
+        d_ptr->m_session->Destroy();
 }
 
 void SessionAgent::release()

@@ -34,23 +34,23 @@ class UserAgent : public QObject
     Q_DISABLE_COPY(UserAgent)
 
 public:
-    explicit UserAgent(QObject* parent = 0);
-    virtual ~UserAgent();
-
     enum ConnectionRequestType {
         TYPE_DEFAULT =0,
         TYPE_SUPPRESS,
         TYPE_CLEAR
     };
 
+    explicit UserAgent(QObject* parent = 0);
+    virtual ~UserAgent();
+
+    QString connectionRequestType() const;
+    QString path() const;
+
 public Q_SLOTS:
     void sendUserReply(const QVariantMap &input);
 
     void sendConnectReply(const QString &replyMessage, int timeout = 120);
     void setConnectionRequestType(const QString &type);
-    QString connectionRequestType() const;
-
-    QString path() const;
     void setAgentPath(const QString &path);
 
 Q_SIGNALS:

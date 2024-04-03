@@ -27,7 +27,6 @@ namespace Tests {
 class ClockModel : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(QString timezone READ timezone WRITE setTimezone NOTIFY timezoneChanged)
     Q_PROPERTY(QString timezoneUpdates READ timezoneUpdates WRITE setTimezoneUpdates NOTIFY timezoneUpdatesChanged)
     Q_PROPERTY(QString timeUpdates READ timeUpdates WRITE setTimeUpdates NOTIFY timeUpdatesChanged)
@@ -38,14 +37,15 @@ class ClockModel : public QObject
 public:
     ClockModel();
 
-public Q_SLOTS:
     QString timezone() const;
-    void setTimezone(const QString &val);
     QString timezoneUpdates() const;
-    void setTimezoneUpdates(const QString &val);
     QString timeUpdates() const;
-    void setTimeUpdates(const QString &val);
     QStringList timeservers() const;
+
+public Q_SLOTS:
+    void setTimezone(const QString &val);
+    void setTimezoneUpdates(const QString &val);
+    void setTimeUpdates(const QString &val);
     void setTimeservers(const QStringList &val);
 
     void setDate(QDate date);

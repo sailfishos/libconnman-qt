@@ -75,30 +75,4 @@ private:
     friend class AgentAdaptor;
 };
 
-class AgentAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent")
-
-public:
-    explicit AgentAdaptor(UserAgent* parent);
-    virtual ~AgentAdaptor();
-
-public Q_SLOTS:
-    void Release();
-    void ReportError(const QDBusObjectPath &service_path, const QString &error);
-    Q_NOREPLY void RequestBrowser(const QDBusObjectPath &service_path, const QString &url,
-                        const QDBusMessage &message);
-    void RequestConnect(const QDBusMessage &message);
-
-    Q_NOREPLY void RequestInput(const QDBusObjectPath &service_path,
-                                const QVariantMap &fields,
-                                const QDBusMessage &message);
-    void Cancel();
-
-private:
-    UserAgent* m_userAgent;
-    QElapsedTimer browserRequestTimer;
-};
-
 #endif // USERAGENT_H

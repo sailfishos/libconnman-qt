@@ -47,20 +47,4 @@ private:
     friend class SessionNotificationAdaptor;
 };
 
-class SessionNotificationAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Notification")
-
-public:
-    explicit SessionNotificationAdaptor(SessionAgent* parent);
-    virtual ~SessionNotificationAdaptor();
-
-public Q_SLOTS:
-    void Release();
-    void Update(const QVariantMap &settings);
-private:
-    SessionAgent* m_sessionAgent;
-};
-
 #endif // USERAGENT_H

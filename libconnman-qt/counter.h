@@ -78,22 +78,4 @@ private:
     void release();
 };
 
-class CounterAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Counter")
-
-public:
-    explicit CounterAdaptor(Counter *parent);
-    virtual ~CounterAdaptor();
-
-public Q_SLOTS:
-    void Release();
-    void Usage(const QDBusObjectPath &service_path,
-                                const QVariantMap &home,
-                                const QVariantMap &roaming);
-
-private:
-    Counter *m_counter;
-};
 #endif // COUNTER_H

@@ -503,7 +503,7 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
     reconnectServiceInterface();
     updateManaged();
     updateConnected();
-    DBG_(m_path << "managed:" << m_managed);
+    qCDebug(lcConnman) << m_path << "managed:" << m_managed;
 
     // Reset the signal mask (the above calls may have set some bits)
     m_queuedSignals = 0;
@@ -594,7 +594,7 @@ void NetworkService::Private::checkAccess()
 
 void NetworkService::Private::onRestrictedPropertyChanged(const QString &name)
 {
-    DBG_(name);
+    qCDebug(lcConnman) << name;
     connect(new GetPropertyWatcher(name, m_proxy),
         SIGNAL(finished(QDBusPendingCallWatcher*)),
         SLOT(onGetPropertyFinished(QDBusPendingCallWatcher*)));
@@ -609,9 +609,9 @@ void NetworkService::Private::onGetPropertyFinished(QDBusPendingCallWatcher *cal
     QDBusPendingReply<QVariant> reply = *call;
     call->deleteLater();
     if (reply.isError()) {
-        DBG_(watcher->m_name << reply.error());
+        qCDebug(lcConnman) << watcher->m_name << reply.error();
     } else {
-        DBG_(watcher->m_name << "=" << reply.value());
+        qCDebug(lcConnman) << watcher->m_name << "=" << reply.value();
         updatePropertyCache(watcher->m_name, reply.value());
         emitQueuedSignals();
     }
@@ -622,13 +622,13 @@ void NetworkService::Private::onCheckAccessFinished(QDBusPendingCallWatcher *cal
     QDBusPendingReply<uint,uint,uint> reply = *call;
     call->deleteLater();
     if (reply.isError()) {
-        DBG_(m_path << reply.error());
+        qCDebug(lcConnman) << m_path << reply.error();
     } else {
         const uint get_props = reply.argumentAt<0>();
         const uint set_props = reply.argumentAt<1>();
         const uint calls = reply.argumentAt<2>();
 
-        DBG_(get_props << set_props << calls);
+        qCDebug(lcConnman) << get_props << set_props << calls;
 
         const uint prev = m_propGetFlags;
         const bool wasManaged = managed();
@@ -645,7 +645,7 @@ void NetworkService::Private::onCheckAccessFinished(QDBusPendingCallWatcher *cal
 
         m_managed = managed();
         if (m_managed != wasManaged) {
-            DBG_(m_path << "managed:" << m_managed);
+            qCDebug(lcConnman) << m_path << "managed:" << m_managed;
             queueSignal(SignalManagedChanged);
         }
 
@@ -914,7 +914,7 @@ void NetworkService::Private::onGetPropertiesFinished(QDBusPendingCallWatcher *c
         emitQueuedSignals();
         Q_EMIT service()->propertiesReady();
     } else {
-        DBG_(m_path << reply.error());
+        qCDebug(lcConnman) << m_path << reply.error();
     }
 }
 
@@ -965,7 +965,7 @@ void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)
     if (reply.isError()) {
         QDBusError error(reply.error());
         QString errorName(error.name());
-        DBG_(error);
+        qCDebug(lcConnman) << error;
 
         // InProgress means that somebody has already asked this service
         // to get connected. That's fine, we will keep watching the status.
@@ -1301,7 +1301,7 @@ void NetworkService::Private::policyCheck(const QString &rules)
         }
         da_policy_unref(policy);
     } else {
-        DBG_("Failed to parse" << rules);
+        qCDebug(lcConnman) << "Failed to parse" << rules;
     }
 }
 

@@ -31,10 +31,6 @@ isEmpty(TARGET_SUFFIX) {
     TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-CONFIG(debug, debug|release) {
-    DEFINES += CONNMAN_DEBUG=1
-}
-
 TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
@@ -76,6 +72,7 @@ HEADERS += \
     qdbusxml2cpp_dbus_types.h
 
 SOURCES += \
+    logging.cpp \
     marshalutils.cpp \
     networkmanager.cpp \
     networktechnology.cpp \

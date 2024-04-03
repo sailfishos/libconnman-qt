@@ -11,6 +11,9 @@
 #define LIBCONNMAN_PRIVATE_H
 
 #include "commondbustypes.h"
+#include <QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(lcConnman)
 
 #define CONNMAN_SERVICE QLatin1String("net.connman")
 
@@ -53,17 +56,5 @@ public:
     static inline bool connected(QString state)
         { return (state == Online || state == Ready); }
 };
-
-#ifndef CONNMAN_DEBUG
-#  define CONNMAN_DEBUG 0
-#endif
-
-#include <QDebug>
-
-#if CONNMAN_DEBUG
-#  define DBG_(x) qDebug() << this << Q_FUNC_INFO << "line:" << __LINE__ << x
-#else
-#  define DBG_(expr) ((void)0)
-#endif
 
 #endif // LIBCONNMAN_PRIVATE_H

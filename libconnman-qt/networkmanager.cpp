@@ -511,7 +511,7 @@ void NetworkManager::setConnmanAvailable(bool available)
                 m_priv->maybeCreateInterfaceProxyLater();
             }
         } else {
-            DBG_("connman not AVAILABLE");
+            qCDebug(lcConnman) << "connman not AVAILABLE";
             Q_EMIT availabilityChanged(m_available = false);
             disconnectFromConnman();
         }
@@ -811,7 +811,7 @@ void NetworkManager::updateServices(const ConnmanObjectList &changed, const QLis
             removedServices.append(path);
         } else {
             // connman maintains a virtual "hidden" wifi network and removes it upon init
-            DBG_("attempted to remove non-existing service" << path);
+            qCDebug(lcConnman) << "attempted to remove non-existing service" << path;
         }
     }
 
@@ -1013,7 +1013,7 @@ void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
     watcher->deleteLater();
 
     if (reply.isError()) {
-        DBG_(reply.error().message());
+        qCDebug(lcConnman) << reply.error().message();
         return;
     }
     QVariantMap props = reply.value();

@@ -58,17 +58,17 @@ PUBLIC_HEADERS += \
     networksession.h \
     counter.h \
     vpnconnection.h \
-    vpnconnection_p.h \
     vpnmanager.h \
-    vpnmanager_p.h \
-    vpnmodel.h \
-    vpnmodel_p.h
+    vpnmodel.h
 
 HEADERS += \
     $$PUBLIC_HEADERS \
     libconnman_p.h \
     marshalutils.h \
     commondbustypes.h \
+    vpnconnection_p.h \
+    vpnmanager_p.h \
+    vpnmodel_p.h \
     qdbusxml2cpp_dbus_types.h
 
 SOURCES += \

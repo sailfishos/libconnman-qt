@@ -10,8 +10,6 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
-#include "commondbustypes.h"
-
 #include "networktechnology.h"
 #include "networkservice.h"
 #include <QtDBus>
@@ -204,7 +202,6 @@ private Q_SLOTS:
     void disconnectServices();
     void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
-    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
     void getPropertiesFinished(QDBusPendingCallWatcher *watcher);

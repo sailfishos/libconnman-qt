@@ -8,8 +8,9 @@
  */
 
 #include "networkmanager.h"
-
+#include "commondbustypes.h"
 #include "libconnman_p.h"
+
 #include <QRegularExpression>
 #include <QWeakPointer>
 
@@ -113,6 +114,9 @@ public:
 
     void updateState(const QString &newState);
 
+public slots:
+    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
+
 public:
     Private(NetworkManager *parent)
         : QObject(parent)
@@ -141,6 +145,37 @@ public Q_SLOTS:
     void maybeCreateInterfaceProxy();
     void onConnectedChanged();
     void onWifiConnectingChanged();
+};
+
+class NetworkManager::Private::ListUpdate {
+public:
+    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+
+    void add(const QString& str) {
+        if (storage->count() == count) {
+            storage->append(str);
+            changed = true;
+        } else if (storage->at(count) != str) {
+            while (storage->count() > count) {
+                storage->removeLast();
+            }
+            storage->append(str);
+            changed = true;
+        }
+        count++;
+    }
+
+    void done() {
+        while (storage->count() > count) {
+            storage->removeLast();
+            changed = true;
+        }
+    }
+
+public:
+    QStringList* storage;
+    bool changed;
+    int count;
 };
 
 bool NetworkManager::Private::selectSaved(NetworkService *service)
@@ -301,36 +336,176 @@ void NetworkManager::Private::updateState(const QString &newState)
     manager()->updateDefaultRoute();
 }
 
-class NetworkManager::Private::ListUpdate {
-public:
-    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+void NetworkManager::Private::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
+{
+    ListUpdate services(&m_servicesOrder);
+    ListUpdate savedServices(&m_savedServicesOrder);
+    ListUpdate availableServices(&m_availableServicesOrder);
+    ListUpdate wifiServices(&m_wifiServicesOrder);
+    ListUpdate cellularServices(&m_cellularServicesOrder);
+    ListUpdate ethernetServices(&m_ethernetServicesOrder);
 
-    void add(const QString& str) {
-        if (storage->count() == count) {
-            storage->append(str);
-            changed = true;
-        } else if (storage->at(count) != str) {
-            while (storage->count() > count) {
-                storage->removeLast();
+    QStringList addedServices;
+    QStringList removedServices;
+    NetworkService* prevConnectedWifi = m_connectedWifi;
+    NetworkService* prevConnectedEthernet = m_connectedEthernet;
+
+    for (const ConnmanObject &obj : changed) {
+        const QString path(obj.objpath.path());
+
+        // Ignore all WiFi with a zeroed/unknown BSSIDs to reduce list size
+        // in crowded areas. These are most likely weak and really unreachable
+        // but ConnMan maintains them if they come within reach and then they
+        // have a valid BSSID. WiFi services with an empty BSSID are saved ones
+        // that are not in the range.
+        if (obj.properties.value("Type").toString() == WifiType) {
+            const QString bssid = obj.properties.value("BSSID").toString();
+
+            if (bssid == QStringLiteral("00:00:00:00:00:00"))
+                continue;
+        }
+
+        NetworkService *service = m_servicesCache.value(path);
+        if (service) {
+            // We don't want to emit signals at this point. Those will
+            // be emitted later, after internal state is fully updated
+            disconnect(service, nullptr, this, nullptr);
+            service->updateProperties(obj.properties);
+        } else {
+            service = new NetworkService(path, obj.properties, this);
+            m_servicesCache.insert(path, service);
+            addedServices.append(path);
+        }
+
+        // Full list
+        services.add(path);
+
+        // Saved services
+        if (selectSaved(service)) {
+            savedServices.add(path);
+        }
+
+        // Available services
+        if (selectAvailable(service)) {
+            availableServices.add(path);
+        }
+
+        // Per-technology lists
+        const QString type(service->type());
+        if (type == WifiType) {
+            wifiServices.add(path);
+            // Some special treatment for WiFi services
+            updateWifiConnected(service);
+            connect(service, &NetworkService::connectingChanged,
+                    this, &NetworkManager::Private::onWifiConnectingChanged);
+        } else if (type == CellularType) {
+            cellularServices.add(path);
+        } else if (type == EthernetType) {
+            ethernetServices.add(path);
+            updateEthernetConnected(service);
+        }
+
+        connect(service, &NetworkService::connectedChanged,
+                this, &NetworkManager::Private::onConnectedChanged);
+    }
+
+    // Cut the tails
+    services.done();
+    savedServices.done();
+    availableServices.done();
+    wifiServices.done();
+    cellularServices.done();
+    ethernetServices.done();
+
+    // Removed services
+    for (const QDBusObjectPath &obj : removed) {
+        const QString path(obj.path());
+        NetworkService *service = m_servicesCache.take(path);
+        if (service) {
+            if (service == m_connectedWifi) {
+                m_connectedWifi = nullptr;
             }
-            storage->append(str);
-            changed = true;
-        }
-        count++;
-    }
-
-    void done() {
-        while (storage->count() > count) {
-            storage->removeLast();
-            changed = true;
+            if (service == m_defaultRoute) {
+                m_defaultRoute = m_invalidDefaultRoute;
+            }
+            service->deleteLater();
+            removedServices.append(path);
+        } else {
+            // connman maintains a virtual "hidden" wifi network and removes it upon init
+            qCDebug(lcConnman) << "attempted to remove non-existing service" << path;
         }
     }
 
-public:
-    QStringList* storage;
-    bool changed;
-    int count;
-};
+    // Make sure that m_servicesCache doesn't contain stale elements.
+    // Hopefully that won't happen too often (if at all)
+    if (m_servicesCache.count() > m_servicesOrder.count()) {
+        QStringList keys = m_servicesCache.keys();
+        for (const QString &path: keys) {
+            if (!m_servicesOrder.contains(path)) {
+                NetworkService *service = m_servicesCache.take(path);
+                if (service == m_defaultRoute) {
+                    m_defaultRoute = m_invalidDefaultRoute;
+                }
+                service->deleteLater();
+                removedServices.append(path);
+                if (m_servicesCache.count() == m_servicesOrder.count()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Update availability and check whether validity changed
+    bool wasValid = manager()->isValid();
+    setServicesAvailable(true);
+    updateWifiConnecting(NULL);
+
+    // Emit signals
+    if (m_connectedWifi != prevConnectedWifi) {
+        Q_EMIT manager()->connectedWifiChanged();
+    }
+
+    if (m_connectedEthernet != prevConnectedEthernet) {
+        Q_EMIT manager()->connectedEthernetChanged();
+    }
+
+    // Added services
+    for (const QString &path: addedServices) {
+        Q_EMIT manager()->serviceAdded(path);
+    }
+
+    // Removed services
+    for (const QString &path: removedServices) {
+        Q_EMIT manager()->serviceRemoved(path);
+    }
+
+    m_servicesCacheHasUpdates = true;
+    manager()->updateDefaultRoute();
+
+    if (services.changed) {
+        Q_EMIT manager()->servicesChanged();
+        // This one is probably unnecessary:
+        Q_EMIT manager()->servicesListChanged(m_servicesOrder);
+    }
+    if (savedServices.changed) {
+        Q_EMIT manager()->savedServicesChanged();
+    }
+    if (availableServices.changed) {
+        Q_EMIT manager()->availableServicesChanged();
+    }
+    if (wifiServices.changed) {
+        Q_EMIT manager()->wifiServicesChanged();
+    }
+    if (cellularServices.changed) {
+        Q_EMIT manager()->cellularServicesChanged();
+    }
+    if (ethernetServices.changed) {
+        Q_EMIT manager()->ethernetServicesChanged();
+    }
+    if (wasValid != manager()->isValid()) {
+        Q_EMIT manager()->validChanged();
+    }
+}
 
 // ==========================================================================
 // InterfaceProxy
@@ -622,7 +797,7 @@ void NetworkManager::disconnectServices()
 
     if (m_priv->m_proxy) {
         disconnect(m_priv->m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-                   this, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+                   m_priv, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
     }
 
     for (NetworkService *service : m_priv->m_servicesCache) {
@@ -729,7 +904,7 @@ void NetworkManager::setupServices()
 {
     if (m_priv->m_proxy) {
         connect(m_priv->m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-                SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+                m_priv, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
 
         QDBusPendingCallWatcher *pendingCall
                 = new QDBusPendingCallWatcher(m_priv->m_proxy->GetServices(), m_priv->m_proxy);
@@ -738,176 +913,6 @@ void NetworkManager::setupServices()
     }
 }
 
-void NetworkManager::updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed)
-{
-    Private::ListUpdate services(&m_priv->m_servicesOrder);
-    Private::ListUpdate savedServices(&m_priv->m_savedServicesOrder);
-    Private::ListUpdate availableServices(&m_priv->m_availableServicesOrder);
-    Private::ListUpdate wifiServices(&m_priv->m_wifiServicesOrder);
-    Private::ListUpdate cellularServices(&m_priv->m_cellularServicesOrder);
-    Private::ListUpdate ethernetServices(&m_priv->m_ethernetServicesOrder);
-
-    QStringList addedServices;
-    QStringList removedServices;
-    NetworkService* prevConnectedWifi = m_priv->m_connectedWifi;
-    NetworkService* prevConnectedEthernet = m_priv->m_connectedEthernet;
-
-    for (const ConnmanObject &obj : changed) {
-        const QString path(obj.objpath.path());
-
-        // Ignore all WiFi with a zeroed/unknown BSSIDs to reduce list size
-        // in crowded areas. These are most likely weak and really unreachable
-        // but ConnMan maintains them if they come within reach and then they
-        // have a valid BSSID. WiFi services with an empty BSSID are saved ones
-        // that are not in the range.
-        if (obj.properties.value("Type").toString() == WifiType) {
-            const QString bssid = obj.properties.value("BSSID").toString();
-
-            if (bssid == QStringLiteral("00:00:00:00:00:00"))
-                continue;
-        }
-
-        NetworkService *service = m_priv->m_servicesCache.value(path);
-        if (service) {
-            // We don't want to emit signals at this point. Those will
-            // be emitted later, after internal state is fully updated
-            disconnect(service, nullptr, m_priv, nullptr);
-            service->updateProperties(obj.properties);
-        } else {
-            service = new NetworkService(path, obj.properties, this);
-            m_priv->m_servicesCache.insert(path, service);
-            addedServices.append(path);
-        }
-
-        // Full list
-        services.add(path);
-
-        // Saved services
-        if (Private::selectSaved(service)) {
-            savedServices.add(path);
-        }
-
-        // Available services
-        if (Private::selectAvailable(service)) {
-            availableServices.add(path);
-        }
-
-        // Per-technology lists
-        const QString type(service->type());
-        if (type == WifiType) {
-            wifiServices.add(path);
-            // Some special treatment for WiFi services
-            m_priv->updateWifiConnected(service);
-            connect(service, &NetworkService::connectingChanged,
-                    m_priv, &NetworkManager::Private::onWifiConnectingChanged);
-        } else if (type == CellularType) {
-            cellularServices.add(path);
-        } else if (type == EthernetType) {
-            ethernetServices.add(path);
-            m_priv->updateEthernetConnected(service);
-        }
-
-        connect(service, &NetworkService::connectedChanged,
-                m_priv, &NetworkManager::Private::onConnectedChanged);
-    }
-
-    // Cut the tails
-    services.done();
-    savedServices.done();
-    availableServices.done();
-    wifiServices.done();
-    cellularServices.done();
-    ethernetServices.done();
-
-    // Removed services
-    for (const QDBusObjectPath &obj : removed) {
-        const QString path(obj.path());
-        NetworkService *service = m_priv->m_servicesCache.take(path);
-        if (service) {
-            if (service == m_priv->m_connectedWifi) {
-                m_priv->m_connectedWifi = NULL;
-            }
-            if (service == m_priv->m_defaultRoute) {
-                m_priv->m_defaultRoute = m_priv->m_invalidDefaultRoute;
-            }
-            service->deleteLater();
-            removedServices.append(path);
-        } else {
-            // connman maintains a virtual "hidden" wifi network and removes it upon init
-            qCDebug(lcConnman) << "attempted to remove non-existing service" << path;
-        }
-    }
-
-    // Make sure that m_servicesCache doesn't contain stale elements.
-    // Hopefully that won't happen too often (if at all)
-    if (m_priv->m_servicesCache.count() > m_priv->m_servicesOrder.count()) {
-        QStringList keys = m_priv->m_servicesCache.keys();
-        for (const QString &path: keys) {
-            if (!m_priv->m_servicesOrder.contains(path)) {
-                NetworkService *service = m_priv->m_servicesCache.take(path);
-                if (service == m_priv->m_defaultRoute) {
-                    m_priv->m_defaultRoute = m_priv->m_invalidDefaultRoute;
-                }
-                service->deleteLater();
-                removedServices.append(path);
-                if (m_priv->m_servicesCache.count() == m_priv->m_servicesOrder.count()) {
-                    break;
-                }
-            }
-        }
-    }
-
-    // Update availability and check whether validity changed
-    bool wasValid = isValid();
-    m_priv->setServicesAvailable(true);
-    m_priv->updateWifiConnecting(NULL);
-
-    // Emit signals
-    if (m_priv->m_connectedWifi != prevConnectedWifi) {
-        Q_EMIT connectedWifiChanged();
-    }
-
-    if (m_priv->m_connectedEthernet != prevConnectedEthernet) {
-        Q_EMIT connectedEthernetChanged();
-    }
-
-    // Added services
-    for (const QString &path: addedServices) {
-        Q_EMIT serviceAdded(path);
-    }
-
-    // Removed services
-    for (const QString &path: removedServices) {
-        Q_EMIT serviceRemoved(path);
-    }
-
-    m_priv->m_servicesCacheHasUpdates = true;
-    updateDefaultRoute();
-
-    if (services.changed) {
-        Q_EMIT servicesChanged();
-        // This one is probably unnecessary:
-        Q_EMIT servicesListChanged(m_priv->m_servicesOrder);
-    }
-    if (savedServices.changed) {
-        Q_EMIT savedServicesChanged();
-    }
-    if (availableServices.changed) {
-        Q_EMIT availableServicesChanged();
-    }
-    if (wifiServices.changed) {
-        Q_EMIT wifiServicesChanged();
-    }
-    if (cellularServices.changed) {
-        Q_EMIT cellularServicesChanged();
-    }
-    if (ethernetServices.changed) {
-        Q_EMIT ethernetServicesChanged();
-    }
-    if (wasValid != isValid()) {
-        Q_EMIT validChanged();
-    }
-}
 
 void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &value)
 {
@@ -1082,7 +1087,7 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
         services = reply.value();
     }
     qDebug() << "Updating services as GetServices returns";
-    updateServices(services, QList<QDBusObjectPath>());
+    m_priv->updateServices(services, QList<QDBusObjectPath>());
 }
 
 // Public API /////////////

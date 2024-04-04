@@ -51,7 +51,6 @@ PUBLIC_HEADERS += \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \
-    commondbustypes.h \
     connmannetworkproxyfactory.h \
     clockmodel.h \
     useragent.h \
@@ -69,6 +68,7 @@ HEADERS += \
     $$PUBLIC_HEADERS \
     libconnman_p.h \
     marshalutils.h \
+    commondbustypes.h \
     qdbusxml2cpp_dbus_types.h
 
 SOURCES += \

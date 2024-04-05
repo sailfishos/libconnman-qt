@@ -26,6 +26,8 @@ struct ServiceRequestData
     QDBusMessage msg;
 };
 
+class UserAgentPrivate;
+
 class UserAgent : public QObject
 {
     Q_OBJECT
@@ -37,20 +39,14 @@ public:
     explicit UserAgent(QObject* parent = 0);
     virtual ~UserAgent();
 
-    enum ConnectionRequestType {
-        TYPE_DEFAULT =0,
-        TYPE_SUPPRESS,
-        TYPE_CLEAR
-    };
+    QString connectionRequestType() const;
+    QString path() const;
 
 public Q_SLOTS:
     void sendUserReply(const QVariantMap &input);
 
     void sendConnectReply(const QString &replyMessage, int timeout = 120);
     void setConnectionRequestType(const QString &type);
-    QString connectionRequestType() const;
-
-    QString path() const;
     void setAgentPath(const QString &path);
 
 Q_SIGNALS:
@@ -74,41 +70,9 @@ private:
     void requestBrowser(const QString &servicePath, const QString &url,
                         const QDBusMessage &message);
 
-    ServiceRequestData* m_req_data;
-    QSharedPointer<NetworkManager> m_manager;
-    QDBusMessage currentDbusMessage;
-    ConnectionRequestType requestType;
-    QString agentPath;
+    UserAgentPrivate *d_ptr;
 
     friend class AgentAdaptor;
-    QTimer *requestTimer;
-    QDBusMessage requestMessage;
-};
-
-class AgentAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Agent")
-
-public:
-    explicit AgentAdaptor(UserAgent* parent);
-    virtual ~AgentAdaptor();
-
-public Q_SLOTS:
-    void Release();
-    void ReportError(const QDBusObjectPath &service_path, const QString &error);
-    Q_NOREPLY void RequestBrowser(const QDBusObjectPath &service_path, const QString &url,
-                        const QDBusMessage &message);
-    void RequestConnect(const QDBusMessage &message);
-
-    Q_NOREPLY void RequestInput(const QDBusObjectPath &service_path,
-                                const QVariantMap &fields,
-                                const QDBusMessage &message);
-    void Cancel();
-
-private:
-    UserAgent* m_userAgent;
-    QElapsedTimer browserRequestTimer;
 };
 
 #endif // USERAGENT_H

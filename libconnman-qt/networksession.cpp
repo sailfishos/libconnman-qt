@@ -10,10 +10,25 @@
 #include "networksession.h"
 #include "sessionagent.h"
 
-NetworkSession::NetworkSession(QObject *parent) :
-    QObject(parent),
-    m_sessionAgent(0),
-    m_path("/ConnmanQmlSessionAgent")
+class NetworkSessionPrivate
+{
+public:
+    NetworkSessionPrivate();
+
+    SessionAgent *m_sessionAgent;
+    QVariantMap settingsMap;
+    QString m_path;
+};
+
+NetworkSessionPrivate::NetworkSessionPrivate()
+    : m_sessionAgent(0)
+    , m_path("/ConnmanQmlSessionAgent")
+{
+}
+
+NetworkSession::NetworkSession(QObject *parent)
+    : QObject(parent)
+    , d_ptr(new NetworkSessionPrivate)
 {
     createSession();
 }
@@ -24,86 +39,86 @@ NetworkSession::~NetworkSession()
 
 void NetworkSession::createSession()
 {
-    if (m_path.isEmpty())
+    if (d_ptr->m_path.isEmpty())
         return;
 
-    delete m_sessionAgent;
-    m_sessionAgent = new SessionAgent(m_path ,this);
-    connect(m_sessionAgent,SIGNAL(settingsUpdated(QVariantMap)),
-            this,SLOT(sessionSettingsUpdated(QVariantMap)));
+    delete d_ptr->m_sessionAgent;
+    d_ptr->m_sessionAgent = new SessionAgent(d_ptr->m_path, this);
+    connect(d_ptr->m_sessionAgent, SIGNAL(settingsUpdated(QVariantMap)),
+            this, SLOT(sessionSettingsUpdated(QVariantMap)));
 }
 
 QString NetworkSession::state() const
 {
-    return settingsMap.value("State").toString();
+    return d_ptr->settingsMap.value("State").toString();
 }
 
 QString NetworkSession::name() const
 {
-    return settingsMap.value("Name").toString();
+    return d_ptr->settingsMap.value("Name").toString();
 }
 
 QString NetworkSession::bearer() const
 {
-    return settingsMap.value("Bearer").toString();
+    return d_ptr->settingsMap.value("Bearer").toString();
 }
 
 QString NetworkSession::sessionInterface() const
 {
-    return settingsMap.value("Interface").toString();
+    return d_ptr->settingsMap.value("Interface").toString();
 }
 
 QVariantMap NetworkSession::ipv4() const
 {
-    return qdbus_cast<QVariantMap>(settingsMap.value("IPv4"));
+    return qdbus_cast<QVariantMap>(d_ptr->settingsMap.value("IPv4"));
 }
 
 QVariantMap NetworkSession::ipv6() const
 {
-    return qdbus_cast<QVariantMap>(settingsMap.value("IPv6"));
+    return qdbus_cast<QVariantMap>(d_ptr->settingsMap.value("IPv6"));
 }
 
 QStringList NetworkSession::allowedBearers() const
 {
-    return settingsMap.value("AllowedBearers").toStringList();
+    return d_ptr->settingsMap.value("AllowedBearers").toStringList();
 }
 
 QString NetworkSession::connectionType() const
 {
-    return settingsMap.value("ConnectionType").toString();
+    return d_ptr->settingsMap.value("ConnectionType").toString();
 }
 
 void NetworkSession::setAllowedBearers(const QStringList &bearers)
 {
-    settingsMap.insert("AllowedBearers", QVariant::fromValue(bearers));
-    m_sessionAgent->setAllowedBearers(bearers);
+    d_ptr->settingsMap.insert("AllowedBearers", QVariant::fromValue(bearers));
+    d_ptr->m_sessionAgent->setAllowedBearers(bearers);
 }
 
 void NetworkSession::setConnectionType(const QString &type)
 {
-    settingsMap.insert("ConnectionType", QVariant::fromValue(type));
-    m_sessionAgent->setConnectionType(type);
+    d_ptr->settingsMap.insert("ConnectionType", QVariant::fromValue(type));
+    d_ptr->m_sessionAgent->setConnectionType(type);
 }
 
 void NetworkSession::requestDestroy()
 {
-    m_sessionAgent->requestDestroy();
+    d_ptr->m_sessionAgent->requestDestroy();
 }
 
 void NetworkSession::requestConnect()
 {
-    m_sessionAgent->requestConnect();
+    d_ptr->m_sessionAgent->requestConnect();
 }
 
 void NetworkSession::requestDisconnect()
 {
-    m_sessionAgent->requestDisconnect();
+    d_ptr->m_sessionAgent->requestDisconnect();
 }
 
 void NetworkSession::sessionSettingsUpdated(const QVariantMap &settings)
 {
     for (const QString &name : settings.keys()) {
-        settingsMap.insert(name,settings[name]);
+        d_ptr->settingsMap.insert(name, settings[name]);
 
         if (name == QLatin1String("State")) {
             Q_EMIT stateChanged(settings[name].toString());
@@ -128,13 +143,13 @@ void NetworkSession::sessionSettingsUpdated(const QVariantMap &settings)
 
 QString NetworkSession::path() const
 {
-    return m_path;
+    return d_ptr->m_path;
 }
 
 void NetworkSession::setPath(const QString &path)
 {
-    if (path != m_path) {
-        m_path = path;
+    if (path != d_ptr->m_path) {
+        d_ptr->m_path = path;
         createSession();
     }
 }

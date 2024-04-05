@@ -5,12 +5,12 @@ CONFIG += plugin
 
 SOURCES = \
     plugin.cpp \
-    technologymodel.cpp \
+    technologyservicemodel.cpp \
     savedservicemodel.cpp \
     declarativenetworkmanager.cpp
 
 HEADERS = \
-    technologymodel.h \
+    technologyservicemodel.h \
     savedservicemodel.h \
     declarativenetworkmanager.h
 

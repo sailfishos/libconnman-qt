@@ -22,17 +22,17 @@
  */
 //  static const char counterPath[] = "/ConnectivityCounter";
 
+class CounterPrivate;
+
 class Counter : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(quint64 bytesReceived READ bytesReceived NOTIFY bytesReceivedChanged)
     Q_PROPERTY(quint64 bytesTransmitted READ bytesTransmitted NOTIFY bytesTransmittedChanged)
     Q_PROPERTY(quint32 secondsOnline READ secondsOnline NOTIFY secondsOnlineChanged)
     Q_PROPERTY(bool roaming READ roaming NOTIFY roamingChanged)
     Q_PROPERTY(quint32 accuracy READ accuracy WRITE setAccuracy NOTIFY accuracyChanged)
     Q_PROPERTY(quint32 interval READ interval WRITE setInterval NOTIFY intervalChanged)
-
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
 
     Q_DISABLE_COPY(Counter)
@@ -70,47 +70,12 @@ private Q_SLOTS:
     void updateCounterAgent();
 
 private:
-    QSharedPointer<NetworkManager> m_manager;
+    CounterPrivate *d_ptr;
 
     friend class CounterAdaptor;
 
     void serviceUsage(const QString &servicePath, const QVariantMap &counters, bool roaming);
     void release();
-
-    quint64 bytesInHome;
-    quint64 bytesOutHome;
-    quint32 secondsOnlineHome;
-
-    quint64 bytesInRoaming;
-    quint64 bytesOutRoaming;
-    quint32 secondsOnlineRoaming;
-
-    bool roamingEnabled;
-    quint32 currentInterval;
-    quint32 currentAccuracy;
-
-    QString counterPath;
-    bool shouldBeRunning;
-
-    bool registered;
 };
 
-class CounterAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "net.connman.Counter")
-
-public:
-    explicit CounterAdaptor(Counter *parent);
-    virtual ~CounterAdaptor();
-
-public Q_SLOTS:
-    void Release();
-    void Usage(const QDBusObjectPath &service_path,
-                                const QVariantMap &home,
-                                const QVariantMap &roaming);
-
-private:
-    Counter *m_counter;
-};
 #endif // COUNTER_H

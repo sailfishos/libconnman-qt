@@ -20,6 +20,8 @@ namespace Tests {
 
 class SessionAgent;
 
+class NetworkSessionPrivate;
+
 class NetworkSession : public QObject
 {
     Q_OBJECT
@@ -76,10 +78,9 @@ public Q_SLOTS:
     void setPath(const QString &path);
 
 private:
-    SessionAgent *m_sessionAgent;
-    QVariantMap settingsMap;
-    QString m_path;
     void createSession();
+
+    NetworkSessionPrivate *d_ptr;
 };
 
 #endif // SESSIONSERVICE_H

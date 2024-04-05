@@ -16,6 +16,7 @@
 
 #include "networkmanager.h"
 class NetworkService;
+class ConnmanNetworkProxyFactoryPrivate;
 
 class ConnmanNetworkProxyFactory : public QObject, public QNetworkProxyFactory
 {
@@ -23,6 +24,7 @@ class ConnmanNetworkProxyFactory : public QObject, public QNetworkProxyFactory
 
 public:
     ConnmanNetworkProxyFactory(QObject *parent = 0);
+    ~ConnmanNetworkProxyFactory();
 
     // From QNetworkProxyFactory
     QList<QNetworkProxy> queryProxy(const QNetworkProxyQuery & query);
@@ -32,10 +34,7 @@ private Q_SLOTS:
     void onProxyChanged(const QVariantMap &proxy);
 
 private:
-    QPointer<NetworkService> m_defaultRoute;
-    QList<QNetworkProxy> m_cachedProxies_all;
-    QList<QNetworkProxy> m_cachedProxies_udpSocketOrTcpServerCapable;
-    QSharedPointer<NetworkManager> m_networkManager;
+    ConnmanNetworkProxyFactoryPrivate *d_ptr;
 };
 
 #endif //CONNMANNETWORKPROXYFACTORY_H

@@ -15,21 +15,69 @@
 #include "counter.h"
 #include "networkmanager.h"
 
+class CounterAdaptor : public QDBusAbstractAdaptor
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "net.connman.Counter")
 
-Counter::Counter(QObject *parent) :
-    QObject(parent),
-    m_manager(NetworkManager::sharedInstance()),
-    bytesInHome(0),
-    bytesOutHome(0),
-    secondsOnlineHome(0),
-    bytesInRoaming(0),
-    bytesOutRoaming(0),
-    secondsOnlineRoaming(0),
-    roamingEnabled(false),
-    currentInterval(1),
-    currentAccuracy(1024),
-    shouldBeRunning(false),
-    registered(false)
+public:
+    explicit CounterAdaptor(Counter *parent);
+    virtual ~CounterAdaptor();
+
+public Q_SLOTS:
+    void Release();
+    void Usage(const QDBusObjectPath &service_path,
+                                const QVariantMap &home,
+                                const QVariantMap &roaming);
+
+private:
+    Counter *m_counter;
+};
+
+class CounterPrivate
+{
+public:
+    CounterPrivate();
+
+    QSharedPointer<NetworkManager> m_manager;
+
+    quint64 bytesInHome;
+    quint64 bytesOutHome;
+    quint32 secondsOnlineHome;
+
+    quint64 bytesInRoaming;
+    quint64 bytesOutRoaming;
+    quint32 secondsOnlineRoaming;
+
+    bool roamingEnabled;
+    quint32 currentInterval;
+    quint32 currentAccuracy;
+
+    QString counterPath;
+    bool shouldBeRunning;
+
+    bool registered;
+};
+
+CounterPrivate::CounterPrivate()
+    : m_manager(NetworkManager::sharedInstance())
+    , bytesInHome(0)
+    , bytesOutHome(0)
+    , secondsOnlineHome(0)
+    , bytesInRoaming(0)
+    , bytesOutRoaming(0)
+    , secondsOnlineRoaming(0)
+    , roamingEnabled(false)
+    , currentInterval(1)
+    , currentAccuracy(1024)
+    , shouldBeRunning(false)
+    , registered(false)
+{
+}
+
+Counter::Counter(QObject *parent)
+    : QObject(parent)
+    , d_ptr(new CounterPrivate)
 {
 #if (QT_VERSION >= QT_VERSION_CHECK(5,10,0))
     quint32 randomValue = QRandomGenerator::global()->generate();
@@ -38,29 +86,33 @@ Counter::Counter(QObject *parent) :
     qsrand((uint)time.msec());
     int randomValue = qrand();
 #endif
+
     //this needs to be unique so we can use more than one at a time with different processes
-    counterPath = "/ConnectivityCounter" + QString::number(randomValue);
+    d_ptr->counterPath = "/ConnectivityCounter" + QString::number(randomValue);
 
     new CounterAdaptor(this);
-    if (!QDBusConnection::systemBus().registerObject(counterPath, this))
-        qWarning("Could not register DBus object on %s", qPrintable(counterPath));
+    if (!QDBusConnection::systemBus().registerObject(d_ptr->counterPath, this))
+        qWarning("Could not register DBus object on %s", qPrintable(d_ptr->counterPath));
 
-    connect(m_manager.data(), &NetworkManager::availabilityChanged,
+    connect(d_ptr->m_manager.data(), &NetworkManager::availabilityChanged,
             this, &Counter::updateCounterAgent);
 }
 
 Counter::~Counter()
 {
-    if (registered)
-        m_manager->unregisterCounter(counterPath);
+    if (d_ptr->registered)
+        d_ptr->m_manager->unregisterCounter(d_ptr->counterPath);
+
+    delete d_ptr;
+    d_ptr = nullptr;
 }
 
 void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counters, bool roaming)
 {
     Q_EMIT counterChanged(servicePath, counters, roaming);
 
-    if (roaming != roamingEnabled) {
-        roamingEnabled = roaming;
+    if (roaming != d_ptr->roamingEnabled) {
+        d_ptr->roamingEnabled = roaming;
         Q_EMIT roamingChanged(roaming);
     }
 
@@ -70,23 +122,23 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
 
     if (roaming) {
         if (rxbytes != 0) {
-            bytesInRoaming = rxbytes;
+            d_ptr->bytesInRoaming = rxbytes;
         }
         if (txbytes != 0) {
-            bytesOutRoaming = txbytes;
+            d_ptr->bytesOutRoaming = txbytes;
         }
         if (time != 0) {
-            secondsOnlineRoaming = time;
+            d_ptr->secondsOnlineRoaming = time;
         }
     } else {
         if (rxbytes != 0) {
-            bytesInHome = rxbytes;
+            d_ptr->bytesInHome = rxbytes;
         }
         if (txbytes != 0) {
-            bytesOutHome = txbytes;
+            d_ptr->bytesOutHome = txbytes;
         }
         if (time != 0) {
-            secondsOnlineHome = time;
+            d_ptr->secondsOnlineHome = time;
         }
     }
 
@@ -100,39 +152,39 @@ void Counter::serviceUsage(const QString &servicePath, const QVariantMap &counte
 
 void Counter::release()
 {
-    registered = false;
-    Q_EMIT runningChanged(registered);
+    d_ptr->registered = false;
+    Q_EMIT runningChanged(d_ptr->registered);
 }
 
 bool Counter::roaming() const
 {
-    return roamingEnabled;
+    return d_ptr->roamingEnabled;
 }
 
 quint64 Counter::bytesReceived() const
 {
-    if (roamingEnabled) {
-        return bytesInRoaming;
+    if (d_ptr->roamingEnabled) {
+        return d_ptr->bytesInRoaming;
     } else {
-        return bytesInHome;
+        return d_ptr->bytesInHome;
     }
 }
 
 quint64 Counter::bytesTransmitted() const
 {
-    if (roamingEnabled) {
-        return bytesOutRoaming;
+    if (d_ptr->roamingEnabled) {
+        return d_ptr->bytesOutRoaming;
     } else {
-        return bytesOutHome;
+        return d_ptr->bytesOutHome;
     }
 }
 
 quint32 Counter::secondsOnline() const
 {
-    if (roamingEnabled) {
-        return secondsOnlineRoaming;
+    if (d_ptr->roamingEnabled) {
+        return d_ptr->secondsOnlineRoaming;
     } else {
-        return secondsOnlineHome;
+        return d_ptr->secondsOnlineHome;
     }
 }
 
@@ -145,17 +197,17 @@ need to be re registered from the manager.
 */
 void Counter::setAccuracy(quint32 accuracy)
 {
-    if (currentAccuracy == accuracy)
+    if (d_ptr->currentAccuracy == accuracy)
         return;
 
-    currentAccuracy = accuracy;
+    d_ptr->currentAccuracy = accuracy;
     Q_EMIT accuracyChanged(accuracy);
     updateCounterAgent();
 }
 
 quint32 Counter::accuracy() const
 {
-    return currentAccuracy;
+    return d_ptr->currentAccuracy;
 }
 
 /*
@@ -165,59 +217,59 @@ need to be re registered from the manager.
 */
 void Counter::setInterval(quint32 interval)
 {
-    if (currentInterval == interval)
+    if (d_ptr->currentInterval == interval)
         return;
 
-    currentInterval = interval;
+    d_ptr->currentInterval = interval;
     Q_EMIT intervalChanged(interval);
     updateCounterAgent();
 }
 
 quint32 Counter::interval() const
 {
-    return currentInterval;
+    return d_ptr->currentInterval;
 }
 
 void Counter::setRunning(bool on)
 {
-    if (shouldBeRunning == on)
+    if (d_ptr->shouldBeRunning == on)
         return;
 
-    shouldBeRunning = on;
+    d_ptr->shouldBeRunning = on;
     updateCounterAgent();
 }
 
 void Counter::updateCounterAgent()
 {
-    if (!m_manager->isAvailable()) {
-        if (registered) {
-            registered = false;
-            Q_EMIT runningChanged(registered);
+    if (!d_ptr->m_manager->isAvailable()) {
+        if (d_ptr->registered) {
+            d_ptr->registered = false;
+            Q_EMIT runningChanged(d_ptr->registered);
         }
         return;
     }
 
-    if (registered) {
-        m_manager->unregisterCounter(counterPath);
-        if (!shouldBeRunning) {
-            registered = false;
-            Q_EMIT runningChanged(registered);
+    if (d_ptr->registered) {
+        d_ptr->m_manager->unregisterCounter(d_ptr->counterPath);
+        if (!d_ptr->shouldBeRunning) {
+            d_ptr->registered = false;
+            Q_EMIT runningChanged(d_ptr->registered);
             return;
         }
     }
 
-    if (shouldBeRunning) {
-        m_manager->registerCounter(counterPath, currentAccuracy, currentInterval);
-        if (!registered) {
-            registered = true;
-            Q_EMIT runningChanged(registered);
+    if (d_ptr->shouldBeRunning) {
+        d_ptr->m_manager->registerCounter(d_ptr->counterPath, d_ptr->currentAccuracy, d_ptr->currentInterval);
+        if (!d_ptr->registered) {
+            d_ptr->registered = true;
+            Q_EMIT runningChanged(d_ptr->registered);
         }
     }
 }
 
 bool Counter::running() const
 {
-    return registered;
+    return d_ptr->registered;
 }
 
 /*
@@ -252,3 +304,4 @@ void CounterAdaptor::Usage(const QDBusObjectPath &service_path,
     }
 }
 
+#include "counter.moc"

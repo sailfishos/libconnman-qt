@@ -39,12 +39,12 @@ typedef QList<ConnmanObject> ConnmanObjectList;
 Q_DECLARE_METATYPE ( ConnmanObjectList )
 
 inline void registerCommonDataTypes() {
-  qDBusRegisterMetaType<StringMap>();
-  qDBusRegisterMetaType<StringPair>();
-  qDBusRegisterMetaType<StringPairArray>();
-  qDBusRegisterMetaType<ConnmanObject>();
-  qDBusRegisterMetaType<ConnmanObjectList>();
-  qRegisterMetaType<ConnmanObjectList>("ConnmanObjectList");
+    qDBusRegisterMetaType<StringMap>();
+    qDBusRegisterMetaType<StringPair>();
+    qDBusRegisterMetaType<StringPairArray>();
+    qDBusRegisterMetaType<ConnmanObject>();
+    qDBusRegisterMetaType<ConnmanObjectList>();
+    qRegisterMetaType<ConnmanObjectList>("ConnmanObjectList");
 }
 
 #endif //COMMONDBUSTYPES_H

@@ -11,8 +11,9 @@
 #define NETWORKTECHNOLOGY_H
 
 #include <QtDBus>
+#include <QSharedPointer>
 
-class NetConnmanTechnologyInterface;
+class NetworkTechnologyPrivate;
 
 class NetworkTechnology : public QObject
 {
@@ -74,26 +75,18 @@ Q_SIGNALS:
     void typeChanged(const QString &type);
 
 private:
-    NetConnmanTechnologyInterface *m_technology;
-    QDBusServiceWatcher *m_dBusWatcher;
-    QVariantMap m_propertiesCache;
-    QVariantMap m_pendingProperties;
-
-    QString m_path;
+    NetworkTechnologyPrivate *d_ptr;
 
 private Q_SLOTS:
+    void onInterfaceChanged(const QString &interface);
     void propertyChanged(const QString &name, const QDBusVariant &value);
     void emitPropertyChange(const QString &name, const QVariant &value);
 
     void scanReply(QDBusPendingCallWatcher *call);
     void getPropertiesFinished(QDBusPendingCallWatcher *call);
 
-    void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
-    void technologyRemoved(const QDBusObjectPath &technology);
-
     void pendingSetProperty(const QString &key, const QVariant &value);
 
-    void startDBusWatching();
     void initialize();
     void createInterface();
     void destroyInterface();

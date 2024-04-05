@@ -11,8 +11,10 @@
 #define LIBCONNMAN_PRIVATE_H
 
 #include "commondbustypes.h"
+#include <QLoggingCategory>
 
-#define CONNMAN_BUS QDBusConnection::systemBus()
+Q_DECLARE_LOGGING_CATEGORY(lcConnman)
+
 #define CONNMAN_SERVICE QLatin1String("net.connman")
 
 class ConnmanError {
@@ -54,24 +56,5 @@ public:
     static inline bool connected(QString state)
         { return (state == Online || state == Ready); }
 };
-
-#ifndef CONNMAN_DEBUG
-#  define CONNMAN_DEBUG 0
-#endif // CONNMAN_DEBUG
-
-#include <QDebug>
-
-#if CONNMAN_DEBUG
-#  define DBG_(x) qDebug() << this << Q_FUNC_INFO << "line:" << __LINE__ << x
-#  define ASSERT_(x) ((x) ? ((void)0) : qt_assert(#x,__FILE__,__LINE__))
-#  define VERIFY_(x) ASSERT(x)
-#else
-#  define DBG_(expr) ((void)0)
-#  define ASSERT_(expr) ((void)0)
-#  define VERIFY_(x) (x)
-#endif // CONNMAN_DEBUG
-
-#define WARN_(x) qWarning() << x
-#define VERBOSE_(expr) ((void)0)
 
 #endif // LIBCONNMAN_PRIVATE_H

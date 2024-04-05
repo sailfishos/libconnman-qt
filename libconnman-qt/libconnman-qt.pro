@@ -31,10 +31,6 @@ isEmpty(TARGET_SUFFIX) {
     TARGET_SUFFIX = qt$$QT_MAJOR_VERSION
 }
 
-CONFIG(debug, debug|release) {
-    DEFINES += CONNMAN_DEBUG=1
-}
-
 TARGET = $$qtLibraryTarget(connman-$$TARGET_SUFFIX)
 headers.path = $$INSTALL_ROOT$$PREFIX/include/connman-$$TARGET_SUFFIX
 
@@ -55,7 +51,6 @@ PUBLIC_HEADERS += \
     networkmanager.h \
     networktechnology.h \
     networkservice.h \
-    commondbustypes.h \
     connmannetworkproxyfactory.h \
     clockmodel.h \
     useragent.h \
@@ -63,19 +58,21 @@ PUBLIC_HEADERS += \
     networksession.h \
     counter.h \
     vpnconnection.h \
-    vpnconnection_p.h \
     vpnmanager.h \
-    vpnmanager_p.h \
-    vpnmodel.h \
-    vpnmodel_p.h
+    vpnmodel.h
 
 HEADERS += \
     $$PUBLIC_HEADERS \
     libconnman_p.h \
     marshalutils.h \
+    commondbustypes.h \
+    vpnconnection_p.h \
+    vpnmanager_p.h \
+    vpnmodel_p.h \
     qdbusxml2cpp_dbus_types.h
 
 SOURCES += \
+    logging.cpp \
     marshalutils.cpp \
     networkmanager.cpp \
     networktechnology.cpp \

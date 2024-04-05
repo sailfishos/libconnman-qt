@@ -83,12 +83,16 @@ UserAgent::~UserAgent()
 {
     d_ptr->m_manager->unregisterAgent(QString(d_ptr->agentPath));
 
+    delete d_ptr->m_req_data;
+    d_ptr->m_req_data = nullptr;
+
     delete d_ptr;
     d_ptr = nullptr;
 }
 
 void UserAgent::requestUserInput(ServiceRequestData* data)
 {
+    delete d_ptr->m_req_data;
     d_ptr->m_req_data = data;
     Q_EMIT userInputRequested(data->objectPath, data->fields);
 }
@@ -253,8 +257,8 @@ void AgentAdaptor::RequestBrowser(const QDBusObjectPath &service_path, const QSt
 }
 
 void AgentAdaptor::RequestInput(const QDBusObjectPath &service_path,
-                                       const QVariantMap &fields,
-                                       const QDBusMessage &message)
+                                const QVariantMap &fields,
+                                const QDBusMessage &message)
 {
     QVariantMap json;
     for (const QString &key : fields.keys()){

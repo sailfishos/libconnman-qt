@@ -582,9 +582,9 @@ inline NetworkService* NetworkService::Private::service()
 
 void NetworkService::Private::checkAccess()
 {
-    connect(new QDBusPendingCallWatcher(m_proxy->CheckAccess(), m_proxy),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onCheckAccessFinished(QDBusPendingCallWatcher*)));
+    auto *pendingCheck = new QDBusPendingCallWatcher(m_proxy->CheckAccess(), m_proxy);
+    connect(pendingCheck, &QDBusPendingCallWatcher::finished,
+            this, &NetworkService::Private::onCheckAccessFinished);
 }
 
 void NetworkService::Private::onRestrictedPropertyChanged(const QString &name)
@@ -896,9 +896,9 @@ void NetworkService::Private::reconnectServiceInterface()
             SLOT(onPropertyChanged(QString,QDBusVariant)));
         connect(service, SIGNAL(RestrictedPropertyChanged(QString)),
             SLOT(onRestrictedPropertyChanged(QString)));
-        connect(new QDBusPendingCallWatcher(service->GetProperties(), service),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onGetPropertiesFinished(QDBusPendingCallWatcher*)));
+        auto *pendingProperties = new QDBusPendingCallWatcher(service->GetProperties(), service);
+        connect(pendingProperties, &QDBusPendingCallWatcher::finished,
+                this, &NetworkService::Private::onGetPropertiesFinished);
     }
 }
 

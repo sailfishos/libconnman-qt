@@ -33,14 +33,6 @@ const QString ConnmanError::OperationTimeout(CONNMAN_ERROR ".OperationTimeout");
 const QString ConnmanError::InvalidService(CONNMAN_ERROR ".InvalidService");
 const QString ConnmanError::InvalidProperty(CONNMAN_ERROR ".InvalidProperty");
 
-const QString ConnmanState::Idle("idle");
-const QString ConnmanState::Association("association");
-const QString ConnmanState::Configuration("configuration");
-const QString ConnmanState::Ready("ready");
-const QString ConnmanState::Online("online");
-const QString ConnmanState::Disconnect("disconnect");
-const QString ConnmanState::Failure("failure");
-
 // Marshall the ConnmanObject data into a D-Bus argument
 QDBusArgument &operator<<(QDBusArgument &argument, const ConnmanObject &obj)
 {

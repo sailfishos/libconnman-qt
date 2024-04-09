@@ -14,9 +14,11 @@
 
 #define COUNT(a) ((uint)(sizeof(a)/sizeof(a[0])))
 
+// connman = connman d-bus properties, class are local creations. arg depending whether signal includes the value.
 #define NETWORK_SERVICE_PROPERTIES(ConnmanArg,ConnmanNoArg,ClassArg,ClassNoArg) \
     ClassArg(Path,path) \
     ClassArg(Connected,connected) \
+    ClassArg(ServiceState,serviceState) \
     ClassNoArg(Connecting,connecting) \
     ClassNoArg(Managed,managed) \
     ClassNoArg(SecurityType,securityType) \
@@ -81,12 +83,6 @@
     NETWORK_SERVICE_PROPERTIES(Connman,Connman,Class,Class)
 
 #define IGNORE(X,x)
-
-// New private date and methods are added to NetworkService::Private
-// whenever possible to avoid contaminating the public header with
-// irrelevant information. The old redundant stuff (the one which
-// existed before NetworkService::Private was introduced) is still
-// kept in the public header, for backward ABI compatibility.
 
 class NetworkService::Private: public QObject
 {
@@ -177,6 +173,8 @@ public:
 
     Private(const QString &path, const QVariantMap &properties, NetworkService *parent);
 
+    void init();
+
     void deleteProxy();
     void setPath(const QString &path);
     InterfaceProxy* createProxy(const QString &path);
@@ -199,8 +197,6 @@ public:
     void setPropertyAvailable(const PropertyAccessInfo *prop, bool available);
     void setLastConnectError(const QString &error);
     void updateProperties(QVariantMap properties);
-    void updateConnecting();
-    void updateConnected();
     void updateState();
     void updateManaged();
     void queueSignal(Signal sig);
@@ -220,8 +216,6 @@ private Q_SLOTS:
     void onConnectFinished(QDBusPendingCallWatcher *call);
 
 private:
-    void updateConnecting(const QString &state);
-    void updateConnected(const QString &state);
     void checkAccess();
     void resetProperties();
     void reconnectServiceInterface();
@@ -241,6 +235,7 @@ NETWORK_SERVICE_PROPERTIES(DEFINE_EMITTER_CONNMAN_ARG,\
 
 public:
     bool m_valid;
+    NetworkService::ServiceState m_serviceState;
     QString m_path;
     QVariantMap m_propertiesCache;
     InterfaceProxy *m_proxy;
@@ -251,10 +246,7 @@ public:
     uint m_propSetFlags;
     uint m_callFlags;
     bool m_managed;
-    bool m_connecting;
-    bool m_connected;
     QString m_lastConnectError;
-    QString m_state;
     int m_peapVersion;
     QSharedPointer<NetworkManager> m_networkManager;
 
@@ -445,6 +437,7 @@ const QString NetworkService::Private::SecurityTypeName[] = {
 NetworkService::Private::Private(const QString &path, const QVariantMap &props, NetworkService *parent) :
     QObject(parent),
     m_valid(!props.isEmpty()),
+    m_serviceState(NetworkService::UnknownState),
     m_path(path),
     m_propertiesCache(props),
     m_proxy(NULL),
@@ -453,11 +446,13 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
     m_propSetFlags(PropertyNone),
     m_callFlags(CallAll),
     m_managed(false),
-    m_connecting(false),
-    m_connected(false),
     m_peapVersion(-1),
     m_queuedSignals(0),
     m_firstQueuedSignal(0)
+{
+}
+
+void NetworkService::Private::init()
 {
     qRegisterMetaType<NetworkService *>();
     updateSecurityType();
@@ -502,7 +497,7 @@ NetworkService::Private::Private(const QString &path, const QVariantMap &props, 
 
     reconnectServiceInterface();
     updateManaged();
-    updateConnected();
+    updateState();
     qCDebug(lcConnman) << m_path << "managed:" << m_managed;
 
     // Reset the signal mask (the above calls may have set some bits)
@@ -536,7 +531,7 @@ void NetworkService::Private::emitQueuedSignals()
     static const SignalEmitter emitSignal [] = {
 #define REFERENCE_EMITTER_(K,X,x) REFERENCE_EMITTER(X,x)
 #define REFERENCE_EMITTER(X,x) &NetworkService::Private::x##Changed,
-    NETWORK_SERVICE_PROPERTIES2(REFERENCE_EMITTER_,REFERENCE_EMITTER)
+        NETWORK_SERVICE_PROPERTIES2(REFERENCE_EMITTER_,REFERENCE_EMITTER)
     };
 
     Q_STATIC_ASSERT(COUNT(emitSignal) == SignalCount);
@@ -582,7 +577,7 @@ NetworkService::Private::createProxy(const QString &path)
 
 inline NetworkService* NetworkService::Private::service()
 {
-    return (NetworkService*)parent();
+    return static_cast<NetworkService*>(parent());
 }
 
 void NetworkService::Private::checkAccess()
@@ -792,42 +787,50 @@ void NetworkService::Private::setLastConnectError(const QString &error)
     }
 }
 
-void NetworkService::Private::updateConnecting(const QString &state)
+static NetworkService::ServiceState stateStringToEnum(const QString &state)
 {
-    bool connecting = m_connectWatcher || ConnmanState::connecting(state);
-    if (m_connecting != connecting) {
-        m_connecting = connecting;
-        queueSignal(SignalConnectingChanged);
+    if (state == QStringLiteral("idle")) {
+        return NetworkService::IdleState;
+    } else if (state == QStringLiteral("failure")) {
+        return NetworkService::FailureState;
+    } else if (state == QStringLiteral("association")) {
+        return NetworkService::AssociationState;
+    } else if (state == QStringLiteral("configuration")) {
+        return NetworkService::ConfigurationState;
+    } else if (state == QStringLiteral("ready")) {
+        return NetworkService::ReadyState;
+    } else if (state == QStringLiteral("disconnect")) {
+        return NetworkService::DisconnectState;
+    } else if (state == QStringLiteral("online")) {
+        return NetworkService::OnlineState;
     }
-}
 
-void NetworkService::Private::updateConnecting()
-{
-    updateConnecting(state());
-}
-
-void NetworkService::Private::updateConnected(const QString &state)
-{
-    bool connected = !m_connectWatcher && ConnmanState::connected(state);
-    if (m_connected != connected) {
-        m_connected = connected;
-        queueSignal(SignalConnectedChanged);
-    }
-}
-
-void NetworkService::Private::updateConnected()
-{
-    updateConnected(state());
+    return NetworkService::UnknownState;
 }
 
 void NetworkService::Private::updateState()
 {
-    QString currentState(state());
-    if (m_state != currentState) {
-        m_state = currentState;
-        queueSignal(SignalStateChanged);
-        updateConnecting(currentState);
-        updateConnected(currentState);
+    QString currentState = state();
+    NetworkService::ServiceState newState = stateStringToEnum(currentState);
+
+    if (m_serviceState == newState) {
+        return;
+    }
+
+    bool wasConnecting = service()->connecting();
+    bool wasConnected = service()->connected();
+
+    m_serviceState = newState;
+
+    queueSignal(SignalStateChanged);
+    queueSignal(SignalServiceStateChanged);
+
+    if (service()->connecting() != wasConnecting) {
+        queueSignal(SignalConnectingChanged);
+    }
+
+    if (service()->connected() != wasConnected) {
+        queueSignal(SignalConnectedChanged);
     }
 }
 
@@ -923,7 +926,7 @@ bool NetworkService::Private::requestConnect()
     if (m_proxy) {
         // If the service is in the failure state clear the Error property
         // so that we get notified of errors on subsequent connection attempts.
-        if (state() == ConnmanState::Failure) {
+        if (service()->serviceState() == NetworkService::FailureState) {
             m_proxy->ClearProperty(Error);
         }
 
@@ -938,16 +941,24 @@ bool NetworkService::Private::requestConnect()
             m_proxy->setTimeout(old_timeout);
         }
 
+        bool wasConnecting = service()->connecting();
+        bool wasConnected = service()->connected();
+
         delete m_connectWatcher.data();
         m_connectWatcher = new QDBusPendingCallWatcher(call, m_proxy);
 
         setLastConnectError(QString());
-        updateConnecting();
-        updateConnected();
 
-        connect(m_connectWatcher,
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onConnectFinished(QDBusPendingCallWatcher*)));
+        if (service()->connecting() != wasConnecting) {
+            queueSignal(SignalConnectingChanged);
+        }
+
+        if (service()->connected() != wasConnected) {
+            queueSignal(SignalConnectedChanged);
+        }
+
+        connect(m_connectWatcher.data(), &QDBusPendingCallWatcher::finished,
+                this, &NetworkService::Private::onConnectFinished);
 
         emitQueuedSignals();
         return true;
@@ -958,6 +969,9 @@ bool NetworkService::Private::requestConnect()
 
 void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)
 {
+    bool wasConnecting = service()->connecting();
+    bool wasConnected = service()->connected();
+
     QDBusPendingReply<> reply = *call;
     m_connectWatcher.clear();
     call->deleteLater();
@@ -976,8 +990,14 @@ void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)
         setLastConnectError(QString());
     }
 
-    updateConnecting();
-    updateConnected();
+    if (service()->connecting() != wasConnecting) {
+        queueSignal(SignalConnectingChanged);
+    }
+
+    if (service()->connected() != wasConnected) {
+        queueSignal(SignalConnectedChanged);
+    }
+
     emitQueuedSignals();
 }
 
@@ -1315,12 +1335,14 @@ NetworkService::NetworkService(const QString &path, const QVariantMap &propertie
     QObject(parent),
     m_priv(new Private(path, properties, this))
 {
+    m_priv->init();
 }
 
 NetworkService::NetworkService(QObject *parent) :
     QObject(parent),
     m_priv(new Private(QString(), QVariantMap(), this))
 {
+    m_priv->init();
 }
 
 NetworkService::~NetworkService()
@@ -1332,9 +1354,21 @@ QString NetworkService::name() const
     return m_priv->stringValue(Private::Name);
 }
 
+// deprecated
 QString NetworkService::state() const
 {
+    static bool warned = false;
+    if (!warned) {
+        qWarning() << "NetworkService::state() is deprecated. Use serviceState() or matching property";
+        warned = true;
+    }
+
     return m_priv->state();
+}
+
+NetworkService::ServiceState NetworkService::serviceState() const
+{
+    return m_priv->m_serviceState;
 }
 
 QString NetworkService::error() const
@@ -1540,12 +1574,21 @@ bool NetworkService::isValid() const
 
 bool NetworkService::connected() const
 {
-    return m_priv->m_connected;
+    if (m_priv->m_connectWatcher) {
+        return false;
+    }
+
+    ServiceState state = serviceState();
+    return state == OnlineState || state == ReadyState;
 }
 
 bool NetworkService::connecting() const
 {
-    return m_priv->m_connecting;
+    if (m_priv->m_connectWatcher) {
+        return true;
+    }
+    ServiceState state = serviceState();
+    return state == AssociationState || state == ConfigurationState;
 }
 
 QString NetworkService::lastConnectError() const

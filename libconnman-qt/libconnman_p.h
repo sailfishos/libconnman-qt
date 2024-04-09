@@ -41,20 +41,4 @@ public:
     static const QString InvalidProperty;
 };
 
-class ConnmanState {
-public:
-    static const QString Idle;
-    static const QString Association;
-    static const QString Configuration;
-    static const QString Ready;
-    static const QString Online;
-    static const QString Disconnect;
-    static const QString Failure;
-
-    static inline bool connecting(QString state)
-        { return (state == Association || state == Configuration); }
-    static inline bool connected(QString state)
-        { return (state == Online || state == Ready); }
-};
-
 #endif // LIBCONNMAN_PRIVATE_H

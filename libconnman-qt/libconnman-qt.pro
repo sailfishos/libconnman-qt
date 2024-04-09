@@ -63,7 +63,7 @@ PUBLIC_HEADERS += \
 
 HEADERS += \
     $$PUBLIC_HEADERS \
-    libconnman_p.h \
+    logging.h \
     marshalutils.h \
     commondbustypes.h \
     vpnconnection_p.h \

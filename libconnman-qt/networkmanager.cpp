@@ -9,7 +9,7 @@
 
 #include "networkmanager.h"
 #include "commondbustypes.h"
-#include "libconnman_p.h"
+#include "logging.h"
 
 #include <QRegularExpression>
 #include <QWeakPointer>

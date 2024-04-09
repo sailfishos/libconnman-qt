@@ -10,7 +10,8 @@
 
 #include "networktechnology.h"
 #include "connman_technology_interface.h"
-#include "libconnman_p.h"
+#include "logging.h"
+#include "commondbustypes.h"
 
 #include <QDBusPendingReply>
 #include <QWeakPointer>

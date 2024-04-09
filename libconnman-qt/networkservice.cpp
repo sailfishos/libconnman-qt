@@ -10,7 +10,10 @@
 
 #include "networkservice.h"
 #include "networkmanager.h"
-#include "libconnman_p.h"
+#include "commondbustypes.h"
+#include "logging.h"
+
+static QString ConnmanErrorInProgress = QStringLiteral("net.connman.Error.InProgress");
 
 #define COUNT(a) ((uint)(sizeof(a)/sizeof(a[0])))
 
@@ -983,7 +986,7 @@ void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)
 
         // InProgress means that somebody has already asked this service
         // to get connected. That's fine, we will keep watching the status.
-        setLastConnectError((errorName == ConnmanError::InProgress) ? QString() : errorName);
+        setLastConnectError(errorName == ConnmanErrorInProgress ? QString() : errorName);
         Q_EMIT service()->connectRequestFailed(error.message());
     } else {
         // Reset the last error on success

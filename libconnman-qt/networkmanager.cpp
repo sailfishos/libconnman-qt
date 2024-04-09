@@ -1078,7 +1078,8 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     } else {
         services = reply.value();
     }
-    qDebug() << "Updating services as GetServices returns";
+
+    qCDebug(lcConnman) << "Updating services as GetServices returns";
     m_priv->updateServices(services, QList<QDBusObjectPath>());
 }
 

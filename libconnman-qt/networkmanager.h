@@ -32,7 +32,9 @@ public:
 class NetworkManager : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(State)
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    // deprecated
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineMode NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
@@ -57,6 +59,14 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString EthernetTechnology READ ethernetTechnologyPath CONSTANT)
 
 public:
+    enum State {
+        UnknownState,
+        OfflineState,
+        IdleState,
+        ReadyState,
+        OnlineState
+    };
+
     static const QString WifiTechnologyPath;
     static const QString CellularTechnologyPath;
     static const QString BluetoothTechnologyPath;
@@ -89,6 +99,7 @@ public:
     Q_INVOKABLE QString technologyPathForService(const QString &path);
     Q_INVOKABLE QString technologyPathForType(const QString &type);
 
+    // deprecated
     QString state() const;
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
@@ -113,6 +124,7 @@ public:
 
     bool isValid() const;
 
+    State globalState() const;
     bool connected() const;
     bool connecting() const;
 
@@ -148,6 +160,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void availabilityChanged(bool available);
     void stateChanged(const QString &state);
+    void globalStateChanged(State state);
     void offlineModeChanged(bool offlineMode);
     void inputRequestTimeoutChanged();
     void technologiesChanged();

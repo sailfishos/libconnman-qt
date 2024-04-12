@@ -20,10 +20,12 @@ class NetworkService : public QObject
 
     Q_ENUMS(EapMethod)
     Q_ENUMS(SecurityType)
+    Q_ENUMS(ServiceState)
 
     Q_PROPERTY(bool valid READ isValid NOTIFY validChanged)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(ServiceState serviceState READ serviceState NOTIFY serviceStateChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
     Q_PROPERTY(QStringList security READ security NOTIFY securityChanged)
@@ -88,6 +90,17 @@ class NetworkService : public QObject
     friend class Private;
 
 public:
+    enum ServiceState {
+        UnknownState,
+        IdleState,
+        FailureState,
+        AssociationState,
+        ConfigurationState,
+        ReadyState,
+        DisconnectState,
+        OnlineState
+    };
+
     enum SecurityType {
         SecurityUnknown,
         SecurityNone,
@@ -110,7 +123,8 @@ public:
 
     QString name() const;
     QString type() const;
-    QString state() const;
+    QString state() const; // deprecated, use serviceState()
+    ServiceState serviceState() const;
     QString error() const;
     QStringList security() const;
     SecurityType securityType() const;
@@ -198,6 +212,7 @@ Q_SIGNALS:
     void validChanged();
     void nameChanged(const QString &name);
     void stateChanged(const QString &state);
+    void serviceStateChanged(ServiceState state);
     void errorChanged(const QString &error);
     void securityChanged(const QStringList &security);
     void strengthChanged(uint strength);

@@ -22,8 +22,11 @@ private:
 class DeclarativeNetworkManager: public QObject
 {
     Q_OBJECT
+    Q_ENUMS(State)
     Q_PROPERTY(bool available READ isAvailable NOTIFY availabilityChanged)
+    // deprecated
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(int globalState READ globalState NOTIFY globalStateChanged)
     Q_PROPERTY(bool offlineMode READ offlineMode WRITE setOfflineModeProperty NOTIFY offlineModeChanged)
     Q_PROPERTY(NetworkService* defaultRoute READ defaultRoute NOTIFY defaultRouteChanged)
     Q_PROPERTY(NetworkService* connectedWifi READ connectedWifi NOTIFY connectedWifiChanged)
@@ -47,11 +50,21 @@ class DeclarativeNetworkManager: public QObject
     Q_PROPERTY(QString EthernetTechnology READ ethernetTechnologyPath CONSTANT)
 
 public:
+    // needs to match NetworkManager's enum
+    enum State {
+        UnknownState = NetworkManager::UnknownState,
+        OfflineState = NetworkManager::OfflineState,
+        IdleState = NetworkManager::IdleState,
+        ReadyState = NetworkManager::ReadyState,
+        OnlineState = NetworkManager::OnlineState
+    };
+
     DeclarativeNetworkManager(QObject *parent = 0);
     virtual ~DeclarativeNetworkManager();
 
     bool isAvailable() const;
     QString state() const;
+    State globalState() const;
     bool offlineMode() const;
     NetworkService* defaultRoute() const;
     NetworkService* connectedWifi() const;
@@ -116,6 +129,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void availabilityChanged();
     void stateChanged();
+    void globalStateChanged();
     void offlineModeChanged();
     void inputRequestTimeoutChanged();
     void defaultRouteChanged();

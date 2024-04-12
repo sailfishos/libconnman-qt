@@ -9,21 +9,21 @@
 
 #include "networkmanager.h"
 #include "commondbustypes.h"
-#include "libconnman_p.h"
+#include "logging.h"
 
 #include <QRegularExpression>
 #include <QWeakPointer>
 
-static const QString InputRequestTimeout("InputRequestTimeout");
 static const uint DefaultInputRequestTimeout(300000);
 
 static const QString WifiType("wifi");
 static const QString CellularType("cellular");
 static const QString EthernetType("ethernet");
 
-static const QString State("State");
-static const QString OfflineMode("OfflineMode");
-static const QString DefaultService("DefaultService");
+static const QString InputRequestTimeoutProperty("InputRequestTimeout");
+static const QString StateProperty("State");
+static const QString OfflineModeProperty("OfflineMode");
+static const QString DefaultServiceProperty("DefaultService");
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -68,7 +68,6 @@ public:
 
     // For now, we are only tracking connecting state for WiFi service
     bool m_connectingWifi;
-    bool m_connected;
 
     QStringList m_availableServicesOrder;
     QStringList m_wifiServicesOrder;
@@ -124,7 +123,6 @@ public:
         , m_servicesAvailable(false)
         , m_technologiesAvailable(false)
         , m_connectingWifi(false)
-        , m_connected(false)
         , m_connectedWifi(nullptr)
         , m_connectedEthernet(nullptr)
         , m_proxy(nullptr)
@@ -314,22 +312,16 @@ void NetworkManager::Private::setTechnologiesAvailable(bool technologiesAvailabl
 
 void NetworkManager::Private::updateState(const QString &newState)
 {
-    if (manager()->state() == newState)
+    if (m_propertiesCache.value(StateProperty).toString() == newState)
         return;
 
-    m_propertiesCache[State] = newState;
-
-    const bool value = ConnmanState::connected(newState);
-    bool connectedChanged;
-    if (m_connected != value) {
-        m_connected = value;
-        connectedChanged = true;
-    } else {
-        connectedChanged = false;
-    }
+    bool wasConnected = manager()->connected();
+    m_propertiesCache[StateProperty] = newState;
 
     Q_EMIT manager()->stateChanged(newState);
-    if (connectedChanged) {
+    Q_EMIT manager()->globalStateChanged(manager()->globalState());
+
+    if (manager()->connected() != wasConnected) {
         Q_EMIT manager()->connectedChanged();
     }
 
@@ -1086,7 +1078,8 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     } else {
         services = reply.value();
     }
-    qDebug() << "Updating services as GetServices returns";
+
+    qCDebug(lcConnman) << "Updating services as GetServices returns";
     m_priv->updateServices(services, QList<QDBusObjectPath>());
 }
 
@@ -1100,15 +1093,20 @@ bool NetworkManager::isAvailable() const
     return m_priv->m_available;
 }
 
-
 QString NetworkManager::state() const
 {
-    return m_priv->m_propertiesCache[State].toString();
+    static bool warned = false;
+    if (!warned) {
+        qWarning() << "NetworkManager::state() is deprecated. Use globalState() or matching property";
+        warned = true;
+    }
+
+    return m_priv->m_propertiesCache.value(StateProperty).toString();
 }
 
 bool NetworkManager::offlineMode() const
 {
-    return m_priv->m_propertiesCache[OfflineMode].toBool();
+    return m_priv->m_propertiesCache.value(OfflineModeProperty).toBool();
 }
 
 NetworkService* NetworkManager::defaultRoute() const
@@ -1310,7 +1308,7 @@ void NetworkManager::removeSavedService(const QString &) const
 void NetworkManager::setOfflineMode(bool offline)
 {
     if (m_priv->m_proxy) {
-        m_priv->m_proxy->SetProperty(OfflineMode, offline);
+        m_priv->m_proxy->SetProperty(OfflineModeProperty, offline);
     }
 }
 
@@ -1425,9 +1423,9 @@ void NetworkManager::setSessionMode(bool)
 
 void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 {
-    if (name == State) {
+    if (name == StateProperty) {
         m_priv->updateState(value.toString());
-    } else if (name == DefaultService) {
+    } else if (name == DefaultServiceProperty) {
         NetworkService* newDefaultRoute(NULL);
         QString path = value.toString();
 
@@ -1457,9 +1455,9 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
         m_priv->m_propertiesCache[name] = value;
 
-        if (name == OfflineMode) {
+        if (name == OfflineModeProperty) {
             Q_EMIT offlineModeChanged(value.toBool());
-        } else if (name == InputRequestTimeout) {
+        } else if (name == InputRequestTimeoutProperty) {
             Q_EMIT inputRequestTimeoutChanged();
         }
     }
@@ -1478,7 +1476,7 @@ bool NetworkManager::sessionMode() const
 uint NetworkManager::inputRequestTimeout() const
 {
     bool ok = false;
-    uint value = m_priv->m_propertiesCache.value(InputRequestTimeout).toUInt(&ok);
+    uint value = m_priv->m_propertiesCache.value(InputRequestTimeoutProperty).toUInt(&ok);
     return (ok && value) ? value : DefaultInputRequestTimeout;
 }
 
@@ -1515,9 +1513,25 @@ bool NetworkManager::isValid() const
     return m_priv->m_servicesAvailable && m_priv->m_technologiesAvailable;
 }
 
+NetworkManager::State NetworkManager::globalState() const
+{
+    QString state = m_priv->m_propertiesCache.value(StateProperty).toString();
+    if (state == QStringLiteral("offline")) {
+        return OfflineState;
+    } else if (state == QStringLiteral("idle")) {
+        return IdleState;
+    } else if (state == QStringLiteral("ready")) {
+        return ReadyState;
+    } else if (state == QStringLiteral("online")) {
+        return OnlineState;
+    }
+
+    return UnknownState;
+}
+
 bool NetworkManager::connected() const
 {
-    return m_priv->m_connected;
+    return globalState() == OnlineState || globalState() == ReadyState;
 }
 
 bool NetworkManager::connecting() const

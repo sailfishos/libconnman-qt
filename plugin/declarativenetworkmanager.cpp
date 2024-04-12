@@ -26,6 +26,8 @@ DeclarativeNetworkManager::DeclarativeNetworkManager(QObject *parent)
             this, &DeclarativeNetworkManager::availabilityChanged);
     connect(m_sharedInstance.data(), &NetworkManager::stateChanged,
             this, &DeclarativeNetworkManager::stateChanged);
+    connect(m_sharedInstance.data(), &NetworkManager::globalStateChanged,
+            this, &DeclarativeNetworkManager::globalStateChanged);
     connect(m_sharedInstance.data(), &NetworkManager::offlineModeChanged,
             this, &DeclarativeNetworkManager::offlineModeChanged);
     connect(m_sharedInstance.data(), &NetworkManager::inputRequestTimeoutChanged,
@@ -88,6 +90,11 @@ bool DeclarativeNetworkManager::isAvailable() const
 QString DeclarativeNetworkManager::state() const
 {
     return m_sharedInstance->state();
+}
+
+DeclarativeNetworkManager::State DeclarativeNetworkManager::globalState() const
+{
+    return static_cast<DeclarativeNetworkManager::State>(m_sharedInstance->globalState());
 }
 
 bool DeclarativeNetworkManager::offlineMode() const

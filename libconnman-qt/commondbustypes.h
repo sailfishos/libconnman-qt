@@ -47,4 +47,6 @@ inline void registerCommonDataTypes() {
     qRegisterMetaType<ConnmanObjectList>("ConnmanObjectList");
 }
 
+#define CONNMAN_SERVICE QLatin1String("net.connman")
+
 #endif //COMMONDBUSTYPES_H

@@ -79,7 +79,6 @@ bool TechnologyServiceModel::isConnected() const
     if (m_tech) {
         return m_tech->connected();
     } else {
-        qWarning() << "Can't get: technology is NULL";
         return false;
     }
 }
@@ -89,7 +88,6 @@ bool TechnologyServiceModel::isPowered() const
     if (m_tech) {
         return m_tech->powered();
     } else {
-        qWarning() << "Can't get: technology is NULL";
         return false;
     }
 }

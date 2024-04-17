@@ -146,7 +146,7 @@ public:
         NoSignal = -1,
 #define SIGNAL_ID_(K,X,x) SIGNAL_ID(X,x)
 #define SIGNAL_ID(X,x) Signal##X##Changed,
-    NETWORK_SERVICE_PROPERTIES2(SIGNAL_ID_,SIGNAL_ID)
+        NETWORK_SERVICE_PROPERTIES2(SIGNAL_ID_,SIGNAL_ID)
         SignalCount
     };
 
@@ -252,6 +252,7 @@ public:
     QString m_lastConnectError;
     int m_peapVersion;
     QSharedPointer<NetworkManager> m_networkManager;
+    bool m_emitting = false;
 
 private:
     quint64 m_queuedSignals;
@@ -540,6 +541,7 @@ void NetworkService::Private::emitQueuedSignals()
     Q_STATIC_ASSERT(COUNT(emitSignal) == SignalCount);
     if (m_queuedSignals) {
         NetworkService *obj = service();
+        m_emitting = true;
         for (int i = m_firstQueuedSignal; i < SignalCount && m_queuedSignals; i++) {
             const quint64 signalBit = (Q_UINT64_C(1) << i);
             if (m_queuedSignals & signalBit) {
@@ -547,6 +549,7 @@ void NetworkService::Private::emitQueuedSignals()
                 Q_EMIT (this->*(emitSignal[i]))(obj);
             }
         }
+        m_emitting = false;
     }
 }
 
@@ -1361,7 +1364,7 @@ QString NetworkService::name() const
 QString NetworkService::state() const
 {
     static bool warned = false;
-    if (!warned) {
+    if (!warned && !m_priv->m_emitting) {
         qWarning() << "NetworkService::state() is deprecated. Use serviceState() or matching property";
         warned = true;
     }

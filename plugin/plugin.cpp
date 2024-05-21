@@ -32,6 +32,25 @@ static QObject *singleton_api_factory(QQmlEngine *, QJSEngine *)
     return new T;
 }
 
+class ConnmanApi: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString wifiTechnologyPath READ wifiTechnologyPath CONSTANT)
+    Q_PROPERTY(QString cellularTechnologyPath READ cellularTechnologyPath CONSTANT)
+    Q_PROPERTY(QString bluetoothTechnologyPath READ bluetoothTechnologyPath CONSTANT)
+    Q_PROPERTY(QString gpsTechnologyPath READ gpsTechnologyPath CONSTANT)
+    Q_PROPERTY(QString ethernetTechnologyPath READ ethernetTechnologyPath CONSTANT)
+
+public:
+    ConnmanApi(QObject *parent = nullptr) : QObject(parent) {}
+
+    QString wifiTechnologyPath() { return NetworkManager::WifiTechnologyPath; }
+    QString cellularTechnologyPath() { return NetworkManager::CellularTechnologyPath; }
+    QString bluetoothTechnologyPath() { return NetworkManager::BluetoothTechnologyPath; }
+    QString gpsTechnologyPath() { return NetworkManager::GpsTechnologyPath; }
+    QString ethernetTechnologyPath() { return NetworkManager::EthernetTechnologyPath; }
+};
+
 class ConnmanPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
@@ -50,6 +69,7 @@ void ConnmanPlugin::registerTypes(const char *uri)
         qWarning() << "MeeGo.Connman QML module name is deprecated and subject for removal. Please adapt code to \"import Connman\".";
     }
 
+    qmlRegisterSingletonType<ConnmanApi>(uri, 0, 2, "Connman", singleton_api_factory<ConnmanApi>);
     qmlRegisterType<NetworkService>(uri, 0, 2, "NetworkService");
     qmlRegisterType<TechnologyServiceModel>(uri, 0, 2, "TechnologyServiceModel");
     qmlRegisterType<TechnologyModel>(uri, 0, 2, "TechnologyModel");

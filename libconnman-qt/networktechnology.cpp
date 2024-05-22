@@ -309,6 +309,10 @@ void NetworkTechnology::destroyInterface()
 // Public API
 
 // Getters
+bool NetworkTechnology::available() const
+{
+    return d_ptr->m_technology != nullptr;
+}
 
 QString NetworkTechnology::path() const
 {
@@ -380,6 +384,7 @@ void NetworkTechnology::setPath(const QString &path)
     }
 
     d_ptr->m_path = path;
+    bool wasAvailable = available();
     destroyInterface();
 
     if (!d_ptr->m_path.isEmpty()) {
@@ -394,6 +399,9 @@ void NetworkTechnology::setPath(const QString &path)
     }
 
     Q_EMIT pathChanged(d_ptr->m_path);
+    if (wasAvailable != available()) {
+        emit availableChanged();
+    }
 }
 
 void NetworkTechnology::setIdleTimeout(quint32 timeout)
@@ -465,8 +473,14 @@ void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &
 void NetworkTechnology::onInterfaceChanged(const QString &interface)
 {
     if (interface == d_ptr->m_path) {
+        bool wasAvailable = available();
+
         destroyInterface();
         createInterface();
+
+        if (wasAvailable != available()) {
+            emit availableChanged();
+        }
     }
 }
 

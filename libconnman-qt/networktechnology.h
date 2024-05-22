@@ -18,7 +18,7 @@ class NetworkTechnologyPrivate;
 class NetworkTechnology : public QObject
 {
     Q_OBJECT
-
+    Q_PROPERTY(bool available READ available NOTIFY availableChanged)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString type READ type NOTIFY typeChanged)
     Q_PROPERTY(bool powered READ powered WRITE setPowered NOTIFY poweredChanged)
@@ -36,6 +36,7 @@ public:
 
     virtual ~NetworkTechnology();
 
+    bool available() const;
     QString name() const;
     QString type() const;
     bool powered() const;
@@ -62,6 +63,7 @@ public Q_SLOTS:
     void setPath(const QString &path);
 
 Q_SIGNALS:
+    void availableChanged();
     void poweredChanged(const bool &powered);
     void connectedChanged(const bool &connected);
     void scanFinished();

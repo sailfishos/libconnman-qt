@@ -929,19 +929,20 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
     if (isVPN) {
         m_priv->m_defaultRouteIsVPN = true;
         if (m_priv->m_defaultRoute && m_priv->m_defaultRoute != m_priv->m_invalidDefaultRoute) {
-            qDebug() << "New default service is VPN, use old service " << m_priv->m_defaultRoute->name();
+            qCDebug(lcConnman) << "New default service is VPN, use old service " << m_priv->m_defaultRoute->name();
             return m_priv->m_defaultRoute;
         } else {
-            qDebug() << "No old default service set, select next connected";
+            qCDebug(lcConnman) << "No old default service set, select next connected";
         }
     } else {
        if (m_priv->m_servicesOrder.contains(path)) {
             newDefaultRoute = m_priv->m_servicesCache.value(path, nullptr);
             if (newDefaultRoute && newDefaultRoute->connected()) {
-                qDebug() << "Selected service" << newDefaultRoute->name() << "path" << path;
+                qCDebug(lcConnman) << "Selected service" << newDefaultRoute->name() << "path" << path;
                 return newDefaultRoute;
             } else {
-                qDebug() << "Service" << (newDefaultRoute ? newDefaultRoute->name() : "NULL") << "not connected";
+                qCDebug(lcConnman) << "Service" << (newDefaultRoute ? newDefaultRoute->name() : "NULL")
+                                   << "not connected";
             }
         }
     }
@@ -966,13 +967,13 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
                 /* First connected service is VPN -> VPN is default route */
                 if (i == 1) {
                     m_priv->m_defaultRouteIsVPN = true;
-                    qDebug() << "VPN is set as default route";
+                    qCDebug(lcConnman) << "VPN is set as default route";
                 }
 
                 continue;
             }
 
-            qDebug() << "Selected service" << newDefaultRoute->name() << "path" << servicePath;
+            qCDebug(lcConnman) << "Selected service" << newDefaultRoute->name() << "path" << servicePath;
             return newDefaultRoute;
         } else {
             /* Stop when first not-connected is reached as the services are ordered based on state */
@@ -980,7 +981,7 @@ NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
         }
     }
 
-    qDebug() << "No transport service found";
+    qCDebug(lcConnman) << "No transport service found";
 
     return nullptr;
 }
@@ -991,7 +992,7 @@ void NetworkManager::updateDefaultRoute()
         if (!m_priv->m_servicesCacheHasUpdates)
             return;
 
-        qDebug() << "No default route set, services:" << m_priv->m_servicesCache.count();
+        qCDebug(lcConnman) << "No default route set, services:" << m_priv->m_servicesCache.count();
 
         m_priv->m_defaultRoute = selectDefaultRoute(QString());
         if (!m_priv->m_defaultRoute)
@@ -1435,12 +1436,12 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
 
         m_priv->m_servicesCacheHasUpdates = true;
 
-        qDebug() << "Default service changed to path \'" << path << "\'";
+        qCDebug(lcConnman) << "Default service changed to path \'" << path << "\'";
 
         newDefaultRoute = selectDefaultRoute(path);
 
         if (m_priv->m_defaultRoute != newDefaultRoute || m_priv->m_defaultRouteIsVPN) {
-            qDebug() << "Updating default route";
+            qCDebug(lcConnman) << "Updating default route";
             m_priv->m_defaultRoute = newDefaultRoute;
 
             /* Unset only when default is not VPN */

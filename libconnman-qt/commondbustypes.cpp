@@ -27,3 +27,17 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, ConnmanObject &ob
     argument.endStructure();
     return argument;
 }
+
+void registerCommonDataTypes()
+{
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        qDBusRegisterMetaType<StringMap>();
+        qDBusRegisterMetaType<StringPair>();
+        qDBusRegisterMetaType<StringPairArray>();
+        qDBusRegisterMetaType<ConnmanObject>();
+        qDBusRegisterMetaType<ConnmanObjectList>();
+        qRegisterMetaType<ConnmanObjectList>("ConnmanObjectList");
+    }
+}

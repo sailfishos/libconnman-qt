@@ -69,6 +69,8 @@ TechnologyTracker::TechnologyTracker()
                                             QDBusServiceWatcher::WatchForRegistration
                                             | QDBusServiceWatcher::WatchForUnregistration, this))
 {
+    registerCommonDataTypes();
+
     // Monitor connman itself.
     connect(m_dbusWatcher, &QDBusServiceWatcher::serviceRegistered,
             this, &TechnologyTracker::getTechnologies);

@@ -94,8 +94,6 @@ public:
     virtual ~VpnConnection();
 
     void modifyConnection(const QVariantMap &properties);
-    void activate();
-    void deactivate();
     void update(const QVariantMap &updateProperties);
     int connected() const;
 

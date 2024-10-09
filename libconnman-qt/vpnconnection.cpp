@@ -162,40 +162,6 @@ void VpnConnection::modifyConnection(const QVariantMap &properties)
         QDBusVariant(MarshalUtils::propertiesToDBus(updatedProperties)));
 }
 
-void VpnConnection::activate()
-{
-    Q_D(VpnConnection);
-
-    QDBusPendingCall call = d->m_connectionProxy.Connect();
-    qDebug() << "Connect to vpn" << d->m_path;
-
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, [d](QDBusPendingCallWatcher *watcher) {
-        QDBusPendingReply<void> reply = *watcher;
-        watcher->deleteLater();
-
-        if (reply.isError()) {
-            qDebug() << "Unable to activate Connman VPN connection:" << d->m_path << ":" << reply.error().message();
-        }
-    });
-}
-
-void VpnConnection::deactivate()
-{
-    Q_D(VpnConnection);
-
-    QDBusPendingCall call = d->m_connectionProxy.Disconnect();
-
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, [d](QDBusPendingCallWatcher *watcher) {
-        QDBusPendingReply<void> reply = *watcher;
-        watcher->deleteLater();
-        if (reply.isError()) {
-            qDebug() << "Unable to deactivate Connman VPN connection:" << d->m_path << ":" << reply.error().message();
-        }
-    });
-}
-
 void VpnConnection::update(const QVariantMap &updateProperties)
 {
     Q_D(VpnConnection);

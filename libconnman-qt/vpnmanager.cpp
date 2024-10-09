@@ -247,7 +247,6 @@ void VpnManager::deleteConnection(const QString &path)
                 disconnect(conn, &VpnConnection::stateChanged, this, nullptr);
                 VpnManager::deleteConnection(path);
             });
-            conn->deactivate();
         } else {
             QDBusPendingCall call = d->m_connmanVpn.Remove(QDBusObjectPath(path));
             QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
@@ -264,41 +263,6 @@ void VpnManager::deleteConnection(const QString &path)
         }
     } else {
         qDebug() << "Unable to delete unknown connection:" << path;
-    }
-}
-
-void VpnManager::activateConnection(const QString &path)
-{
-    Q_D(VpnManager);
-
-    qDebug() << "Connect" << path;
-    for (VpnConnection *conn : d->m_items) {
-        QString otherPath = conn->path();
-        if (otherPath != path && (conn->state() == VpnConnection::Ready ||
-                                conn->state() == VpnConnection::Configuration ||
-                                conn->state() == VpnConnection::Association)) {
-            deactivateConnection(otherPath);
-            qDebug() << "Adding pending vpn disconnect" << otherPath << conn->state() << "when connecting to vpn";
-        }
-    }
-
-    qDebug() << "About to connect path:" << path;
-    VpnConnection *conn = connection(path);
-    if (conn) {
-        conn->activate();
-    } else {
-        qDebug() << "Can't find VPN connection to activate it:" << path;
-    }
-}
-
-void VpnManager::deactivateConnection(const QString &path)
-{
-    qDebug() << "Disconnect" << path;
-    VpnConnection *conn = connection(path);
-    if (conn) {
-        conn->deactivate();
-    } else {
-        qDebug() << "Can't find VPN connection to deactivate it:" << path;
     }
 }
 

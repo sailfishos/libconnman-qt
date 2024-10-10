@@ -78,9 +78,6 @@ public:
     Q_INVOKABLE void modifyConnection(const QString &path, const QVariantMap &properties);
     Q_INVOKABLE void deleteConnection(const QString &path);
 
-    Q_INVOKABLE void activateConnection(const QString &path);
-    Q_INVOKABLE void deactivateConnection(const QString &path);
-
     Q_INVOKABLE VpnConnection *connection(const QString &path) const;
     Q_INVOKABLE VpnConnection *get(int index) const;
     Q_INVOKABLE int indexOf(const QString &path) const;

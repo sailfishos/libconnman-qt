@@ -13,11 +13,6 @@
     <method name="ClearProperty">
       <arg name="name" type="s" direction="in"/>
     </method>
-    <method name="Connect"/>
-    <method name="Connect2">
-      <arg name="dbus_sender" type="s" direction="in"/>
-    </method>
-    <method name="Disconnect"/>
     <signal name="PropertyChanged">
       <arg name="name" type="s"/>
       <arg name="value" type="v"/>

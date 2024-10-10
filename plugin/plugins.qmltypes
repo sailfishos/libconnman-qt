@@ -955,14 +955,6 @@ Module {
             Parameter { name: "path"; type: "string" }
         }
         Method {
-            name: "activateConnection"
-            Parameter { name: "path"; type: "string" }
-        }
-        Method {
-            name: "deactivateConnection"
-            Parameter { name: "path"; type: "string" }
-        }
-        Method {
             name: "connection"
             type: "VpnConnection*"
             Parameter { name: "path"; type: "string" }

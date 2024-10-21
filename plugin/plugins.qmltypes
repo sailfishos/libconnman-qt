@@ -55,6 +55,19 @@ Module {
         }
     }
     Component {
+        name: "ConnmanApi"
+        prototype: "QObject"
+        exports: ["Connman/Connman 0.2"]
+        isCreatable: false
+        isSingleton: true
+        exportMetaObjectRevisions: [0]
+        Property { name: "wifiTechnologyPath"; type: "string"; isReadonly: true }
+        Property { name: "cellularTechnologyPath"; type: "string"; isReadonly: true }
+        Property { name: "bluetoothTechnologyPath"; type: "string"; isReadonly: true }
+        Property { name: "gpsTechnologyPath"; type: "string"; isReadonly: true }
+        Property { name: "ethernetTechnologyPath"; type: "string"; isReadonly: true }
+    }
+    Component {
         name: "Counter"
         prototype: "QObject"
         exports: ["Connman/NetworkCounter 0.2"]
@@ -106,8 +119,19 @@ Module {
         prototype: "QObject"
         exports: ["Connman/NetworkManager 0.2"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "State"
+            values: {
+                "UnknownState": 0,
+                "OfflineState": 1,
+                "IdleState": 2,
+                "ReadyState": 3,
+                "OnlineState": 4
+            }
+        }
         Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "state"; type: "string"; isReadonly: true }
+        Property { name: "globalState"; type: "int"; isReadonly: true }
         Property { name: "offlineMode"; type: "bool" }
         Property { name: "defaultRoute"; type: "NetworkService"; isReadonly: true; isPointer: true }
         Property { name: "connectedWifi"; type: "NetworkService"; isReadonly: true; isPointer: true }
@@ -126,14 +150,6 @@ Module {
         Property { name: "GpsTechnology"; type: "string"; isReadonly: true }
         Property { name: "EthernetTechnology"; type: "string"; isReadonly: true }
         Signal { name: "availabilityChanged" }
-        Signal {
-            name: "stateChanged"
-            Parameter { name: "state"; type: "string" }
-        }
-        Signal {
-            name: "offlineModeChanged"
-            Parameter { name: "offlineMode"; type: "bool" }
-        }
         // sdk-make-qmltypes:keep
         Signal { name: "inputRequestTimeoutChanged" }
         Signal { name: "technologiesChanged" }
@@ -143,14 +159,6 @@ Module {
         Signal { name: "cellularServicesChanged" }
         Signal { name: "ethernetServicesChanged" }
         Signal { name: "availableServicesChanged" }
-        Signal {
-            name: "defaultRouteChanged"
-            Parameter { name: "defaultRoute"; type: "NetworkService"; isPointer: true }
-        }
-        Signal {
-            name: "sessionModeChanged"
-            Parameter { type: "bool" }
-        }
         Signal { name: "servicesListChanged" }
         Signal {
             name: "serviceAdded"
@@ -301,6 +309,19 @@ Module {
         exports: ["Connman/NetworkService 0.2"]
         exportMetaObjectRevisions: [0]
         Enum {
+            name: "ServiceState"
+            values: {
+                "UnknownState": 0,
+                "IdleState": 1,
+                "FailureState": 2,
+                "AssociationState": 3,
+                "ConfigurationState": 4,
+                "ReadyState": 5,
+                "DisconnectState": 6,
+                "OnlineState": 7
+            }
+        }
+        Enum {
             name: "SecurityType"
             values: {
                 "SecurityUnknown": 0,
@@ -322,6 +343,7 @@ Module {
         Property { name: "valid"; type: "bool"; isReadonly: true }
         Property { name: "name"; type: "string"; isReadonly: true }
         Property { name: "state"; type: "string"; isReadonly: true }
+        Property { name: "serviceState"; type: "ServiceState"; isReadonly: true }
         Property { name: "type"; type: "string"; isReadonly: true }
         Property { name: "error"; type: "string"; isReadonly: true }
         Property { name: "security"; type: "QStringList"; isReadonly: true }
@@ -387,6 +409,10 @@ Module {
         Signal {
             name: "stateChanged"
             Parameter { name: "state"; type: "string" }
+        }
+        Signal {
+            name: "serviceStateChanged"
+            Parameter { name: "state"; type: "ServiceState" }
         }
         Signal {
             name: "errorChanged"
@@ -691,6 +717,7 @@ Module {
         prototype: "QObject"
         exports: ["Connman/NetworkTechnology 0.2"]
         exportMetaObjectRevisions: [0]
+        Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "name"; type: "string"; isReadonly: true }
         Property { name: "type"; type: "string"; isReadonly: true }
         Property { name: "powered"; type: "bool" }
@@ -772,10 +799,13 @@ Module {
         }
     }
     Component {
-        name: "TechnologyModel"
+        name: "TechnologyServiceModel"
         prototype: "QAbstractListModel"
-        exports: ["Connman/TechnologyModel 0.2"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "Connman/TechnologyModel 0.2",
+            "Connman/TechnologyServiceModel 0.2"
+        ]
+        exportMetaObjectRevisions: [0, 0]
         Enum {
             name: "ServiceFilter"
             values: {
@@ -879,8 +909,6 @@ Module {
             name: "setConnectionRequestType"
             Parameter { name: "type"; type: "string" }
         }
-        Method { name: "connectionRequestType"; type: "string" }
-        Method { name: "path"; type: "string" }
         Method {
             name: "setAgentPath"
             Parameter { name: "path"; type: "string" }

@@ -25,22 +25,18 @@ Module {
         Signal { name: "timeUpdatesChanged" }
         // sdk-make-qmltypes:keep
         Signal { name: "timeserversChanged" }
-        Method { name: "timezone"; type: "string" }
         Method {
             name: "setTimezone"
             Parameter { name: "val"; type: "string" }
         }
-        Method { name: "timezoneUpdates"; type: "string" }
         Method {
             name: "setTimezoneUpdates"
             Parameter { name: "val"; type: "string" }
         }
-        Method { name: "timeUpdates"; type: "string" }
         Method {
             name: "setTimeUpdates"
             Parameter { name: "val"; type: "string" }
         }
-        Method { name: "timeservers"; type: "QStringList" }
         Method {
             name: "setTimeservers"
             Parameter { name: "val"; type: "QStringList" }

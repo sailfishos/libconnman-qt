@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 Jolla Mobile Ltd
+ *
+ * This program is licensed under the terms and conditions of the
+ * Apache License, version 2.0.  The full text of the Apache License is at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 #ifndef DECLARATIVENETWORKMANAGER_H
 #define DECLARATIVENETWORKMANAGER_H
 
@@ -49,6 +57,8 @@ class DeclarativeNetworkManager: public QObject
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
     Q_PROPERTY(QString EthernetTechnology READ ethernetTechnologyPath CONSTANT)
 
+    Q_PROPERTY(QVariantList tetheringClients READ getTetheringClients NOTIFY tetheringClientsChanged)
+
 public:
     // needs to match NetworkManager's enum
     enum State {
@@ -89,6 +99,8 @@ public:
     QString bluetoothTechnologyPath() const;
     QString gpsTechnologyPath() const;
     QString ethernetTechnologyPath() const;
+
+    QVariantList getTetheringClients() const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
     Q_INVOKABLE QStringList savedServicesList(const QString &tech = QString());
@@ -156,6 +168,10 @@ Q_SIGNALS:
     void serviceRemoved(const QString &servicePath);
     void serviceCreated(const QString &servicePath);
     void serviceCreationFailed(const QString &error);
+
+    void tetheringClientsChanged();
+    void tetheringClientAdded(const QString &macAddress);
+    void tetheringClientRemoved(const QString &macAddress);
 
 private:
     QSharedPointer<NetworkManager> m_sharedInstance;

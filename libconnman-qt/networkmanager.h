@@ -1,6 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2020 Jolla Ltd.
+ * Copyright © 2025 Jolla Mobile Ltd
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -57,6 +58,8 @@ class NetworkManager : public QObject
     Q_PROPERTY(QString BluetoothTechnology READ bluetoothTechnologyPath CONSTANT)
     Q_PROPERTY(QString GpsTechnology READ gpsTechnologyPath CONSTANT)
     Q_PROPERTY(QString EthernetTechnology READ ethernetTechnologyPath CONSTANT)
+
+    Q_PROPERTY(QVariantList tetheringClients READ getTetheringClients NOTIFY tetheringClientsChanged)
 
 public:
     enum State {
@@ -136,6 +139,8 @@ public:
     QString gpsTechnologyPath() const;
     QString ethernetTechnologyPath() const;
 
+    QVariantList getTetheringClients() const;
+
 public Q_SLOTS:
     void setOfflineMode(bool offlineMode);
     void registerAgent(const QString &path);
@@ -177,6 +182,9 @@ Q_SIGNALS:
     void servicesListChanged(const QStringList &list);
     void serviceAdded(const QString &servicePath);
     void serviceRemoved(const QString &servicePath);
+    void tetheringClientsChanged();
+    void tetheringClientAdded(const QString &macAddress);
+    void tetheringClientRemoved(const QString &macAddress);
 
     void serviceCreated(const QString &servicePath);
     void serviceCreationFailed(const QString &error);
@@ -201,6 +209,7 @@ private:
     QStringList selectServiceList(const QStringList &list, const QString &tech) const;
     QStringList selectServiceList(const QStringList &list, ServiceSelector selector) const;
     void updateDefaultRoute();
+    void updateTetheringClients();
 
 private:
     class Private;
@@ -215,11 +224,13 @@ private Q_SLOTS:
     void disconnectServices();
     void setupServices();
     void propertyChanged(const QString &name, const QDBusVariant &value);
+    void handleTetheringClientsChanged(const QStringList &added, const QStringList &removed);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);
     void getPropertiesFinished(QDBusPendingCallWatcher *watcher);
     void getTechnologiesFinished(QDBusPendingCallWatcher *watcher);
     void getServicesFinished(QDBusPendingCallWatcher *watcher);
+    void getTetheringClientsDetailsFinished(QDBusPendingCallWatcher *watcher);
 
 private:
     Q_DISABLE_COPY(NetworkManager)

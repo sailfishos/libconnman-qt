@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 Jolla Mobile Ltd
+ *
+ * This program is licensed under the terms and conditions of the
+ * Apache License, version 2.0.  The full text of the Apache License is at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 #include "declarativenetworkmanager.h"
 
 #include <QDebug>
@@ -76,6 +84,12 @@ DeclarativeNetworkManager::DeclarativeNetworkManager(QObject *parent)
             this, &DeclarativeNetworkManager::serviceCreated);
     connect(m_sharedInstance.data(), &NetworkManager::serviceCreationFailed,
             this, &DeclarativeNetworkManager::serviceCreationFailed);
+    connect(m_sharedInstance.data(), &NetworkManager::tetheringClientsChanged,
+            this, &DeclarativeNetworkManager::tetheringClientsChanged);
+    connect(m_sharedInstance.data(), &NetworkManager::tetheringClientAdded,
+            this, &DeclarativeNetworkManager::tetheringClientAdded);
+    connect(m_sharedInstance.data(), &NetworkManager::tetheringClientRemoved,
+            this, &DeclarativeNetworkManager::tetheringClientRemoved);
 }
 
 DeclarativeNetworkManager::~DeclarativeNetworkManager()
@@ -267,6 +281,11 @@ void DeclarativeNetworkManager::registerCounter(const QString &path, quint32 acc
 void DeclarativeNetworkManager::unregisterCounter(const QString &path)
 {
     m_sharedInstance->unregisterCounter(path);
+}
+
+QVariantList DeclarativeNetworkManager::getTetheringClients() const
+{
+    return m_sharedInstance->getTetheringClients();
 }
 
 bool DeclarativeNetworkManager::createService(

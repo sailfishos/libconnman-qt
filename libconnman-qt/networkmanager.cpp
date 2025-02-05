@@ -1,6 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2020 Jolla Ltd.
+ * Copyright © 2025 Jolla Mobile Ltd
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0.  The full text of the Apache License is at
@@ -9,6 +10,7 @@
 
 #include "networkmanager.h"
 #include "commondbustypes.h"
+#include "marshalutils.h"
 #include "logging.h"
 
 #include <QRegularExpression>
@@ -24,6 +26,7 @@ static const QString InputRequestTimeoutProperty("InputRequestTimeout");
 static const QString StateProperty("State");
 static const QString OfflineModeProperty("OfflineMode");
 static const QString DefaultServiceProperty("DefaultService");
+static const QString TetheringClientsProperty("TetheringClients");
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -588,6 +591,8 @@ public:
         { return asyncCall("GetTechnologies"); }
     QDBusPendingCall GetServices()
         { return asyncCall("GetServices"); }
+    QDBusPendingCall GetTetheringClientsDetails()
+        { return asyncCall("GetTetheringClientsDetails"); }
     QDBusPendingCall RegisterAgent(const QString &path)
         { return asyncCall("RegisterAgent", QVariant::fromValue(QDBusObjectPath(path))); }
     QDBusPendingCall UnregisterAgent(const QString &path)
@@ -611,6 +616,7 @@ Q_SIGNALS:
     void ServicesChanged(ConnmanObjectList changed, const QList<QDBusObjectPath> &removed);
     void TechnologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void TechnologyRemoved(const QDBusObjectPath &technology);
+    void TetheringClientsChanged(const QStringList &changed, const QStringList &removed);
 };
 
 // ==========================================================================
@@ -718,10 +724,15 @@ bool NetworkManager::connectToConnman()
     } else {
         connect(m_priv->m_proxy, SIGNAL(PropertyChanged(QString,QDBusVariant)),
                 SLOT(propertyChanged(QString,QDBusVariant)));
+        connect(m_priv->m_proxy, SIGNAL(TetheringClientsChanged(QStringList, QStringList)),
+                SLOT(handleTetheringClientsChanged(QStringList, QStringList)));
 
         auto *getProperties = new QDBusPendingCallWatcher(m_priv->m_proxy->GetProperties(), m_priv->m_proxy);
         connect(getProperties, &QDBusPendingCallWatcher::finished,
                 this, &NetworkManager::getPropertiesFinished);
+
+        updateTetheringClients();
+
         return true;
     }
 }
@@ -911,6 +922,30 @@ void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &va
     propertyChanged(name, value.variant());
 }
 
+void NetworkManager::handleTetheringClientsChanged(const QStringList &added, const QStringList &removed)
+{
+    bool change = false;
+
+    for (QStringList::ConstIterator i = added.constBegin(); i != added.constEnd(); ++i) {
+        qCDebug(lcConnman) << "Connected" << *i;
+        Q_EMIT tetheringClientAdded(*i);
+        change = true;
+    }
+
+    for (QStringList::ConstIterator i = removed.constBegin(); i != removed.constEnd(); ++i) {
+        qCDebug(lcConnman) << "Disconnected" << *i;
+        Q_EMIT tetheringClientRemoved(*i);
+        change = true;
+    }
+
+    if (change) {
+        qCDebug(lcConnman) << "get new list of clients";
+        updateTetheringClients();
+    } else {
+        qCDebug(lcConnman) << "no change";
+    }
+}
+
 NetworkService* NetworkManager::selectDefaultRoute(const QString &path)
 {
     NetworkService *newDefaultRoute = nullptr;
@@ -1004,6 +1039,14 @@ void NetworkManager::updateDefaultRoute()
     Q_EMIT defaultRouteChanged(m_priv->m_defaultRoute);
 }
 
+void NetworkManager::updateTetheringClients()
+{
+    auto *getTetheringClients = new QDBusPendingCallWatcher(
+                m_priv->m_proxy->GetTetheringClientsDetails(), m_priv->m_proxy);
+    connect(getTetheringClients, &QDBusPendingCallWatcher::finished,
+                this, &NetworkManager::getTetheringClientsDetailsFinished);
+}
+
 void NetworkManager::technologyAdded(const QDBusObjectPath &technology,
                                      const QVariantMap &properties)
 {
@@ -1082,6 +1125,24 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
 
     qCDebug(lcConnman) << "Updating services as GetServices returns";
     m_priv->updateServices(services, QList<QDBusObjectPath>());
+}
+
+void NetworkManager::getTetheringClientsDetailsFinished(QDBusPendingCallWatcher *watcher)
+{
+    QDBusPendingReply<QVariantMap> reply = *watcher;
+    watcher->deleteLater();
+
+    if (reply.isError()) {
+        qCDebug(lcConnman) << reply.error().message();
+        return;
+    }
+
+    qCDebug(lcConnman) << "Updating tethering clients as GetTetheringClientsDetails returns";
+
+    QVariantMap map = reply.value();
+    m_priv->m_propertiesCache.insert(TetheringClientsProperty, MarshalUtils::parseTetheringClientsToList(map));
+
+    Q_EMIT tetheringClientsChanged();
 }
 
 // Public API /////////////
@@ -1604,6 +1665,14 @@ QString NetworkManager::bluetoothTechnologyPath() const
 QString NetworkManager::gpsTechnologyPath() const
 {
     return GpsTechnologyPath;
+}
+
+QVariantList NetworkManager::getTetheringClients() const
+{
+    if (m_priv->m_propertiesCache.contains(TetheringClientsProperty))
+        return qdbus_cast<QVariantList>(m_priv->m_propertiesCache.value(TetheringClientsProperty));
+
+    return QVariantList();
 }
 
 #include "networkmanager.moc"

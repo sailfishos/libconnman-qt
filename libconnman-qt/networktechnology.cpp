@@ -27,7 +27,8 @@ const auto TetheringIdentifier = QStringLiteral("TetheringIdentifier");
 const auto TetheringPassphrase = QStringLiteral("TetheringPassphrase");
 }
 
-class TechnologyTracker: public QObject {
+class TechnologyTracker: public QObject
+{
     Q_OBJECT
 public:
     static QSharedPointer<TechnologyTracker> instance();
@@ -279,7 +280,7 @@ void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &v
         call->deleteLater();
 
         // If technology object is not yet registered update pending value accordingly.
-        // This is merely a fallback mechnanism as technologies are also istened.
+        // This is merely a fallback mechanism as technologies are also listened.
         if (reply.isError() && reply.error().type() == QDBusError::UnknownObject) {
             d_ptr->m_pendingProperties.insert(key, value);
         }

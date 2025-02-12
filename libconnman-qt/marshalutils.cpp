@@ -41,7 +41,7 @@
 // Empty namespace for local static functions
 namespace {
 
-QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
+QVariant convertState(const QString &key, const QVariant &value, bool toDBus)
 {
     QList<QPair<QVariant, QVariant> > states;
     states.push_back(qMakePair(QVariant::fromValue(QStringLiteral("idle")),
@@ -68,7 +68,7 @@ QVariant convertState (const QString &key, const QVariant &value, bool toDBus)
     return value;
 }
 
-QVariant convertRoutes (const QString &, const QVariant &value, bool toDBus) {
+QVariant convertRoutes(const QString &, const QVariant &value, bool toDBus) {
     // We use qDBusRegisterMetaType in VpnConnections to convert automatically
     // between QList<RouteStruture> and QDBusArgument, but we still need to
     // convert to/from suitable Javascript structures

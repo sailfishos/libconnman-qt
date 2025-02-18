@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 - 2019 Jolla Ltd.
  * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2025 Jolla Mobile Ltd
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -264,5 +265,101 @@ QVariantMap MarshalUtils::propertiesToDBus(const QVariantMap &fromQml)
     }
 
     return rv;
+}
+
+QString connmanTechToString(int value)
+{
+    switch (value) {
+    case 0: //CONNMAN_SERVICE_TYPE_UNKNOWN:
+        return "unknown";
+    case 1: //CONNMAN_SERVICE_TYPE_SYSTEM:
+        return "system";
+    case 2: //CONNMAN_SERVICE_TYPE_ETHERNET:
+        return "ethernet";
+    case 3: //CONNMAN_SERVICE_TYPE_WIFI:
+        return "wifi";
+    case 4: //CONNMAN_SERVICE_TYPE_BLUETOOTH:
+        return "bluetooth";
+    case 5: //CONNMAN_SERVICE_TYPE_CELLULAR:
+        return "cellular";
+    case 6: //CONNMAN_SERVICE_TYPE_GPS:
+        return "gps";
+    case 7: //CONNMAN_SERVICE_TYPE_VPN
+        return "vpn";
+    case 8: //CONNMAN_SERVICE_TYPE_GADGET:
+        return "gadget";
+    case 9: //CONNMAN_SERVICE_TYPE_P2P:
+        return "p2p";
+    }
+
+    return QString();
+}
+
+QString connmanMethodToString(int value)
+{
+    switch (value) {
+    case 0: //CONNMAN_IPCONFIG_METHOD_UNKNOWN:
+        return "unknown";
+    case 1: //CONNMAN_IPCONFIG_METHOD_OFF:
+        return "off";
+    case 2: //CONNMAN_IPCONFIG_METHOD_FIXED:
+        return "static";
+    case 3: //CONNMAN_IPCONFIG_METHOD_MANUAL:
+        return "manual";
+    case 4: //CONNMAN_IPCONFIG_METHOD_DHCP:
+        return "dhcp";
+    case 5: //CONNMAN_IPCONFIG_METHOD_AUTO:
+        return "auto";
+    }
+
+    return QString();
+}
+
+QVariantList MarshalUtils::parseTetheringClientsToList(const QVariantMap &fromDBus)
+{
+    QVariantList list;
+
+    if (fromDBus.isEmpty())
+        return QVariantList();
+
+    for (QVariantMap::const_iterator it = fromDBus.cbegin(); it != fromDBus.cend(); ++it) {
+        QVariantMap values = qdbus_cast<QVariantMap>(it.value());
+        QVariantMap entry;
+
+        entry["mac"] = it.key();
+
+        for (QVariantMap::const_iterator itemIt = values.cbegin(); itemIt != values.cend(); ++itemIt) {;
+            QString entryKey;
+            QString entryValue;
+            QString key = itemIt.key();
+            QVariant value = itemIt.value();
+
+            if (key == "Address") {
+                entryKey = key.toLower();
+                entryValue = value.toString();
+            } else if (key == "AddressType") {
+                int type = value.toInt();
+                entryKey = key.toLower();
+                entryValue = connmanMethodToString(type);
+            } else if (key == "Technology") {
+                int tech = value.toInt();
+                entryKey = key.toLower();
+                entryValue = connmanTechToString(tech);
+            } else if (key == "Version") {
+                // Not used yet
+                // WiFi 2/5 = GHz, BT = LMP
+                continue;
+            } else {
+                qWarning() << "Tethering client list has an unknown key" << key << "value" << value.toString();
+                continue;
+            }
+
+            entry[entryKey] = entryValue;
+        }
+
+        list.append(entry);
+    }
+
+    return list;
 }
 

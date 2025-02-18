@@ -145,6 +145,7 @@ Module {
         Property { name: "BluetoothTechnology"; type: "string"; isReadonly: true }
         Property { name: "GpsTechnology"; type: "string"; isReadonly: true }
         Property { name: "EthernetTechnology"; type: "string"; isReadonly: true }
+        Property { name: "tetheringClients"; type: "QVariantList"; isReadonly: true }
         Signal { name: "availabilityChanged" }
         // sdk-make-qmltypes:keep
         Signal { name: "inputRequestTimeoutChanged" }
@@ -171,6 +172,15 @@ Module {
         Signal {
             name: "serviceCreationFailed"
             Parameter { name: "error"; type: "string" }
+        }
+        Signal { name: "tetheringClientsChanged" }
+        Signal {
+            name: "tetheringClientAdded"
+            Parameter { name: "macAddress"; type: "string" }
+        }
+        Signal {
+            name: "tetheringClientRemoved"
+            Parameter { name: "macAddress"; type: "string" }
         }
         // sdk-make-qmltypes:keep
         Signal { name: "serviceEnabledChanged" }
@@ -286,6 +296,9 @@ Module {
             name: "resetCountersForType"
             Parameter { name: "type"; type: "string" }
         }
+        Method {
+            name: "getTetheringClients"
+            type: "QVariantList"
     }
     Component {
         name: "DeclarativeNetworkManagerFactory"

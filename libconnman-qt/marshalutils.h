@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 - 2019 Jolla Ltd.
  * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2025 Jolla Mobile Ltd
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -59,6 +60,7 @@ namespace MarshalUtils
     QVariant convertToQml(const QString &key, const QVariant &value);
     QVariant convertToDBus(const QString &key, const QVariant &value);
     QVariantMap propertiesToDBus(const QVariantMap &fromQml);
+    QVariantList parseTetheringClientsToList(const QVariantMap &fromDBus);
 }
 
 #endif // MARSHALUTILS_H

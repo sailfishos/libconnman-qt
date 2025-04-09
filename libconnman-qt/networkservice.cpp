@@ -1,7 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2019 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
+ * Copyright © 2025 Jolla Mobile Ltd
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -80,7 +80,9 @@ static QString ConnmanErrorInProgress = QStringLiteral("net.connman.Error.InProg
     ConnmanArg("AnonymousIdentity",AnonymousIdentity,anonymousIdentity) \
     ConnmanNoArg("Available",Available,available) \
     ConnmanNoArg("Saved",Saved,saved) \
-    ClassNoArg(Valid,valid)
+    ClassNoArg(Valid,valid) \
+    ConnmanArg("mDNS", MDNS, mDNS) \
+    ConnmanArg("mDNS.Configuration", MDNSConfiguration, mDNSConfiguration)
 
 #define NETWORK_SERVICE_PROPERTIES2(Connman,Class) \
     NETWORK_SERVICE_PROPERTIES(Connman,Connman,Class,Class)
@@ -1140,6 +1142,12 @@ void NetworkService::Private::resetProperties()
         } else if (key == AnonymousIdentity) {
             queueSignal(SignalAnonymousIdentityChanged);
             setPropertyAvailable(&PropAnonymousIdentity, false);
+        } else if (key == MDNS) {
+            if (value.toBool())
+                queueSignal(SignalMDNSChanged);
+        } else if (key == MDNSConfiguration) {
+            if (value.toBool())
+                queueSignal(SignalMDNSConfigurationChanged);
         }
     }
     updateManaged();
@@ -1259,6 +1267,10 @@ void NetworkService::Private::updatePropertyCache(const QString &name, const QVa
     } else if (name == AnonymousIdentity) {
         queueSignal(SignalAnonymousIdentityChanged);
         setPropertyAvailable(&PropAnonymousIdentity, true);
+    } else if (name == MDNS) {
+        queueSignal(SignalMDNSChanged);
+    } else if (name == MDNSConfiguration) {
+    	queueSignal(SignalMDNSConfigurationChanged);
     }
 
     updateManaged();
@@ -1850,6 +1862,24 @@ QString NetworkService::anonymousIdentity() const
 void NetworkService::setAnonymousIdentity(const QString &anonymousIdentity)
 {
     m_priv->setProperty(Private::AnonymousIdentity, anonymousIdentity);
+}
+
+bool NetworkService::mDNS() const
+{
+    return m_priv->boolValue(Private::MDNS);
+}
+
+bool NetworkService::mDNSConfiguration() const
+{
+    return m_priv->boolValue(Private::MDNSConfiguration);
+}
+
+void NetworkService::setmDNSConfiguration(bool mDNSConfiguration)
+{
+    Private::InterfaceProxy *service = m_priv->m_proxy;
+    if (service) {
+        service->SetProperty(Private::MDNSConfiguration, mDNSConfiguration);
+    }
 }
 
 #include "networkservice.moc"

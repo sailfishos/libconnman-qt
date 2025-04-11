@@ -1,7 +1,7 @@
 /*
  * Copyright © 2010 Intel Corporation.
  * Copyright © 2012-2019 Jolla Ltd.
- * Contact: Slava Monich <slava.monich@jolla.com>
+ * Copyright © 2025 Jolla Mobile Ltd
  *
  * This program is licensed under the terms and conditions of the
  * Apache License, version 2.0. The full text of the Apache License
@@ -85,6 +85,8 @@ class NetworkService : public QObject
     Q_PROPERTY(QString domainSuffixMatch READ domainSuffixMatch WRITE setDomainSuffixMatch NOTIFY domainSuffixMatchChanged)
     Q_PROPERTY(QString phase2 READ phase2 WRITE setPhase2 NOTIFY phase2Changed)
     Q_PROPERTY(QString anonymousIdentity READ anonymousIdentity WRITE setAnonymousIdentity NOTIFY anonymousIdentityChanged)
+    Q_PROPERTY(bool mDNS READ mDNS NOTIFY mDNSChanged)
+    Q_PROPERTY(bool mDNSConfiguration READ mDNSConfiguration WRITE setmDNSConfiguration NOTIFY mDNSConfigurationChanged)
 
     class Private;
     friend class Private;
@@ -151,6 +153,8 @@ public:
     QString domainSuffixMatch() const;
     QString phase2() const;
     QString anonymousIdentity() const;
+    bool mDNS() const;
+    bool mDNSConfiguration() const;
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -245,6 +249,8 @@ Q_SIGNALS:
     void roamingChanged(bool roaming);
     void timeserversChanged(const QStringList &timeservers);
     void timeserversConfigChanged(const QStringList &timeservers);
+    void mDNSChanged(bool mDNS);
+    void mDNSConfigurationChanged(bool mDNSConfiguration);
 
     void serviceConnectionStarted();
     void serviceDisconnectionStarted();
@@ -298,6 +304,7 @@ public Q_SLOTS:
     void setDomainSuffixMatch(const QString &domainSuffixMatch);
     void setPhase2(const QString &phase2);
     void setAnonymousIdentity(const QString &anonymousIdentity);
+    void setmDNSConfiguration(bool mDNSConfiguration);
 
     void resetCounters();
 

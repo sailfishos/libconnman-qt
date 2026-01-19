@@ -51,6 +51,8 @@ SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
             this, &SavedServiceModel::updateServiceList);
     connect(m_manager.data(), &NetworkManager::servicesChanged,
             this, &SavedServiceModel::updateServiceList);
+    connect(m_manager.data(), &NetworkManager::connectedChanged,
+            this, &SavedServiceModel::updateServiceList);
 }
 
 SavedServiceModel::~SavedServiceModel()
@@ -198,6 +200,19 @@ void SavedServiceModel::updateServiceList()
         beginRemoveRows(QModelIndex(), num_new, num_old - 1);
         m_services.remove(num_new, num_old - num_new);
         endRemoveRows();
+    }
+
+    /*
+     * Ignore count change here because we can have added one and removed one
+     * at the same time. Just sort the services list to propagate changes
+     * upwards.
+     */
+    if (m_sort) {
+        if (m_groupByCategory) {
+            std::stable_sort(m_services.begin(), m_services.end(), compareManagedServices);
+        } else {
+            std::stable_sort(m_services.begin(), m_services.end(), compareServices);
+        }
     }
 }
 

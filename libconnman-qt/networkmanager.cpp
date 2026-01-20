@@ -863,10 +863,6 @@ void NetworkManager::disconnectServices()
         Q_EMIT savedServicesChanged();
     }
 
-    if (emitSavedServicesChanged) {
-        Q_EMIT savedServicesChanged();
-    }
-
     if (emitAvailableServicesChanged) {
         Q_EMIT availableServicesChanged();
     }

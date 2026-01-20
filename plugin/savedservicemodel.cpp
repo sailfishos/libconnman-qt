@@ -51,6 +51,8 @@ SavedServiceModel::SavedServiceModel(QAbstractListModel* parent)
             this, &SavedServiceModel::updateServiceList);
     connect(m_manager.data(), &NetworkManager::servicesChanged,
             this, &SavedServiceModel::updateServiceList);
+    connect(m_manager.data(), &NetworkManager::savedServicesChanged,
+            this, &SavedServiceModel::updateServiceList);
 }
 
 SavedServiceModel::~SavedServiceModel()

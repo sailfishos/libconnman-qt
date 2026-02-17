@@ -108,7 +108,9 @@ public:
         SecurityNone,
         SecurityWEP,
         SecurityPSK,
-        SecurityIEEE802
+        SecurityIEEE802,
+        SecurityPSKSAE,
+        SecuritySAE,
     };
 
     enum EapMethod {

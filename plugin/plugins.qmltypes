@@ -296,9 +296,6 @@ Module {
             name: "resetCountersForType"
             Parameter { name: "type"; type: "string" }
         }
-        Method {
-            name: "getTetheringClients"
-            type: "QVariantList"
     }
     Component {
         name: "DeclarativeNetworkManagerFactory"
@@ -411,6 +408,8 @@ Module {
         Property { name: "domainSuffixMatch"; type: "string" }
         Property { name: "phase2"; type: "string" }
         Property { name: "anonymousIdentity"; type: "string" }
+        Property { name: "mDNS"; type: "bool"; isReadonly: true }
+        Property { name: "mDNSConfiguration"; type: "bool" }
         Signal {
             name: "nameChanged"
             Parameter { name: "name"; type: "string" }
@@ -551,6 +550,14 @@ Module {
             name: "timeserversConfigChanged"
             Parameter { name: "timeservers"; type: "QStringList" }
         }
+        Signal {
+            name: "mDNSChanged"
+            Parameter { name: "mDNS"; type: "bool" }
+        }
+        Signal {
+            name: "mDNSConfigurationChanged"
+            Parameter { name: "mDNSConfiguration"; type: "bool" }
+        }
         Signal { name: "serviceConnectionStarted" }
         Signal { name: "serviceDisconnectionStarted" }
         Signal {
@@ -656,6 +663,10 @@ Module {
         Method {
             name: "setAnonymousIdentity"
             Parameter { name: "anonymousIdentity"; type: "string" }
+        }
+        Method {
+            name: "setmDNSConfiguration"
+            Parameter { name: "mDNSConfiguration"; type: "bool" }
         }
         Method { name: "resetCounters" }
     }

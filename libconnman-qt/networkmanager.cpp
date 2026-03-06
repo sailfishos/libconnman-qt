@@ -148,11 +148,14 @@ public Q_SLOTS:
     void onWifiConnectingChanged();
 };
 
-class NetworkManager::Private::ListUpdate {
+class NetworkManager::Private::ListUpdate
+{
 public:
-    ListUpdate(QStringList* list) : storage(list), changed(false), count(0) {}
+    ListUpdate(QStringList *list)
+        : storage(list), changed(false), count(0) {}
 
-    void add(const QString& str) {
+    void add(const QString &str)
+    {
         if (storage->count() == count) {
             storage->append(str);
             changed = true;
@@ -166,7 +169,8 @@ public:
         count++;
     }
 
-    void done() {
+    void done()
+    {
         while (storage->count() > count) {
             storage->removeLast();
             changed = true;

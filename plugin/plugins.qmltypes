@@ -334,7 +334,9 @@ Module {
                 "SecurityNone": 1,
                 "SecurityWEP": 2,
                 "SecurityPSK": 3,
-                "SecurityIEEE802": 4
+                "SecurityIEEE802": 4,
+                "SecurityPSKSAE": 5,
+                "SecyritySAE": 6
             }
         }
         Enum {

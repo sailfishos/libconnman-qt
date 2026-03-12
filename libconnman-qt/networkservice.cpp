@@ -437,7 +437,7 @@ const QString NetworkService::Private::PeapMethodName[] = {
 
 // The order must match SecurityType enum
 const QString NetworkService::Private::SecurityTypeName[] = {
-    QString(), "none", "wep", "psk", "ieee8021x"
+    QString(), "none", "wep", "psk", "ieee8021x", "psksae", "sae",
 };
 
 NetworkService::Private::Private(const QString &path, const QVariantMap &props, NetworkService *parent) :

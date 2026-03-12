@@ -5,7 +5,7 @@ Release:    1
 License:    ASL 2.0
 URL:        https://github.com/sailfishos/libconnman-qt/
 Source0:    %{name}-%{version}.tar.bz2
-Requires:   connman >= 1.32+git208
+Requires:   connman >= 1.40+git4
 Requires:   libdbusaccess >= 1.0.4
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig

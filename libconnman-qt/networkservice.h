@@ -87,6 +87,8 @@ class NetworkService : public QObject
     Q_PROPERTY(QString anonymousIdentity READ anonymousIdentity WRITE setAnonymousIdentity NOTIFY anonymousIdentityChanged)
     Q_PROPERTY(bool mDNS READ mDNS NOTIFY mDNSChanged)
     Q_PROPERTY(bool mDNSConfiguration READ mDNSConfiguration WRITE setmDNSConfiguration NOTIFY mDNSConfigurationChanged)
+    Q_PROPERTY(bool wpa3SaeCheckMfp READ wpa3SaeCheckMfp WRITE setWpa3SaeCheckMfp NOTIFY wpa3SaeCheckMfpChanged)
+    Q_PROPERTY(QString wpa3SaePwe READ wpa3SaePwe WRITE setWpa3SaePwe NOTIFY wpa3SaePweChanged)
 
     class Private;
     friend class Private;
@@ -157,6 +159,8 @@ public:
     QString anonymousIdentity() const;
     bool mDNS() const;
     bool mDNSConfiguration() const;
+    bool wpa3SaeCheckMfp() const;
+    QString wpa3SaePwe() const;
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -253,6 +257,8 @@ Q_SIGNALS:
     void timeserversConfigChanged(const QStringList &timeservers);
     void mDNSChanged(bool mDNS);
     void mDNSConfigurationChanged(bool mDNSConfiguration);
+    void wpa3SaeCheckMfpChanged(bool wpa3SaeCheckMfp);
+    void wpa3SaePweChanged(const QString &wpa3SaePwe);
 
     void serviceConnectionStarted();
     void serviceDisconnectionStarted();
@@ -307,6 +313,8 @@ public Q_SLOTS:
     void setPhase2(const QString &phase2);
     void setAnonymousIdentity(const QString &anonymousIdentity);
     void setmDNSConfiguration(bool mDNSConfiguration);
+    void setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp);
+    void setWpa3SaePwe(const QString &wpa3SaePwe);
 
     void resetCounters();
 

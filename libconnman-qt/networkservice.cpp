@@ -82,7 +82,9 @@ static QString ConnmanErrorInProgress = QStringLiteral("net.connman.Error.InProg
     ConnmanNoArg("Saved",Saved,saved) \
     ClassNoArg(Valid,valid) \
     ConnmanArg("mDNS", MDNS, mDNS) \
-    ConnmanArg("mDNS.Configuration", MDNSConfiguration, mDNSConfiguration)
+    ConnmanArg("mDNS.Configuration", MDNSConfiguration, mDNSConfiguration) \
+    ConnmanArg("WPA3SAECheckMFP", WPA3SAECheckMFP, wpa3SaeCheckMfp) \
+    ConnmanArg("WPA3SAEPWE", WPA3SAEPWE, wpa3SaePwe)
 
 #define NETWORK_SERVICE_PROPERTIES2(Connman,Class) \
     NETWORK_SERVICE_PROPERTIES(Connman,Connman,Class,Class)
@@ -1148,6 +1150,10 @@ void NetworkService::Private::resetProperties()
         } else if (key == MDNSConfiguration) {
             if (value.toBool())
                 queueSignal(SignalMDNSConfigurationChanged);
+        } else if (key == WPA3SAECheckMFP) {
+            queueSignal(SignalWPA3SAECheckMFPChanged);
+        } else if (key == WPA3SAEPWE) {
+            queueSignal(SignalWPA3SAEPWEChanged);
         }
     }
     updateManaged();
@@ -1271,6 +1277,10 @@ void NetworkService::Private::updatePropertyCache(const QString &name, const QVa
         queueSignal(SignalMDNSChanged);
     } else if (name == MDNSConfiguration) {
     	queueSignal(SignalMDNSConfigurationChanged);
+    } else if (name == WPA3SAECheckMFP) {
+        queueSignal(SignalWPA3SAECheckMFPChanged);
+    } else if (name == WPA3SAEPWE) {
+        queueSignal(SignalWPA3SAEPWEChanged);
     }
 
     updateManaged();
@@ -1880,6 +1890,26 @@ void NetworkService::setmDNSConfiguration(bool mDNSConfiguration)
     if (service) {
         service->SetProperty(Private::MDNSConfiguration, mDNSConfiguration);
     }
+}
+
+bool NetworkService::wpa3SaeCheckMfp() const
+{
+    return m_priv->boolValue(Private::WPA3SAECheckMFP);
+}
+
+void NetworkService::setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp)
+{
+    m_priv->setProperty(Private::WPA3SAECheckMFP, wpa3SaeCheckMfp);
+}
+
+QString NetworkService::wpa3SaePwe() const
+{
+    return m_priv->stringValue(Private::WPA3SAEPWE);
+}
+
+void NetworkService::setWpa3SaePwe(const QString &wpa3SaeWpe)
+{
+    m_priv->setProperty(Private::WPA3SAEPWE, wpa3SaeWpe);
 }
 
 #include "networkservice.moc"

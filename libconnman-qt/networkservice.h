@@ -89,6 +89,7 @@ class NetworkService : public QObject
     Q_PROPERTY(bool mDNSConfiguration READ mDNSConfiguration WRITE setmDNSConfiguration NOTIFY mDNSConfigurationChanged)
     Q_PROPERTY(bool wpa3SaeCheckMfp READ wpa3SaeCheckMfp WRITE setWpa3SaeCheckMfp NOTIFY wpa3SaeCheckMfpChanged)
     Q_PROPERTY(QString wpa3SaePwe READ wpa3SaePwe WRITE setWpa3SaePwe NOTIFY wpa3SaePweChanged)
+    Q_PROPERTY(bool supported READ supported NOTIFY supportedChanged)
 
     class Private;
     friend class Private;
@@ -164,6 +165,7 @@ public:
     void setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp);
     QString wpa3SaePwe() const;
     void setWpa3SaePwe(const QString &wpa3SaePwe);
+    bool supported() const;
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -262,6 +264,7 @@ Q_SIGNALS:
     void mDNSConfigurationChanged(bool mDNSConfiguration);
     void wpa3SaeCheckMfpChanged(bool wpa3SaeCheckMfp);
     void wpa3SaePweChanged(const QString &wpa3SaePwe);
+    void supportedChanged(bool supported);
 
     void serviceConnectionStarted();
     void serviceDisconnectionStarted();

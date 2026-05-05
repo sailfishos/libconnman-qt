@@ -131,6 +131,7 @@ Module {
                 "Wpa3SupportFull": 0,
                 "Wpa3SupportMixed": 1,
                 "Wpa3SupportNone": 2
+            }
         }
         Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "state"; type: "string"; isReadonly: true }
@@ -142,6 +143,7 @@ Module {
         Property { name: "connectingWifi"; type: "bool"; isReadonly: true }
         Property { name: "sessionMode"; type: "bool" }
         Property { name: "inputRequestTimeout"; type: "uint"; isReadonly: true }
+        Property { name: "wifiWpa3Support"; type: "WifiWpa3Support"; isReadonly: true }
         Property { name: "servicesEnabled"; type: "bool" }
         Property { name: "technologiesEnabled"; type: "bool" }
         Property { name: "valid"; type: "bool"; isReadonly: true }
@@ -420,6 +422,8 @@ Module {
         Property { name: "anonymousIdentity"; type: "string" }
         Property { name: "mDNS"; type: "bool"; isReadonly: true }
         Property { name: "mDNSConfiguration"; type: "bool" }
+        Property { name: "wpa3SaeCheckMfp"; type: "bool" }
+        Property { name: "wpa3SaePwe"; type: "string" }
         Signal {
             name: "nameChanged"
             Parameter { name: "name"; type: "string" }
@@ -568,6 +572,14 @@ Module {
             name: "mDNSConfigurationChanged"
             Parameter { name: "mDNSConfiguration"; type: "bool" }
         }
+        Signal {
+            name: "wpa3SaeCheckMfpChanged"
+            Parameter { name: "wpa3SaeCheckMfp"; type: "bool" }
+        }
+        Signal {
+            name: "wpa3SaePweChanged"
+            Parameter { name: "wpa3SaePwe"; type: "string" }
+        }
         Signal { name: "serviceConnectionStarted" }
         Signal { name: "serviceDisconnectionStarted" }
         Signal {
@@ -673,10 +685,6 @@ Module {
         Method {
             name: "setAnonymousIdentity"
             Parameter { name: "anonymousIdentity"; type: "string" }
-        }
-        Method {
-            name: "setmDNSConfiguration"
-            Parameter { name: "mDNSConfiguration"; type: "bool" }
         }
         Method { name: "resetCounters" }
     }

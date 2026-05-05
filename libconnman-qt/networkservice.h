@@ -159,8 +159,11 @@ public:
     QString anonymousIdentity() const;
     bool mDNS() const;
     bool mDNSConfiguration() const;
+    void setmDNSConfiguration(bool mDNSConfiguration);
     bool wpa3SaeCheckMfp() const;
+    void setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp);
     QString wpa3SaePwe() const;
+    void setWpa3SaePwe(const QString &wpa3SaePwe);
 
     void setPath(const QString &path);
     void updateProperties(const QVariantMap &properties);
@@ -312,9 +315,6 @@ public Q_SLOTS:
     void setDomainSuffixMatch(const QString &domainSuffixMatch);
     void setPhase2(const QString &phase2);
     void setAnonymousIdentity(const QString &anonymousIdentity);
-    void setmDNSConfiguration(bool mDNSConfiguration);
-    void setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp);
-    void setWpa3SaePwe(const QString &wpa3SaePwe);
 
     void resetCounters();
 

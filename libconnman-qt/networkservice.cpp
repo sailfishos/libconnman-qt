@@ -81,10 +81,10 @@ static QString ConnmanErrorInProgress = QStringLiteral("net.connman.Error.InProg
     ConnmanNoArg("Available",Available,available) \
     ConnmanNoArg("Saved",Saved,saved) \
     ClassNoArg(Valid,valid) \
-    ConnmanArg("mDNS", MDNS, mDNS) \
-    ConnmanArg("mDNS.Configuration", MDNSConfiguration, mDNSConfiguration) \
-    ConnmanArg("WPA3SAECheckMFP", WPA3SAECheckMFP, wpa3SaeCheckMfp) \
-    ConnmanArg("WPA3SAEPWE", WPA3SAEPWE, wpa3SaePwe) \
+    ConnmanArg("mDNS",MDNS,mDNS) \
+    ConnmanArg("mDNS.Configuration",MDNSConfiguration,mDNSConfiguration) \
+    ConnmanArg("WPA3SAECheckMFP",WPA3SAECheckMFP,wpa3SaeCheckMfp) \
+    ConnmanArg("WPA3SAEPWE",WPA3SAEPWE,wpa3SaePwe) \
     ConnmanArg("Supported",Supported,supported)
 
 #define NETWORK_SERVICE_PROPERTIES2(Connman,Class) \

@@ -424,6 +424,7 @@ Module {
         Property { name: "mDNSConfiguration"; type: "bool" }
         Property { name: "wpa3SaeCheckMfp"; type: "bool" }
         Property { name: "wpa3SaePwe"; type: "string" }
+        Property { name: "supported"; type: "bool"; isReadonly: true }
         Signal {
             name: "nameChanged"
             Parameter { name: "name"; type: "string" }
@@ -579,6 +580,9 @@ Module {
         Signal {
             name: "wpa3SaePweChanged"
             Parameter { name: "wpa3SaePwe"; type: "string" }
+        Signal {
+            name: "supportedChanged"
+            Parameter { name: "supported"; type: "bool" }
         }
         Signal { name: "serviceConnectionStarted" }
         Signal { name: "serviceDisconnectionStarted" }

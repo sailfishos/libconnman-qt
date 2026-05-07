@@ -81,10 +81,11 @@ static QString ConnmanErrorInProgress = QStringLiteral("net.connman.Error.InProg
     ConnmanNoArg("Available",Available,available) \
     ConnmanNoArg("Saved",Saved,saved) \
     ClassNoArg(Valid,valid) \
-    ConnmanArg("mDNS", MDNS, mDNS) \
-    ConnmanArg("mDNS.Configuration", MDNSConfiguration, mDNSConfiguration) \
-    ConnmanArg("WPA3SAECheckMFP", WPA3SAECheckMFP, wpa3SaeCheckMfp) \
-    ConnmanArg("WPA3SAEPWE", WPA3SAEPWE, wpa3SaePwe)
+    ConnmanArg("mDNS",MDNS,mDNS) \
+    ConnmanArg("mDNS.Configuration",MDNSConfiguration,mDNSConfiguration) \
+    ConnmanArg("WPA3SAECheckMFP",WPA3SAECheckMFP,wpa3SaeCheckMfp) \
+    ConnmanArg("WPA3SAEPWE",WPA3SAEPWE,wpa3SaePwe) \
+    ConnmanArg("Supported",Supported,supported)
 
 #define NETWORK_SERVICE_PROPERTIES2(Connman,Class) \
     NETWORK_SERVICE_PROPERTIES(Connman,Connman,Class,Class)
@@ -1154,6 +1155,9 @@ void NetworkService::Private::resetProperties()
             queueSignal(SignalWPA3SAECheckMFPChanged);
         } else if (key == WPA3SAEPWE) {
             queueSignal(SignalWPA3SAEPWEChanged);
+        } else if (key == Supported) {
+            if (value.toBool())
+                queueSignal(SignalSupportedChanged);
         }
     }
     updateManaged();
@@ -1281,6 +1285,8 @@ void NetworkService::Private::updatePropertyCache(const QString &name, const QVa
         queueSignal(SignalWPA3SAECheckMFPChanged);
     } else if (name == WPA3SAEPWE) {
         queueSignal(SignalWPA3SAEPWEChanged);
+    } else if (name == Supported) {
+        queueSignal(SignalSupportedChanged);
     }
 
     updateManaged();
@@ -1900,6 +1906,11 @@ bool NetworkService::wpa3SaeCheckMfp() const
 void NetworkService::setWpa3SaeCheckMfp(bool wpa3SaeCheckMfp)
 {
     m_priv->setProperty(Private::WPA3SAECheckMFP, wpa3SaeCheckMfp);
+}
+
+bool NetworkService::supported() const
+{
+    return m_priv->boolValue(Private::Supported);
 }
 
 QString NetworkService::wpa3SaePwe() const

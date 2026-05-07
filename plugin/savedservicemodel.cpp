@@ -16,6 +16,12 @@ namespace
 
 bool compareServices(NetworkService *a, NetworkService *b)
 {
+    if (a->supported() && !b->supported())
+            return true;
+
+    if (b->supported() && !a->supported())
+            return false;
+
     if (a->available() && !b->available())
         return true;
 

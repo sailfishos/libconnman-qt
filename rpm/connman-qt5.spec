@@ -1,6 +1,6 @@
 Name:       connman-qt5
 Summary:    Qt bindings for connman
-Version:    1.4.22
+Version:    1.4.23
 Release:    1
 License:    ASL 2.0
 URL:        https://github.com/sailfishos/libconnman-qt/
@@ -62,16 +62,13 @@ sed 's/module Connman/module MeeGo.Connman/' < plugin/qmldir > %{buildroot}%{_li
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %{_libdir}/libconnman-qt5.so.*
 
 %files declarative
-%defattr(-,root,root,-)
 %{_libdir}/qt5/qml/Connman
 %{_libdir}/qt5/qml/MeeGo/Connman
 
 %files devel
-%defattr(-,root,root,-)
 %{_includedir}/connman-qt5
 %{_libdir}/pkgconfig/connman-qt5.pc
 %{_libdir}/libconnman-qt5.prl

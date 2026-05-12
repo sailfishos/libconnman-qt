@@ -580,6 +580,7 @@ Module {
         Signal {
             name: "wpa3SaePweChanged"
             Parameter { name: "wpa3SaePwe"; type: "string" }
+        }
         Signal {
             name: "supportedChanged"
             Parameter { name: "supported"; type: "bool" }

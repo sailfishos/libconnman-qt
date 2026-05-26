@@ -63,6 +63,8 @@ class NetworkManager : public QObject
 
     Q_PROPERTY(QVariantList tetheringClients READ getTetheringClients NOTIFY tetheringClientsChanged)
 
+    Q_PROPERTY(bool wifiWmtDualMode READ wifiWmtDualMode NOTIFY wifiWmtDualModeChanged)
+
 public:
     enum State {
         UnknownState,
@@ -150,6 +152,8 @@ public:
 
     QVariantList getTetheringClients() const;
 
+    bool wifiWmtDualMode() const;
+
 public Q_SLOTS:
     void setOfflineMode(bool offlineMode);
     void registerAgent(const QString &path);
@@ -206,6 +210,8 @@ Q_SIGNALS:
     void connectedChanged();
     void connectingChanged();
     void connectingWifiChanged();
+
+    void wifiWmtDualModeChanged();
 
 private:
     typedef bool (*ServiceSelector)(NetworkService*);

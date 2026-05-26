@@ -155,6 +155,7 @@ Module {
         Property { name: "GpsTechnology"; type: "string"; isReadonly: true }
         Property { name: "EthernetTechnology"; type: "string"; isReadonly: true }
         Property { name: "tetheringClients"; type: "QVariantList"; isReadonly: true }
+        Property { name: "wifiWmtDualMode"; type: "bool"; isReadonly: true }
         Signal { name: "availabilityChanged" }
         // sdk-make-qmltypes:keep
         Signal { name: "inputRequestTimeoutChanged" }
@@ -192,6 +193,7 @@ Module {
             name: "tetheringClientRemoved"
             Parameter { name: "macAddress"; type: "string" }
         }
+        Signal { name: "wifiWmtDualModeChanged" }
         // sdk-make-qmltypes:keep
         Signal { name: "serviceEnabledChanged" }
         // sdk-make-qmltypes:keep

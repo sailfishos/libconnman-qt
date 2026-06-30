@@ -155,6 +155,7 @@ public:
 
     QString m_path;
     QSharedPointer<TechnologyTracker> m_technologyTracker;
+    bool m_valid = false;
 };
 
 NetworkTechnologyPrivate::NetworkTechnologyPrivate()
@@ -260,8 +261,12 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
                 emitPropertyChange(name, tmpCache[name]);
             }
         }
+
         d_ptr->m_pendingProperties.clear();
+        d_ptr->m_valid = true;
+
         Q_EMIT propertiesReady();
+        Q_EMIT validChanged();
     } else {
         qWarning() << reply.error().message();
         d_ptr->m_propertiesCache.clear();
@@ -314,6 +319,11 @@ void NetworkTechnology::destroyInterface()
 bool NetworkTechnology::available() const
 {
     return d_ptr->m_technology != nullptr;
+}
+
+bool NetworkTechnology::isValid() const
+{
+    return d_ptr->m_valid;
 }
 
 QString NetworkTechnology::path() const

@@ -209,7 +209,7 @@ Q_SIGNALS:
 
 private:
     typedef bool (*ServiceSelector)(NetworkService*);
-    void propertyChanged(const QString &name, const QVariant &value);
+    void setProperty(const QString &name, const QVariant &value);
     void setConnmanAvailable(bool available);
     bool connectToConnman();
     void disconnectFromConnman();
@@ -233,7 +233,7 @@ private Q_SLOTS:
     void setupTechnologies();
     void disconnectServices();
     void setupServices();
-    void propertyChanged(const QString &name, const QDBusVariant &value);
+    void handlePropertyChanged(const QString &name, const QDBusVariant &value);
     void handleTetheringClientsChanged(const QStringList &added, const QStringList &removed);
     void technologyAdded(const QDBusObjectPath &technology, const QVariantMap &properties);
     void technologyRemoved(const QDBusObjectPath &technology);

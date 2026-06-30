@@ -352,11 +352,14 @@ Q_SIGNALS:
 // NetworkService::Private::GetPropertyWatcher
 // ==========================================================================
 
-class NetworkService::Private::GetPropertyWatcher : public QDBusPendingCallWatcher {
+class NetworkService::Private::GetPropertyWatcher : public QDBusPendingCallWatcher
+{
 public:
-    GetPropertyWatcher(const QString &name, InterfaceProxy *proxy) :
-        QDBusPendingCallWatcher(proxy->GetProperty(name), proxy),
-        m_name(name) {}
+    GetPropertyWatcher(const QString &name, InterfaceProxy *proxy)
+        : QDBusPendingCallWatcher(proxy->GetProperty(name), proxy)
+        , m_name(name)
+    {}
+
     QString m_name;
 };
 
@@ -477,7 +480,7 @@ void NetworkService::Private::init()
 
     // If the property is present in GetProperties output, it means that it's
     // at least gettable for us
-    for (uint i=0; i<COUNT(Properties); i++) {
+    for (uint i = 0; i < COUNT(Properties); i++) {
         const PropertyAccessInfo *prop = Properties[i];
         if (m_propertiesCache.contains(prop->name)) {
             m_propGetFlags |= prop->flag;
@@ -580,8 +583,8 @@ NetworkService::Private::createProxy(const QString &path)
 {
     delete m_proxy;
     m_proxy = new InterfaceProxy(path, this);
-    connect(m_proxy, SIGNAL(RestrictedPropertyChanged(QString)),
-        SLOT(onRestrictedPropertyChanged(QString)));
+    connect(m_proxy, &InterfaceProxy::RestrictedPropertyChanged,
+            this, &NetworkService::Private::onRestrictedPropertyChanged);
     checkAccess();
     return m_proxy;
 }
@@ -601,9 +604,8 @@ void NetworkService::Private::checkAccess()
 void NetworkService::Private::onRestrictedPropertyChanged(const QString &name)
 {
     qCDebug(lcConnman) << name;
-    connect(new GetPropertyWatcher(name, m_proxy),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetPropertyFinished(QDBusPendingCallWatcher*)));
+    connect(new GetPropertyWatcher(name, m_proxy), &GetPropertyWatcher::finished,
+            this, &NetworkService::Private::onGetPropertyFinished);
     if (name == Access) {
         checkAccess();
     }
@@ -686,12 +688,13 @@ NetworkService::Private::EapMethodMapRef NetworkService::Private::eapMethodMap()
     if (m_eapMethodMapRef.isNull()) {
         EapMethodMap *map = new EapMethodMap;
         // Start with 1 because 0 is EapNone
-        for (uint i=1; i<COUNT(EapMethodName); i++) {
+        for (uint i = 1; i < COUNT(EapMethodName); i++) {
             const QString name = EapMethodName[i];
             map->insert(name.toLower(), QPair<EapMethod, int>((EapMethod)i, -1));
             map->insert(name.toUpper(), QPair<EapMethod, int>((EapMethod)i, -1));
         }
-        for (uint i=0; i<COUNT(PeapMethodName); i++) {
+
+        for (uint i = 0; i < COUNT(PeapMethodName); i++) {
             const QString name = PeapMethodName[i];
             map->insert(name, QPair<EapMethod, int>(EapPEAP, i));
             map->insert(name.toLower(), QPair<EapMethod, int>(EapPEAP, i));
@@ -900,13 +903,14 @@ void NetworkService::Private::reconnectServiceInterface()
 
     if (m_path == QStringLiteral("/")) {
         // This is a dummy invalidDefaultRoute created by NetworkManager
-        QTimer::singleShot(500, service(), SIGNAL(propertiesReady()));
+        QTimer::singleShot(500, service(), &NetworkService::propertiesReady);
     } else {
         InterfaceProxy *service = createProxy(m_path);
-        connect(service, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-            SLOT(onPropertyChanged(QString,QDBusVariant)));
-        connect(service, SIGNAL(RestrictedPropertyChanged(QString)),
-            SLOT(onRestrictedPropertyChanged(QString)));
+        connect(service, &InterfaceProxy::PropertyChanged,
+                this, &NetworkService::Private::onPropertyChanged);
+        connect(service, &InterfaceProxy::RestrictedPropertyChanged,
+                this, &NetworkService::Private::onRestrictedPropertyChanged);
+
         auto *pendingProperties = new QDBusPendingCallWatcher(service->GetProperties(), service);
         connect(pendingProperties, &QDBusPendingCallWatcher::finished,
                 this, &NetworkService::Private::onGetPropertiesFinished);
@@ -934,48 +938,49 @@ void NetworkService::Private::onGetPropertiesFinished(QDBusPendingCallWatcher *c
 
 bool NetworkService::Private::requestConnect()
 {
-    if (m_proxy) {
-        // If the service is in the failure state clear the Error property
-        // so that we get notified of errors on subsequent connection attempts.
-        if (service()->serviceState() == NetworkService::FailureState) {
-            m_proxy->ClearProperty(Error);
-        }
-
-        const int old_timeout = m_proxy->timeout();
-        if (m_networkManager) {
-            m_proxy->setTimeout(m_networkManager->inputRequestTimeout());
-        }
-
-        QDBusPendingCall call = m_proxy->Connect();
-
-        if (m_networkManager) {
-            m_proxy->setTimeout(old_timeout);
-        }
-
-        bool wasConnecting = service()->connecting();
-        bool wasConnected = service()->connected();
-
-        delete m_connectWatcher.data();
-        m_connectWatcher = new QDBusPendingCallWatcher(call, m_proxy);
-
-        setLastConnectError(QString());
-
-        if (service()->connecting() != wasConnecting) {
-            queueSignal(SignalConnectingChanged);
-        }
-
-        if (service()->connected() != wasConnected) {
-            queueSignal(SignalConnectedChanged);
-        }
-
-        connect(m_connectWatcher.data(), &QDBusPendingCallWatcher::finished,
-                this, &NetworkService::Private::onConnectFinished);
-
-        emitQueuedSignals();
-        return true;
-    } else {
+    if (!m_proxy) {
         return false;
     }
+
+    // If the service is in the failure state clear the Error property
+    // so that we get notified of errors on subsequent connection attempts.
+    if (service()->serviceState() == NetworkService::FailureState) {
+        m_proxy->ClearProperty(Error);
+    }
+
+    const int old_timeout = m_proxy->timeout();
+    if (m_networkManager) {
+        m_proxy->setTimeout(m_networkManager->inputRequestTimeout());
+    }
+
+    QDBusPendingCall call = m_proxy->Connect();
+
+    if (m_networkManager) {
+        m_proxy->setTimeout(old_timeout);
+    }
+
+    bool wasConnecting = service()->connecting();
+    bool wasConnected = service()->connected();
+
+    delete m_connectWatcher.data();
+    m_connectWatcher = new QDBusPendingCallWatcher(call, m_proxy);
+
+    setLastConnectError(QString());
+
+    if (service()->connecting() != wasConnecting) {
+        queueSignal(SignalConnectingChanged);
+    }
+
+    if (service()->connected() != wasConnected) {
+        queueSignal(SignalConnectedChanged);
+    }
+
+    connect(m_connectWatcher.data(), &QDBusPendingCallWatcher::finished,
+            this, &NetworkService::Private::onConnectFinished);
+
+    emitQueuedSignals();
+
+    return true;
 }
 
 void NetworkService::Private::onConnectFinished(QDBusPendingCallWatcher *call)

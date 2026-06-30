@@ -44,11 +44,14 @@ class VpnConnectionPrivate
 
 public:
     VpnConnectionPrivate(VpnConnection &qq, const QString &path);
+
     void init();
     void setProperty(const QString &key, const QVariant &value, void(VpnConnection::*changedSignal)());
-    void checkChanged(QVariantMap &properties, QQueue<void(VpnConnection::*)()> &emissions, const QString &name, void(VpnConnection::*changedSignal)());
+    void checkChanged(QVariantMap &properties, QQueue<void(VpnConnection::*)()> &emissions, const QString &name,
+                      void(VpnConnection::*changedSignal)());
     template<typename T>
-    void updateVariable(QVariantMap &properties, QQueue<void(VpnConnection::*)()> &emissions, const QString &name, T *property, void(VpnConnection::*changedSignal)());
+    void updateVariable(QVariantMap &properties, QQueue<void(VpnConnection::*)()> &emissions,
+                        const QString &name, T *property, void(VpnConnection::*changedSignal)());
 
 public:
     NetConnmanVpnConnectionInterface m_connectionProxy;
@@ -60,6 +63,7 @@ public:
     QVariantMap m_properties;
 
     VpnConnection *q_ptr;
+
 private:
     void getPropertiesErrorHandler(QDBusError::ErrorType error);
     void getProperties();

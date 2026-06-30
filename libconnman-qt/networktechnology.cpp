@@ -268,7 +268,6 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
     }
 }
 
-
 void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
 {
     QDBusPendingCallWatcher *pendingCall
@@ -448,8 +447,8 @@ void NetworkTechnology::scan()
 
     QDBusPendingReply<> reply = d_ptr->m_technology->Scan();
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, d_ptr->m_technology);
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(scanReply(QDBusPendingCallWatcher*)));
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &NetworkTechnology::scanReply);
 }
 
 void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &value)

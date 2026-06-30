@@ -199,9 +199,9 @@ void TechnologyServiceModel::doUpdateTechnologies()
         oldPowered = m_tech->powered();
         oldConnected = m_tech->connected();
 
-        disconnect(m_tech, SIGNAL(poweredChanged(bool)), this, SLOT(changedPower(bool)));
-        disconnect(m_tech, SIGNAL(connectedChanged(bool)), this, SLOT(changedConnected(bool)));
-        disconnect(m_tech, SIGNAL(scanFinished()), this, SLOT(finishedScan()));
+        disconnect(m_tech, &NetworkTechnology::poweredChanged, this, &TechnologyServiceModel::changedPower);
+        disconnect(m_tech, &NetworkTechnology::connectedChanged, this, &TechnologyServiceModel::changedConnected);
+        disconnect(m_tech, &NetworkTechnology::scanFinished, this, &TechnologyServiceModel::finishedScan);
     }
 
     if (m_scanning) {
@@ -212,9 +212,9 @@ void TechnologyServiceModel::doUpdateTechnologies()
     m_tech = newTech;
 
     if (m_tech) {
-        connect(m_tech, SIGNAL(poweredChanged(bool)), this, SLOT(changedPower(bool)));
-        connect(m_tech, SIGNAL(connectedChanged(bool)), this, SLOT(changedConnected(bool)));
-        connect(m_tech, SIGNAL(scanFinished()), this, SLOT(finishedScan()));
+        connect(m_tech, &NetworkTechnology::poweredChanged, this, &TechnologyServiceModel::changedPower);
+        connect(m_tech, &NetworkTechnology::connectedChanged, this, &TechnologyServiceModel::changedConnected);
+        connect(m_tech, &NetworkTechnology::scanFinished, this, &TechnologyServiceModel::finishedScan);
 
         bool b = m_tech->powered();
         if (b != oldPowered)

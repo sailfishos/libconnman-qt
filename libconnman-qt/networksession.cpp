@@ -44,8 +44,8 @@ void NetworkSession::createSession()
 
     delete d_ptr->m_sessionAgent;
     d_ptr->m_sessionAgent = new SessionAgent(d_ptr->m_path, this);
-    connect(d_ptr->m_sessionAgent, SIGNAL(settingsUpdated(QVariantMap)),
-            this, SLOT(sessionSettingsUpdated(QVariantMap)));
+    connect(d_ptr->m_sessionAgent, &SessionAgent::settingsUpdated,
+            this, &NetworkSession::sessionSettingsUpdated);
 }
 
 QString NetworkSession::state() const

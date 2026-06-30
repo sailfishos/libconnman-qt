@@ -443,21 +443,21 @@ const QString NetworkService::Private::SecurityTypeName[] = {
     QString(), "none", "wep", "psk", "ieee8021x", "psksae", "sae",
 };
 
-NetworkService::Private::Private(const QString &path, const QVariantMap &props, NetworkService *parent) :
-    QObject(parent),
-    m_valid(!props.isEmpty()),
-    m_serviceState(NetworkService::UnknownState),
-    m_path(path),
-    m_propertiesCache(props),
-    m_proxy(NULL),
-    m_securityType(SecurityNone),
-    m_propGetFlags(PropertyEAP),
-    m_propSetFlags(PropertyNone),
-    m_callFlags(CallAll),
-    m_managed(false),
-    m_peapVersion(-1),
-    m_queuedSignals(0),
-    m_firstQueuedSignal(0)
+NetworkService::Private::Private(const QString &path, const QVariantMap &props, NetworkService *parent)
+    : QObject(parent)
+    , m_valid(!props.isEmpty())
+    , m_serviceState(NetworkService::UnknownState)
+    , m_path(path)
+    , m_propertiesCache(props)
+    , m_proxy(nullptr)
+    , m_securityType(SecurityNone)
+    , m_propGetFlags(PropertyEAP)
+    , m_propSetFlags(PropertyNone)
+    , m_callFlags(CallAll)
+    , m_managed(false)
+    , m_peapVersion(-1)
+    , m_queuedSignals(0)
+    , m_firstQueuedSignal(0)
 {
 }
 
@@ -572,7 +572,7 @@ void NetworkService::Private::setPath(const QString &path)
 void NetworkService::Private::deleteProxy()
 {
     delete m_proxy;
-    m_proxy = 0;
+    m_proxy = nullptr;
 }
 
 NetworkService::Private::InterfaceProxy*

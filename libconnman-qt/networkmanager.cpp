@@ -33,7 +33,7 @@ static const QString WiFiWpa3SupportProperty("WiFiWPA3Support");
 // NetworkManagerFactory
 // ==========================================================================
 
-static NetworkManager* staticInstance = NULL;
+static NetworkManager *staticInstance = nullptr;
 
 static NetworkManager* internalCreateInstance()
 {
@@ -220,7 +220,8 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
         }
     } else if (m_connectedWifi == service) {
         QVector<NetworkService*> availableWifi = manager()->getAvailableServices(WifiType);
-        m_connectedWifi = NULL;
+        m_connectedWifi = nullptr;
+
         for (NetworkService *wifi: availableWifi) {
             if (wifi->connected()) {
                 m_connectedWifi = wifi;
@@ -241,7 +242,8 @@ bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
         }
     } else if (m_connectedEthernet == service) {
         QVector<NetworkService*> availableEthernet = manager()->getAvailableServices(EthernetType);
-        m_connectedEthernet = NULL;
+        m_connectedEthernet = nullptr;
+
         for (NetworkService *ethernet: availableEthernet) {
             if (ethernet->connected()) {
                 m_connectedEthernet = ethernet;
@@ -250,6 +252,7 @@ bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
         }
         return true;
     }
+
     return false;
 }
 
@@ -458,7 +461,7 @@ void NetworkManager::Private::updateServices(const ConnmanObjectList &changed, c
     // Update availability and check whether validity changed
     bool wasValid = manager()->isValid();
     setServicesAvailable(true);
-    updateWifiConnecting(NULL);
+    updateWifiConnecting(nullptr);
 
     // Emit signals
     if (m_connectedWifi != prevConnectedWifi) {
@@ -1489,7 +1492,7 @@ void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
     if (name == StateProperty) {
         m_priv->updateState(value.toString());
     } else if (name == DefaultServiceProperty) {
-        NetworkService* newDefaultRoute(NULL);
+        NetworkService *newDefaultRoute = nullptr;
         QString path = value.toString();
 
         /* No change in default route */

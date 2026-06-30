@@ -109,6 +109,7 @@ public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
     static bool selectSavedOrAvailable(NetworkService *service);
+
     bool updateWifiConnected(NetworkService *service);
     bool updateEthernetConnected(NetworkService *service);
     bool updateWifiConnecting(NetworkService *service);
@@ -117,10 +118,6 @@ public:
 
     void updateState(const QString &newState);
 
-public slots:
-    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
-
-public:
     Private(NetworkManager *parent)
         : QObject(parent)
         , m_registered(false)
@@ -144,6 +141,8 @@ public:
         { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
 
 public Q_SLOTS:
+    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
+
     void maybeCreateInterfaceProxy();
     void onConnectedChanged();
     void onWifiConnectingChanged();

@@ -61,7 +61,7 @@ class DeclarativeNetworkManager: public QObject
 
     Q_PROPERTY(QVariantList tetheringClients READ getTetheringClients NOTIFY tetheringClientsChanged)
 
-    Q_PROPERTY(bool wifiWmtDualMode READ wifiWmtDualMode NOTIFY wifiWmtDualModeChanged)
+    Q_PROPERTY(bool wifiDualMode READ wifiDualMode CONSTANT)
 
 public:
     // needs to match NetworkManager's enum
@@ -113,7 +113,7 @@ public:
 
     QVariantList getTetheringClients() const;
 
-    bool wifiWmtDualMode() const;
+    bool wifiDualMode() const;
 
     Q_INVOKABLE QStringList servicesList(const QString &tech);
     Q_INVOKABLE QStringList savedServicesList(const QString &tech = QString());
@@ -168,7 +168,7 @@ Q_SIGNALS:
     void connectedChanged();
     void connectingChanged();
     void connectingWifiChanged();
-    void wifiWmtDualModeChanged();
+    void wifiDualModeChanged();
 
     // following not property notifiers
     void technologiesChanged();

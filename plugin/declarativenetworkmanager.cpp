@@ -92,8 +92,6 @@ DeclarativeNetworkManager::DeclarativeNetworkManager(QObject *parent)
             this, &DeclarativeNetworkManager::tetheringClientAdded);
     connect(m_sharedInstance.data(), &NetworkManager::tetheringClientRemoved,
             this, &DeclarativeNetworkManager::tetheringClientRemoved);
-    connect(m_sharedInstance.data(), &NetworkManager::wifiWmtDualModeChanged,
-            this, &DeclarativeNetworkManager::wifiWmtDualModeChanged);
 }
 
 DeclarativeNetworkManager::~DeclarativeNetworkManager()
@@ -315,6 +313,7 @@ QString DeclarativeNetworkManager::createServiceSync(
     return m_sharedInstance->createServiceSync(settings, tech, service, device);
 }
 
-bool DeclarativeNetworkManager::wifiWmtDualMode() const {
-    return m_sharedInstance->wifiWmtDualMode();
+bool DeclarativeNetworkManager::wifiDualMode() const
+{
+    return m_sharedInstance->wifiDualMode();
 }

@@ -33,7 +33,7 @@ static const QString WiFiWpa3SupportProperty("WiFiWPA3Support");
 // NetworkManagerFactory
 // ==========================================================================
 
-static NetworkManager* staticInstance = NULL;
+static NetworkManager *staticInstance = nullptr;
 
 static NetworkManager* internalCreateInstance()
 {
@@ -109,6 +109,7 @@ public:
     static bool selectSaved(NetworkService *service);
     static bool selectAvailable(NetworkService *service);
     static bool selectSavedOrAvailable(NetworkService *service);
+
     bool updateWifiConnected(NetworkService *service);
     bool updateEthernetConnected(NetworkService *service);
     bool updateWifiConnecting(NetworkService *service);
@@ -117,10 +118,6 @@ public:
 
     void updateState(const QString &newState);
 
-public slots:
-    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
-
-public:
     Private(NetworkManager *parent)
         : QObject(parent)
         , m_registered(false)
@@ -144,6 +141,8 @@ public:
         { QMetaObject::invokeMethod(this, "maybeCreateInterfaceProxy"); }
 
 public Q_SLOTS:
+    void updateServices(const ConnmanObjectList &changed, const QList<QDBusObjectPath> &removed);
+
     void maybeCreateInterfaceProxy();
     void onConnectedChanged();
     void onWifiConnectingChanged();
@@ -220,7 +219,8 @@ bool NetworkManager::Private::updateWifiConnected(NetworkService *service)
         }
     } else if (m_connectedWifi == service) {
         QVector<NetworkService*> availableWifi = manager()->getAvailableServices(WifiType);
-        m_connectedWifi = NULL;
+        m_connectedWifi = nullptr;
+
         for (NetworkService *wifi: availableWifi) {
             if (wifi->connected()) {
                 m_connectedWifi = wifi;
@@ -241,7 +241,8 @@ bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
         }
     } else if (m_connectedEthernet == service) {
         QVector<NetworkService*> availableEthernet = manager()->getAvailableServices(EthernetType);
-        m_connectedEthernet = NULL;
+        m_connectedEthernet = nullptr;
+
         for (NetworkService *ethernet: availableEthernet) {
             if (ethernet->connected()) {
                 m_connectedEthernet = ethernet;
@@ -250,6 +251,7 @@ bool NetworkManager::Private::updateEthernetConnected(NetworkService *service)
         }
         return true;
     }
+
     return false;
 }
 
@@ -458,7 +460,7 @@ void NetworkManager::Private::updateServices(const ConnmanObjectList &changed, c
     // Update availability and check whether validity changed
     bool wasValid = manager()->isValid();
     setServicesAvailable(true);
-    updateWifiConnecting(NULL);
+    updateWifiConnecting(nullptr);
 
     // Emit signals
     if (m_connectedWifi != prevConnectedWifi) {
@@ -583,9 +585,10 @@ class InterfaceProxy: public QDBusAbstractInterface
     Q_OBJECT
 
 public:
-    InterfaceProxy(NetworkManager *parent) :
-        QDBusAbstractInterface(CONNMAN_SERVICE, "/", "net.connman.Manager",
-            QDBusConnection::systemBus(), parent) {}
+    InterfaceProxy(NetworkManager *parent)
+        : QDBusAbstractInterface(CONNMAN_SERVICE, "/", "net.connman.Manager",
+                                 QDBusConnection::systemBus(), parent)
+    {}
 
 public:
     QDBusPendingCall GetProperties()
@@ -640,10 +643,13 @@ NetworkManager::NetworkManager(QObject* parent)
 {
     registerCommonDataTypes();
     QDBusServiceWatcher* watcher = new QDBusServiceWatcher(CONNMAN_SERVICE, QDBusConnection::systemBus(),
-            QDBusServiceWatcher::WatchForRegistration |
-            QDBusServiceWatcher::WatchForUnregistration, this);
-    connect(watcher, SIGNAL(serviceRegistered(QString)), SLOT(onConnmanRegistered()));
-    connect(watcher, SIGNAL(serviceUnregistered(QString)), SLOT(onConnmanUnregistered()));
+                                                           QDBusServiceWatcher::WatchForRegistration
+                                                           | QDBusServiceWatcher::WatchForUnregistration, this);
+    connect(watcher, &QDBusServiceWatcher::serviceRegistered,
+            this, &NetworkManager::onConnmanRegistered);
+    connect(watcher, &QDBusServiceWatcher::serviceUnregistered,
+            this, &NetworkManager::onConnmanUnregistered);
+
     setConnmanAvailable(QDBusConnection::systemBus().interface()->isServiceRegistered(CONNMAN_SERVICE));
 }
 
@@ -694,7 +700,6 @@ void NetworkManager::setConnmanAvailable(bool available)
             if (connectToConnman()) {
                 Q_EMIT availabilityChanged(m_priv->m_available = true);
             } else {
-
                 //
                 // There is a race condition (at least in Qt 5.6) between
                 // this thread and "QDBusConnection" thread updating the
@@ -721,25 +726,26 @@ bool NetworkManager::connectToConnman()
 {
     disconnectFromConnman();
     m_priv->m_proxy = new InterfaceProxy(this);
+
     if (!m_priv->m_proxy->isValid()) {
         qWarning() << m_priv->m_proxy->lastError();
         delete m_priv->m_proxy;
         m_priv->m_proxy = nullptr;
         return false;
-    } else {
-        connect(m_priv->m_proxy, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                SLOT(propertyChanged(QString,QDBusVariant)));
-        connect(m_priv->m_proxy, SIGNAL(TetheringClientsChanged(QStringList, QStringList)),
-                SLOT(handleTetheringClientsChanged(QStringList, QStringList)));
-
-        auto *getProperties = new QDBusPendingCallWatcher(m_priv->m_proxy->GetProperties(), m_priv->m_proxy);
-        connect(getProperties, &QDBusPendingCallWatcher::finished,
-                this, &NetworkManager::getPropertiesFinished);
-
-        updateTetheringClients();
-
-        return true;
     }
+
+    connect(m_priv->m_proxy, &InterfaceProxy::PropertyChanged,
+            this, &NetworkManager::handlePropertyChanged);
+    connect(m_priv->m_proxy, &InterfaceProxy::TetheringClientsChanged,
+            this, &NetworkManager::handleTetheringClientsChanged);
+
+    auto *getProperties = new QDBusPendingCallWatcher(m_priv->m_proxy->GetProperties(), m_priv->m_proxy);
+    connect(getProperties, &QDBusPendingCallWatcher::finished,
+            this, &NetworkManager::getPropertiesFinished);
+
+    updateTetheringClients();
+
+    return true;
 }
 
 void NetworkManager::disconnectFromConnman()
@@ -758,10 +764,10 @@ void NetworkManager::disconnectTechnologies()
     m_priv->setTechnologiesAvailable(false);
 
     if (m_priv->m_proxy) {
-        disconnect(m_priv->m_proxy, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
-                   this, SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
-        disconnect(m_priv->m_proxy, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
-                   this, SLOT(technologyRemoved(QDBusObjectPath)));
+        disconnect(m_priv->m_proxy, &InterfaceProxy::TechnologyAdded,
+                   this, &NetworkManager::technologyAdded);
+        disconnect(m_priv->m_proxy, &InterfaceProxy::TechnologyRemoved,
+                   this, &NetworkManager::technologyRemoved);
     }
 
     for (NetworkTechnology *tech : m_priv->m_technologiesCache) {
@@ -804,8 +810,8 @@ void NetworkManager::disconnectServices()
     }
 
     if (m_priv->m_proxy) {
-        disconnect(m_priv->m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-                   m_priv, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+        disconnect(m_priv->m_proxy, &InterfaceProxy::ServicesChanged,
+                   m_priv, &NetworkManager::Private::updateServices);
     }
 
     for (NetworkService *service : m_priv->m_servicesCache) {
@@ -892,35 +898,34 @@ void NetworkManager::disconnectServices()
 void NetworkManager::setupTechnologies()
 {
     if (m_priv->m_proxy) {
-        connect(m_priv->m_proxy, SIGNAL(TechnologyAdded(QDBusObjectPath,QVariantMap)),
-                SLOT(technologyAdded(QDBusObjectPath,QVariantMap)));
-        connect(m_priv->m_proxy, SIGNAL(TechnologyRemoved(QDBusObjectPath)),
-                SLOT(technologyRemoved(QDBusObjectPath)));
+        connect(m_priv->m_proxy, &InterfaceProxy::TechnologyAdded,
+                this, &NetworkManager::technologyAdded);
+        connect(m_priv->m_proxy, &InterfaceProxy::TechnologyRemoved,
+                this, &NetworkManager::technologyRemoved);
 
         QDBusPendingCallWatcher *pendingCall
                 = new QDBusPendingCallWatcher(m_priv->m_proxy->GetTechnologies(), m_priv->m_proxy);
-        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                SLOT(getTechnologiesFinished(QDBusPendingCallWatcher*)));
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &NetworkManager::getTechnologiesFinished);
     }
 }
 
 void NetworkManager::setupServices()
 {
     if (m_priv->m_proxy) {
-        connect(m_priv->m_proxy, SIGNAL(ServicesChanged(ConnmanObjectList,QList<QDBusObjectPath>)),
-                m_priv, SLOT(updateServices(ConnmanObjectList,QList<QDBusObjectPath>)));
+        connect(m_priv->m_proxy, &InterfaceProxy::ServicesChanged,
+                m_priv, &NetworkManager::Private::updateServices);
 
         QDBusPendingCallWatcher *pendingCall
                 = new QDBusPendingCallWatcher(m_priv->m_proxy->GetServices(), m_priv->m_proxy);
-        connect(pendingCall, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                SLOT(getServicesFinished(QDBusPendingCallWatcher*)));
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &NetworkManager::getServicesFinished);
     }
 }
 
-
-void NetworkManager::propertyChanged(const QString &name, const QDBusVariant &value)
+void NetworkManager::handlePropertyChanged(const QString &name, const QDBusVariant &value)
 {
-    propertyChanged(name, value.variant());
+    setProperty(name, value.variant());
 }
 
 void NetworkManager::handleTetheringClientsChanged(const QStringList &added, const QStringList &removed)
@@ -1084,7 +1089,7 @@ void NetworkManager::getPropertiesFinished(QDBusPendingCallWatcher *watcher)
     QVariantMap props = reply.value();
 
     for (QVariantMap::ConstIterator i = props.constBegin(); i != props.constEnd(); ++i)
-        propertyChanged(i.key(), i.value());
+        setProperty(i.key(), i.value());
 
     setupTechnologies();
     setupServices();
@@ -1094,8 +1099,10 @@ void NetworkManager::getTechnologiesFinished(QDBusPendingCallWatcher *watcher)
 {
     QDBusPendingReply<ConnmanObjectList> reply = *watcher;
     watcher->deleteLater();
+
     if (reply.isError())
         return;
+
     for (const ConnmanObject &object : reply.value()) {
         NetworkTechnology *tech = new NetworkTechnology(object.objpath.path(),
                                                         object.properties, this);
@@ -1118,6 +1125,7 @@ void NetworkManager::getServicesFinished(QDBusPendingCallWatcher *watcher)
     QDBusPendingReply<ConnmanObjectList> reply = *watcher;
     ConnmanObjectList services;
     watcher->deleteLater();
+
     if (reply.isError()) {
         qWarning() << reply.error();
     } else {
@@ -1203,8 +1211,7 @@ QVector<NetworkTechnology *> NetworkManager::getTechnologies() const
     return techs;
 }
 
-QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list,
-    ServiceSelector selector) const
+QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list, ServiceSelector selector) const
 {
     QVector<NetworkService *> services;
     for (const QString &path : list) {
@@ -1216,8 +1223,7 @@ QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list,
     return services;
 }
 
-QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list,
-    const QString &tech) const
+QVector<NetworkService*> NetworkManager::selectServices(const QStringList &list, const QString &tech) const
 {
     QVector<NetworkService*> services;
     if (tech.isEmpty()) {
@@ -1420,8 +1426,8 @@ void NetworkManager::destroySession(const QString &path)
     }
 }
 
-bool NetworkManager::createService(
-        const QVariantMap &settings, const QString &tech, const QString &service, const QString &device)
+bool NetworkManager::createService(const QVariantMap &settings, const QString &tech,
+                                   const QString &service, const QString &device)
 {
     if (m_priv->m_proxy) {
         // The public type is QVariantMap for QML's benefit, covert to a string map now.
@@ -1447,13 +1453,13 @@ bool NetworkManager::createService(
             }
         });
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
-QString NetworkManager::createServiceSync(
-        const QVariantMap &settings, const QString &tech, const QString &service, const QString &device)
+QString NetworkManager::createServiceSync(const QVariantMap &settings, const QString &tech,
+                                          const QString &service, const QString &device)
 {
     if (m_priv->m_proxy) {
         // The public type is QVariantMap for QML's benefit, covert to a string map now.
@@ -1484,12 +1490,12 @@ void NetworkManager::setSessionMode(bool)
     }
 }
 
-void NetworkManager::propertyChanged(const QString &name, const QVariant &value)
+void NetworkManager::setProperty(const QString &name, const QVariant &value)
 {
     if (name == StateProperty) {
         m_priv->updateState(value.toString());
     } else if (name == DefaultServiceProperty) {
-        NetworkService* newDefaultRoute(NULL);
+        NetworkService *newDefaultRoute = nullptr;
         QString path = value.toString();
 
         /* No change in default route */

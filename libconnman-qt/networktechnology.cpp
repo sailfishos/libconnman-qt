@@ -155,6 +155,7 @@ public:
 
     QString m_path;
     QSharedPointer<TechnologyTracker> m_technologyTracker;
+    bool m_valid = false;
 };
 
 NetworkTechnologyPrivate::NetworkTechnologyPrivate()
@@ -260,14 +261,17 @@ void NetworkTechnology::getPropertiesFinished(QDBusPendingCallWatcher *call)
                 emitPropertyChange(name, tmpCache[name]);
             }
         }
+
         d_ptr->m_pendingProperties.clear();
+        d_ptr->m_valid = true;
+
         Q_EMIT propertiesReady();
+        Q_EMIT validChanged();
     } else {
         qWarning() << reply.error().message();
         d_ptr->m_propertiesCache.clear();
     }
 }
-
 
 void NetworkTechnology::pendingSetProperty(const QString &key, const QVariant &value)
 {
@@ -315,6 +319,11 @@ void NetworkTechnology::destroyInterface()
 bool NetworkTechnology::available() const
 {
     return d_ptr->m_technology != nullptr;
+}
+
+bool NetworkTechnology::isValid() const
+{
+    return d_ptr->m_valid;
 }
 
 QString NetworkTechnology::path() const
@@ -448,8 +457,8 @@ void NetworkTechnology::scan()
 
     QDBusPendingReply<> reply = d_ptr->m_technology->Scan();
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, d_ptr->m_technology);
-    connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-            this, SLOT(scanReply(QDBusPendingCallWatcher*)));
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &NetworkTechnology::scanReply);
 }
 
 void NetworkTechnology::emitPropertyChange(const QString &name, const QVariant &value)

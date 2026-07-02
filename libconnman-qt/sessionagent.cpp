@@ -123,8 +123,8 @@ void SessionAgent::requestConnect()
     if (d_ptr->m_session) {
         QDBusPendingReply<> reply = d_ptr->m_session->Connect();
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-        connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                this, SLOT(onConnectFinished(QDBusPendingCallWatcher*)));
+        connect(watcher, &QDBusPendingCallWatcher::finished,
+                this, &SessionAgent::onConnectFinished);
     }
 }
 

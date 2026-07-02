@@ -64,15 +64,16 @@ public:
 
     explicit VpnModel(QObject *parent = nullptr);
     explicit VpnModel(VpnModelPrivate &dd, QObject *parent);
-    ~VpnModel() Q_DECL_OVERRIDE;
+    ~VpnModel() override;
 
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
-    QModelIndex index(int row, int column, const QModelIndex &parent) const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex &index, int role) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
     int count() const;
     bool isConnected() const;
     VpnManager *vpnManager() const;
     bool populated() const;
+
     Q_INVOKABLE QVariantMap connectionSettings(const QString &path) const;
 
 Q_SIGNALS:
@@ -86,8 +87,10 @@ protected Q_SLOTS:
     void connectionDestroyed(QObject *);
 
 protected:
+    QHash<int, QByteArray> roleNames() const override;
+
     virtual void orderConnections(QVector<VpnConnection*> &connections);
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+
     void moveItem(int oldIndex, int newIndex);
     QVector<VpnConnection*> connections() const;
 

@@ -168,7 +168,7 @@ void VpnModel::connectionsChanged()
 
     // Since m_changesInhibited can also inhibit updates
     // about removed/deleted services, connect destroyed.
-    for (const VpnConnection *connection: new_connections) {
+    for (const VpnConnection *connection : new_connections) {
         connect(connection, &VpnConnection::destroyed,
                 this, &VpnModel::connectionDestroyed);
     }
@@ -253,7 +253,8 @@ void VpnModel::moveItem(int oldIndex, int newIndex)
     Q_D(VpnModel);
 
     if (oldIndex >= 0 && oldIndex < d->m_connections.size() && newIndex >= 0 && newIndex < d->m_connections.size()) {
-        beginMoveRows(QModelIndex(), oldIndex, oldIndex, QModelIndex(), (newIndex > oldIndex) ? (newIndex + 1) : newIndex);
+        beginMoveRows(QModelIndex(), oldIndex, oldIndex, QModelIndex(),
+                      (newIndex > oldIndex) ? (newIndex + 1) : newIndex);
         d->m_connections.move(oldIndex, newIndex);
         endMoveRows();
     }

@@ -163,7 +163,6 @@ QSharedPointer<VpnManager> VpnManager::sharedInstance()
     return manager;
 }
 
-
 VpnManager::VpnManager(QObject *parent)
     : QObject(parent)
     , d_ptr(new VpnManagerPrivate(*this))
@@ -270,8 +269,7 @@ VpnConnection *VpnManager::get(int index) const
 {
     Q_D(const VpnManager);
 
-    if ((index >= 0) && (index < d->m_items.size()))
-    {
+    if ((index >= 0) && (index < d->m_items.size())) {
         return d->m_items.at(index);
     }
     return nullptr;

@@ -63,6 +63,9 @@ class NetworkManager : public QObject
 
     Q_PROPERTY(QVariantList tetheringClients READ getTetheringClients NOTIFY tetheringClientsChanged)
 
+    // A read only property with no changes to state if WiFi has dual mode support for tethering
+    Q_PROPERTY(bool wifiDualMode READ wifiDualMode CONSTANT)
+
 public:
     enum State {
         UnknownState,
@@ -149,6 +152,8 @@ public:
     QString ethernetTechnologyPath() const;
 
     QVariantList getTetheringClients() const;
+
+    bool wifiDualMode() const;
 
 public Q_SLOTS:
     void setOfflineMode(bool offlineMode);

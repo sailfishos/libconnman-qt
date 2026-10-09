@@ -761,6 +761,7 @@ Module {
         exports: ["Connman/NetworkTechnology 0.2"]
         exportMetaObjectRevisions: [0]
         Property { name: "available"; type: "bool"; isReadonly: true }
+        Property { name: "valid"; type: "bool"; isReadonly: true }
         Property { name: "name"; type: "string"; isReadonly: true }
         Property { name: "type"; type: "string"; isReadonly: true }
         Property { name: "powered"; type: "bool" }

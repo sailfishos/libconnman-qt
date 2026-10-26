@@ -312,3 +312,8 @@ QString DeclarativeNetworkManager::createServiceSync(
 {
     return m_sharedInstance->createServiceSync(settings, tech, service, device);
 }
+
+bool DeclarativeNetworkManager::wifiDualMode() const
+{
+    return m_sharedInstance->wifiDualMode();
+}

@@ -28,6 +28,7 @@ static const QString OfflineModeProperty("OfflineMode");
 static const QString DefaultServiceProperty("DefaultService");
 static const QString TetheringClientsProperty("TetheringClients");
 static const QString WiFiWpa3SupportProperty("WiFiWPA3Support");
+static const QString WiFiDualModeProperty("WiFiWMTDualMode");
 
 // ==========================================================================
 // NetworkManagerFactory
@@ -1704,5 +1705,11 @@ QVariantList NetworkManager::getTetheringClients() const
 
     return QVariantList();
 }
+
+bool NetworkManager::wifiDualMode() const
+{
+    return m_priv->m_propertiesCache.value(WiFiDualModeProperty).toBool();
+}
+
 
 #include "networkmanager.moc"

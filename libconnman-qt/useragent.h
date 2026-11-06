@@ -46,6 +46,10 @@ public Q_SLOTS:
     void sendUserReply(const QVariantMap &input);
 
     void sendConnectReply(const QString &replyMessage, int timeout = 120);
+    // Answers browserRequested: done means the login in the browser is over,
+    // and connman checks the connection again; false means it was given up.
+    // Whoever connects to browserRequested has to call this.
+    void sendBrowserReply(bool done);
     void setConnectionRequestType(const QString &type);
     void setAgentPath(const QString &path);
 

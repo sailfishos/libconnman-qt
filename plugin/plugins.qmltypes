@@ -950,6 +950,10 @@ Module {
             Parameter { name: "replyMessage"; type: "string" }
         }
         Method {
+            name: "sendBrowserReply"
+            Parameter { name: "done"; type: "bool" }
+        }
+        Method {
             name: "setConnectionRequestType"
             Parameter { name: "type"; type: "string" }
         }

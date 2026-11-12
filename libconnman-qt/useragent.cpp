@@ -7,6 +7,8 @@
  *
  */
 
+#include <QMetaMethod>
+
 #include "useragent.h"
 #include "networkmanager.h"
 
@@ -56,6 +58,7 @@ public:
     QString agentPath;
     QTimer requestTimer;
     QDBusMessage requestMessage;
+    QDBusMessage browserRequest;
 };
 
 UserAgentPrivate::UserAgentPrivate()
@@ -81,6 +84,7 @@ UserAgent::UserAgent(QObject* parent)
 
 UserAgent::~UserAgent()
 {
+    sendBrowserReply(false);
     d_ptr->m_manager->unregisterAgent(QString(d_ptr->agentPath));
 
     delete d_ptr->m_req_data;
@@ -101,6 +105,8 @@ void UserAgent::cancelUserInput()
 {
     delete d_ptr->m_req_data;
     d_ptr->m_req_data = nullptr;
+    // Cancel ends the request in connman, whichever kind it was.
+    d_ptr->browserRequest = QDBusMessage();
     Q_EMIT userInputCanceled();
 }
 
@@ -224,7 +230,32 @@ void UserAgent::requestBrowser(const QString &servicePath, const QString &url,
                                const QDBusMessage &message)
 {
     qDebug() << message.arguments();
-    Q_EMIT browserRequested(servicePath, url);
+    sendBrowserReply(false);
+    d_ptr->browserRequest = message;
+
+    // connman sends an agent one request at a time, so an unanswered one holds
+    // up the agent's passphrase prompts until BrowserLaunchTimeout.
+    if (isSignalConnected(QMetaMethod::fromSignal(&UserAgent::browserRequested))) {
+        Q_EMIT browserRequested(servicePath, url);
+    } else {
+        sendBrowserReply(false);
+    }
+}
+
+void UserAgent::sendBrowserReply(bool done)
+{
+    const QDBusMessage &request = d_ptr->browserRequest;
+    if (request.type() == QDBusMessage::InvalidMessage)
+        return;
+
+    const QDBusMessage reply = done
+        ? request.createReply()
+        : request.createErrorReply(QString("net.connman.Agent.Error.Canceled"),
+                                   QString("canceled by user"));
+    if (!QDBusConnection::systemBus().send(reply))
+        qWarning() << "Could not queue message";
+
+    d_ptr->browserRequest = QDBusMessage();
 }
 
 ////////////////////
